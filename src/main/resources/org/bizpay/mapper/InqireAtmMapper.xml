@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.InqireAtmMapper">
+  	<sql id="atm">
+		WHERE a.biz_code in (SELECT biz_code FROM biz START WITH biz_code =#{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
+			AND b.req_result='OK'
+	        AND b.req_dt between #{dateStart} and #{dateEnd}
+	        <if test="bizCode!=null and !bizCode.equals('') " >
+	            AND a.biz_code=#{bizCode}
+	        </if>
+	         
+	        <if test="mberName!=null and !mberName.equals('')" >
+	            AND d.mber_name LIKE '%'||#{mberName}||'%'
+	        </if>
+	        
+	        <if test="indutyId!=null and !indutyId.equals('')" >
+	            AND d.induty_id LIKE '%'||#{indutyId}||'%'
+	        </if>
+	        
+	        <if test="bizNum!=null and !bizNum.equals('')" >
+	            AND d.biz_num LIKE '%'||#{bizNum}||'%'
+	        </if>
+	        
+	        <if test="inoutCode!=null and !inoutCode.equals('')" >
+	            AND b.inout_code in (select code.code from code where code.group_nm = '입출력내역관리' and code.code_nm = #{inoutCode}) 
+	        </if>
+	</sql>
+  <!--입출 내역 전체합  -->
+	<select id="totInfo" resultType="InqireAtmSum">
+	select 
+		count(*) AS cnt ,
+		SUM(in_case) AS inCnt,
+		SUM(in_amt) AS inSum,
+		SUM(out_case) AS outCnt, 
+		SUM(out_amt) AS outSum,
+		SUM(cancel_case) AS cancelCnt,
+		SUM(cancel_amt) AS cancelSum 
+	from
+	(SELECT 
+		CASE WHEN b.inout_code LIKE 'IN%' THEN 1 ELSE 0 END AS in_case,
+	    CASE WHEN b.inout_code LIKE 'IN%' THEN req_amt ELSE 0 END AS in_amt,
+	    CASE WHEN b.inout_code LIKE 'OT%' THEN 1 ELSE 0 END AS out_case,
+	    CASE WHEN b.inout_code LIKE 'OT%' THEN req_amt ELSE 0 END AS out_amt,
+	    CASE WHEN b.inout_code = 'OT_CANCEL' THEN 1 ELSE 0 END AS cancel_case,
+	    CASE WHEN b.inout_code = 'OT_CANCEL' THEN req_amt ELSE 0 END AS cancel_amt
+		FROM mber a
+		inner join tbl_atm b
+		on a.mber_code=b.mber_code
+		inner join biz c
+		on a.biz_code=c.biz_code
+		inner join mber_basis d
+		on a.mber_code=d.mber_code 
+		<include refid="atm" />
+	    )
+	</select>
+	
+	<!--입출 내역   -->
+	<select id="list" resultType="InqireAtm" >
+	SELECT 
+		c.cmpnm
+		, d.induty_id
+		, d.mber_name
+		, b.mber_code
+	    , b.inout_no
+	    , (select code.code_nm from code where code.group_nm = '입출력내역관리' and code.code = b.inout_code)  as inoutCode
+	    , b.req_amt
+	    , b.balance
+	    , TO_DATE(b.req_dt||b.req_time , 'yyyy/mm/dd hh24:mi:ss') as reqDt
+	    , b.charge
+	    , b.req_result
+	    , b.bank
+	    , b.account
+	    , b.depositor
+	    , b.bigo
+	    , b.biz_code
+	    , b.in_daily_sales_tot_amt
+	    , b.in_daily_sales_fee_per 
+	    , b.in_daily_sales_fee_amt
+	    , b.in_daily_sales_dt
+	    , b.in_daily_sales_count
+	    , b.sales_tot_amt
+	    , b.sales_fee_per
+	    , b.sales_fee_amt
+	    , b.sales_dt
+	    , b.sales_time
+	    , b.sales_rcipt_no
+		, d.company_name
+		, d.biz_num
+	FROM mber a
+	inner join tbl_atm b
+	on a.mber_code=b.mber_code
+	inner join biz c
+	on a.biz_code=c.biz_code
+	inner join mber_basis d
+	on a.mber_code=d.mber_code 
+	<include refid="atm" />   
+    ORDER BY b.req_dt DESC, b.req_time DESC, b.inout_no DESC    
+	</select>
+	
+	<!--입출 내역 페이징   -->
+	<select id="pageList" resultType="InqireAtm" >
+	select * from(
+    	SELECT 
+    	ROW_NUMBER() OVER(ORDER BY b.req_dt DESC, b.req_time DESC, b.inout_no DESC) AS rnum 
+		,c.cmpnm
+		, d.induty_id
+		, d.mber_name
+		, b.mber_code
+	    , b.inout_no
+	    , (select code.code_nm from code where code.group_nm = '입출력내역관리' and code.code = b.inout_code)  as inoutCode
+	    , b.req_amt
+	    , b.balance
+	    , TO_DATE(b.req_dt||b.req_time , 'yyyy/mm/dd hh24:mi:ss') as reqDt
+	    , b.charge
+	    , b.req_result
+	    , b.bank
+	    , b.account
+	    , b.depositor
+	    , b.bigo
+	    , b.biz_code
+	    , b.in_daily_sales_tot_amt
+	    , b.in_daily_sales_fee_per 
+	    , b.in_daily_sales_fee_amt
+	    , b.in_daily_sales_dt
+	    , b.in_daily_sales_count
+	    , b.sales_tot_amt
+	    , b.sales_fee_per
+	    , b.sales_fee_amt
+	    , b.sales_dt
+	    , b.sales_time
+	    , b.sales_rcipt_no
+		, d.company_name
+		, d.biz_num
+	FROM mber a
+	inner join tbl_atm b
+	on a.mber_code=b.mber_code
+	inner join biz c
+	on a.biz_code=c.biz_code
+	inner join mber_basis d
+	on a.mber_code=d.mber_code 
+	<include refid="atm" />   
+    ORDER BY b.req_dt DESC, b.req_time DESC, b.inout_no DESC    
+    )
+     WHERE rnum BETWEEN #{startIndex} AND #{endIndex}
+	</select>
+	
+	<select id="AtmConfigInfo" resultType="AtmConfig">
+		SELECT * FROM tbl_config WHERE gb_code=#{val}
+	</select>
+	
+	<update id="AtmConfigUpdate">
+	UPDATE 
+		tbl_config 
+	SET 
+		enable_yn = #{enableYn},
+		msg = #{msg}
+	 WHERE gb_code = #{gbCode}
+	</update>
+  </mapper>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.AuthMapper">
+  	<!--로그인등 사용자 정보 학인  -->
+	<select id="userInfo" resultType="MemberInfo">
+		SELECT
+			aa.mber_code,
+			aa.biz_code,
+		    aa.usid,
+		    aa.password,
+		    aa.use_at,
+		    aa.idntfc_nm,
+		    aa.author_code,
+		    aa.recommend_biz_code,
+            case bb.dealer_kind 
+		        when '31' then 'HEADOFFICE'
+		        when '32' then 'DISTRIBUTOR'
+		        when '33' then 'AGENCY'
+		        else 'DEALER'
+		        end as grade
+		FROM
+		    mber aa
+		inner join biz bb
+        on aa.biz_code = bb.biz_code
+		where aa.usid = #{val}
+		and aa.AUTHOR_CODE != 'AUTHOR_USER'
+	</select>
+	
+	<!-- 사업자정보 -->
+	<select id="bizInfo" resultType="BizInfo">
+		SELECT
+		    biz_code,
+		    bizrno,
+		    cmpnm,
+		    bprprr,
+		    bplc,
+		    biz_telno,
+		    trmnl_no,
+		    pymnt_rate,
+		    dealer_id,
+		    dt,
+		    trget_biz_code,
+		    dealer_kind,
+		    pay_bprprr,
+		    pay_telno,
+		    pay_cmpnm,
+		    pay_bizrno,
+		    pay_bplc,
+		    pg_van,
+		    pg_trmnl_no,
+		    m_telno,
+		    email,
+		    bank_name,
+		    bank_serial,
+		    bank_user,
+		    dealer_rate,
+		    member_input_yn,
+		    member_rate,
+		    limit_one,
+		    limit_day,
+		    limit_month,
+		    limit_year,
+		    installment_months,
+		    biz_limit_one,
+		    biz_limit_day,
+		    biz_limit_month,
+		    biz_limit_year,
+		    biz_installment_months,
+		    pg_gb,
+		    van_gb,
+		    biz_type,
+		    memo,
+		    history_memo,
+		    create_dt,
+		    recommend_biz_code,
+		    baro_rate,
+		    etc_rate,
+		    join_amt,
+		    case dealer_kind 
+		        when '31' then 'HEADOFFICE'
+		        when '32' then 'DISTRIBUTOR'
+		        when '33' then 'AGENCY'
+		        else 'DEALER'
+		        end as grade,
+		    GET_DEALER_FEE('dealerFee' ,dealer_kind ) as dealerFee,
+			GET_DEALER_FEE('agencyFee' ,dealer_kind ) as agencyFee,
+			GET_DEALER_FEE('distributorFee' ,dealer_kind ) as distributorFee
+		FROM
+		    biz
+		where biz_code = #{val}
+	</select>
+	
+	<!-- 딜러정보 -->
+	<select id="dealerList" resultType="DealerInfo">
+		SELECT 
+			biz_code, 
+			cmpnm,
+			trget_biz_code,
+			case dealer_kind 
+		        when '31' then 'HEADOFFICE'
+		        when '32' then 'DISTRIBUTOR'
+		        when '33' then 'AGENCY'
+		        else 'DEALER'
+		        end as grade
+		FROM biz
+		START WITH biz_code = #{val}
+			CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code
+		ORDER BY cmpnm
+	</select>
+  </mapper>

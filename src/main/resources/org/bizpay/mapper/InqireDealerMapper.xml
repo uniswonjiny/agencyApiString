@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.InqireDealerMapper">
+  	<sql id="where">
+  		<if test="cmpnm!=null and !cmpnm.equals('')" >
+  		AND a.cmpnm like  '%'||#{cmpnm}||'%'
+  		</if>
+  		<if test="dealerId!=null and !dealerId.equals('')" >
+  		AND a.dealer_id like  '%'||#{dealerId}||'%'
+  		</if>
+  		<if test="useAt!=null and !useAt.equals('')" >
+  		AND b.use_at = #{useAt}
+  		</if>
+  		<if test="bizrno!=null and !bizrno.equals('')" >
+  		AND a.bizrno = #{bizrno}
+  		</if>
+	</sql>
+	
+	<sql id="width">
+	with sto as
+		(
+		    select distinct 
+		        max(CREAT_DT) over( partition by  mber_code , HIST_CODE  ) as  max_create 
+		        , min(CREAT_DT) over( partition by  mber_code  ) as  min_create 
+		        , mber_code 
+		        , HIST_CODE 
+		        , HIST_CN
+		    from mber_hist2 where mber_code in (
+		        select mber_code from mber where  author_code IN('AUTHOR_MNGR','AUTHOR_DEALER') 
+		    )
+		)  
+	</sql>
+	
+	<!--입출 내역   -->
+	<select id="list" resultType="DealerManager" >
+		<include refid="width" />
+		select 
+			(SELECT cc.code_nm FROM code cc WHERE cc.group_nm = '대리점구분' and cc.sn = NVL( a.DEALER_KIND , 33))  as  gubun
+			    ,a.cmpnm 
+			    ,a.BIZRNO
+			    ,b.usid
+			    ,(SELECT COUNT(*) FROM mber WHERE biz_code=a.biz_code AND author_code NOT IN('AUTHOR_MNGR','AUTHOR_DEALER')) AS mber_cnt
+			    ,(select min_create from sto where sto.mber_code = b.mber_code and hist_cn = 'Y')  as regDate
+			    , (select max_create from sto where sto.mber_code = b.mber_code and hist_cn = 'N') as stopTradeDate
+			    , GET_DISTRIBUTOR(a.trget_biz_code, a.dealer_kind) as distributor
+			    ,GET_AGENCY(a.trget_biz_code, a.dealer_kind) as agent
+			    , a.M_TELNO
+			    , a.biz_telno
+			    , a.BANK_NAME
+			    , a.BANK_SERIAL
+			    , a.BANK_USER
+			    , b.USE_AT
+			    , a.biz_code
+				, (select code from code where code_nm = a.BANK_NAME) as bankCode
+		from biz a 
+		inner join mber b
+		on a.biz_code = b.biz_code
+		and author_code IN('AUTHOR_MNGR','AUTHOR_DEALER')
+		where 1=1
+		<include refid="where" />
+		order by a.biz_code DESC
+		
+	</select>
+	
+	<!--입출 내역 페이징   -->
+	<select id="pageList" resultType="DealerManager" >
+	<include refid="width" />
+	select  aaa.* from
+		(select 
+			ROW_NUMBER() OVER(ORDER BY aa.biz_code DESC) AS rnum,aa.*
+		from
+		(select 
+		   (SELECT cc.code_nm FROM code cc WHERE cc.group_nm = '대리점구분' and cc.sn = NVL( a.DEALER_KIND , 33))  as  gubun
+		    ,a.cmpnm 
+		    ,a.BIZRNO
+		    ,b.usid
+		    ,(SELECT COUNT(*) FROM mber WHERE biz_code=a.biz_code AND author_code NOT IN('AUTHOR_MNGR','AUTHOR_DEALER')) AS mber_cnt
+		    ,(select min_create from sto where sto.mber_code = b.mber_code and hist_cn = 'Y')  as regDate
+		    , (select max_create from sto where sto.mber_code = b.mber_code and hist_cn = 'N') as stopTradeDate
+		    , GET_DISTRIBUTOR(a.trget_biz_code, a.dealer_kind) as distributor
+		    , GET_AGENCY(a.trget_biz_code, a.dealer_kind) as agent
+		    , a.M_TELNO
+		    , a.biz_telno
+		    , a.BANK_NAME
+		    , a.BANK_SERIAL
+		    , a.BANK_USER
+		    , b.USE_AT
+		    , a.biz_code
+		    , (select code from code where code_nm = a.BANK_NAME) as bankCode
+		from biz a 
+		inner join mber b
+		on a.biz_code = b.biz_code
+		and author_code IN('AUTHOR_MNGR','AUTHOR_DEALER')
+		where 1=1
+		<include refid="where" />
+		) aa
+		) aaa
+		where aaa.rnum BETWEEN #{startIndex} AND #{endIndex}
+	</select>
+	
+	<!-- 거래조회 전체갯수 -->
+	<select id="totCount" resultType="int">
+		<include refid="width" />
+		select count(1) 
+		from biz a 
+		inner join mber b
+		on a.biz_code = b.biz_code
+		and author_code IN('AUTHOR_MNGR','AUTHOR_DEALER')
+		where 
+			a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
+		<include refid="where" />
+	</select>
+	
+	<!--입출 내역 페이징   -->
+	<select id="dealerbyId" resultType="DealerRegInfo" >
+		select 
+		    aa.dealer_id -- 대리점 ID
+		    ,bb.usid
+		    , dealer_kind
+		    , (select code_nm from code where sn =  aa.dealer_kind ) as dealer_kind_name -- 대리점구분
+		    , aa.cmpnm -- 사호
+		    , aa.bplc -- 주소
+		    , aa.join_amt -- 납입금
+		    , aa.bizrno -- 사업자번호
+		    , bb.AUTHOR_CODE -- 
+		    , aa.BIZ_TYPE
+		    , aa.BIZ_TELNO -- 전화번호
+		    , aa.M_TELNO -- 핸드폰번호
+		    , aa.EMAIL -- 이메일
+		    , aa.BANK_NAME -- 은행명
+		    , aa.BANK_SERIAL -- 계좌번호
+		    , aa.BANK_USER -- 예금주명
+		    , aa.DEALER_RATE -- 대리점 수익율
+		    , aa.MEMBER_RATE -- 판매자수수료율
+		    , aa.MEMBER_INPUT_YN -- 판매자등록허용
+		    , bb.USE_AT -- 거래상황
+		    , aa.MEMO --메모
+		    , aa.HISTORY_MEMO -- 수정이력
+		    , aa.TRMNL_NO-- van 터미널 iD
+		    , aa.PG_TRMNL_NO -- pg 터미널 id
+		    , aa.PG_VAN-- pg/van
+		    , aa.VAN_GB -- van사
+		    , aa.DT -- 최종수정일
+		    , aa.PAY_BPRPRR -- 결제사대표자명
+		    , aa.PAY_TELNO -- 결제사대표전화번호
+		    , aa.PAY_CMPNM -- 결제사회사명
+		    , aa.PAY_BIZRNO -- 결제사사업자번호
+		    , aa.PAY_BPLC-- 결제사주소
+		    , aa.LIMIT_ONE -- 개인 1회 한도
+		    , aa.LIMIT_DAY -- 개인 1일한도
+		    , aa.LIMIT_MONTH-- 개인 월한도
+		    , aa.LIMIT_YEAR -- 개인 년한도
+		    , aa.INSTALLMENT_MONTHS -- 개인할부개월
+		    , aa.BIZ_LIMIT_ONE-- 사업자 1회한도
+		    , aa.BIZ_LIMIT_DAY-- 사업자 1일 한도
+		    , aa.BIZ_LIMIT_MONTH-- 사업자 월한도
+		    , aa.BIZ_LIMIT_YEAR-- 사업자 년한도
+		    , aa.BIZ_INSTALLMENT_MONTHS-- 사업자 할부개월
+		    , aa.recommend_biz_code
+		    , aa.trget_biz_code
+		    , aa.biz_code
+		    , aa.bprprr
+		from BIZ aa
+		left join mber bb
+		on  aa.biz_code= bb.biz_code
+		where bb.usid = #{val}
+	</select>
+	
+	<update id="updateDealerMbr" parameterType="DealerRegInfo">
+		update mber set USE_AT = #{useAt}  where usid = #{usid}
+	</update>
+	
+	<update id="updateDealerBiz" parameterType="DealerRegInfo">
+		UPDATE biz
+		SET
+		    dt = sysdate
+		    <if test="dealerId!=null  and !dealerId.equals('')" >
+		    ,dealer_id =  #{dealerId}
+		    </if>
+		    <if test="bizrno!=null  and !bizrno.equals('')" >
+		    ,bizrno = #{bizrno}
+		    </if>
+		    <if test="cmpnm!=null  and !cmpnm.equals('')" >
+		    ,cmpnm = #{cmpnm}
+		    </if>
+		    <if test="bprprr!=null and !bprprr.equals('')" >
+		    ,bprprr = #{bprprr}
+		    </if>
+		    <if test="bplc!=null and !bplc.equals('')" >
+		    ,bplc = #{bplc}
+		    </if>
+		    <if test="bizTelno!=null  and !bizTelno.equals('')" >
+		    ,biz_telno = #{bizTelno}
+		    </if>
+		    <if test="dealerKind!=null and !dealerKind.equals('')"  >
+		    , dealer_kind = #{dealerKind}
+		    </if>
+		    , trmnl_no = #{trmnlNo}
+		    , pymnt_rate = #{dealerRate}
+		    , trget_biz_code = #{trgetBizCode}
+		    , pay_bprprr = #{payBprprr}
+		    , pay_telno = #{payTelno}
+		    , pay_cmpnm = #{payCmpnm}
+		    , pay_bizrno = #{payBizrno}
+		    , pay_bplc = #{payBplc}
+		    , pg_van = #{pgVan}
+		    , pg_trmnl_no = #{pgTrmnlNo}
+		    , m_telno = #{mTelno}
+		    , email = #{email}
+		    , bank_name = #{bankName}
+		    , bank_serial = #{bankSerial}
+		    , bank_user = #{bankUser}
+		    , dealer_rate = #{dealerRate}
+		    , member_input_yn = #{memberInputYn}
+		    , member_rate = #{memberRate}
+		    , limit_one = #{limitOne}
+		    , limit_day = #{limitDay}
+		    , limit_month = #{limitMonth}
+		    , limit_year = #{limitYear}
+		    , installment_months = #{installmentMonths}
+		    , biz_limit_one = #{bizLimitOne}
+		    , biz_limit_day = #{bizLimitDay}
+		    , biz_limit_month = #{bizLimitMonth}
+		    , biz_limit_year = #{bizLimitYear}
+		    , biz_installment_months = #{bizInstallmentMonths}
+	<!-- , pg_gb = #{} -->
+		    , van_gb = #{vanGb}
+		    , biz_type = #{bizType}
+		    , memo = #{memo}
+		    , history_memo = #{historyMemo}
+		    , recommend_biz_code = #{recommendBizCode}
+		    , join_amt = #{joinAmt}
+	
+		WHERE
+		    biz_code = #{bizCode}
+	</update>
+	
+	<select id="dealerIdCheck" resultType="int">
+		select count(1) cnt from biz where dealer_id = #{val}
+	</select>
+  </mapper>
