@@ -30,15 +30,12 @@ public class InqireDelng {
 	private String cardNo;
 	private String pgVanGb;
 	private String confmDt;
-	private String confmTime;
 	private String confmNo;
 	private String smsAuthNumber;
 	private String goodNm;
 	private String paymentDevice;
 	private String mbtlnum;
 	private String cnclConfmDt;
-	private String cnclConfmTime;
-	private String cancelDt;
 	private String bigo;
 	private String mberName;
 	private String companyName;

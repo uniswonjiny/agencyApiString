@@ -8,6 +8,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class InqireDelingParam {
+	private String searchType;
 	private String dateStart;
 	private String dateEnd;
 	private String bizCode; // 검색 조건으로 선택한 대리점코드
@@ -23,4 +24,6 @@ public class InqireDelingParam {
 	private String issueCmpnyNm; // 카드사
 	private int tot; // 판매금액
 	private String badCardSearch;// 동일카드
+	private String orderbyColumn;
+	private String orderby;
 }

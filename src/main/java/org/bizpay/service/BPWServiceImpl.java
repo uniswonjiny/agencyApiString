@@ -69,10 +69,20 @@ public class BPWServiceImpl implements BPWService {
 
 	@Override
 	public List<InqireDelng> inqireDelng(InqireDelingParam param) throws Exception {
-		List<InqireDelng> list = new ArrayList<InqireDelng>();
+		List<InqireDelng> list = new ArrayList<InqireDelng>();		
 		if(param.getEndIndex() ==0 && param.getStartIndex()==0) {
-			list = delngMapper.list(param);
-		}else list = delngMapper.pageList(param);
+			if( "all".equals(param.getSearchType())) {
+				list = delngMapper.list(param);				
+			}else {
+				list = delngMapper.cancelList(param);		
+			}
+		}else {
+			if( "all".equals(param.getSearchType())) {
+				list = delngMapper.pageList(param);				
+			}else {
+				list = delngMapper.cancelPage(param);		
+			}
+		}
 		// 복화화 처리
 		for (InqireDelng item : list) {
 			String temp = cert.decrypt(item.getCardNo());
@@ -103,26 +113,6 @@ public class BPWServiceImpl implements BPWService {
 				
 			}
 			
-			// 승인 날짜 변경
-			if (item.getConfmDt() != null && item.getConfmDt().length() != 0 && item.getConfmTime() != null && item.getConfmTime().length() != 0) {
-				String tempdt = timeUtil.sdfA(item.getConfmDt() +item.getConfmTime() , "yy/MM/dd HH:mm");
-				item.setConfmDt(tempdt);
-			}
-			
-			// 취소날짜 변경
-			if (item.getCnclConfmDt() != null && item.getCnclConfmDt().length() != 0 && item.getCnclConfmTime() != null && item.getCnclConfmTime().length() != 0) {
-
-				if(item.getCnclConfmTime().length() == 4) item.setCnclConfmTime(item.getCnclConfmTime()+ "00"); 
-				else if(item.getCnclConfmTime().length() <6)  item.setCnclConfmTime("000000");
-				String tempdt = timeUtil.sdfA(item.getCnclConfmDt() +item.getCnclConfmTime() , "yy/MM/dd HH:mm");
-				item.setCancelDt(tempdt);
-			}// 현금영수증인발급인경우 직전취소만 취소날짜지정
-			else if(item.getDelngSeCode() != null && item.getDelngSeCode().length() != 0 ) {
-				if("CASH_RCIPT_ISSUE".equals(item.getDelngSeCode()) && "직전취소".equals(item.getBigo() )) {
-					String tempdt = timeUtil.sdfA(item.getCnclConfmDt() +item.getCnclConfmTime() , "yy/MM/dd HH:mm");
-					item.setCancelDt(tempdt);
-				}
-			}
 			
 			// 판매자주소 adres 복호화
 			if(item.getAdres() != null && item.getAdres().length() != 0 ) {
@@ -153,7 +143,9 @@ public class BPWServiceImpl implements BPWService {
 	@Override
 	public int inqireDelngCount(InqireDelingParam param) throws Exception {
 		log.info("입출금내역관리 전체목록갯수");
-		return delngMapper.totCount(param);
+		if("all".equals(param.getSearchType())) {
+			return delngMapper.totCount(param);
+		}else return delngMapper.cancelTotCount(param);
 	}
 
 	@Override

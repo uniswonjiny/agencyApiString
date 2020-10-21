@@ -29,13 +29,13 @@
 			AND e.induty_id= #{mberId}
 	     </if>
 	     <if test="bizNum!=null" >
-			AND a.biz_num like '%'||#{bizNum}||'%'
+			AND e.biz_num like '%'||#{bizNum}||'%'
 	     </if>
 	     <if test="issueCmpnyNm!=null" >
 			AND a.issue_cmpny_nm like '%'||#{issueCmpnyNm}||'%'
 	     </if>
 	     <if test="tot!=0" >
-			AND b.splpc+bb.vat= #{tot}
+			AND b.splpc+b.vat= #{tot}
 	     </if>
 	     <if test='badCardSearch=="Y"' >
 			AND	a.card_no IN 
@@ -54,6 +54,7 @@
 			    WHERE cnt > 1 
 			)
 	     </if>
+	   
 	</sql>
   <!--입출 내역 전체합  -->
 	<select id="totInfo" resultType="InqireDelngSum">
@@ -107,26 +108,19 @@
 			a.card_no,
 			a.pg_van_gb,
 			a.van_pg_comp,
-			b.confm_dt,
-			b.confm_time,
+			TO_DATE( b.confm_dt || b.confm_time  ,  'YYYYMMDDHH24MISS') as confm_dt,
+
 			b.confm_no,
 			b.sms_auth_number,
 			b.good_nm,
 			b.payment_device,
 			(SELECT mbtlnum FROM mber_basis WHERE mber_code=c.mber_code) AS mbtlnum,
-			(SELECT confm_dt 
+			TO_DATE((SELECT confm_dt || confm_time
 				FROM delng 
 				WHERE trget_mber_code=b.mber_code 
 				    AND trget_mber_code_sn=b.mber_code_sn 
 				    AND trget_rcipt_no=b.rcipt_no 
-				    AND delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')) AS cnclConfmDt,
-			(SELECT confm_time 
-			    FROM delng 
-			    WHERE trget_mber_code=b.mber_code 
-			        AND trget_mber_code_sn=b.mber_code_sn 
-			        AND trget_rcipt_no=b.rcipt_no 
-			        AND delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')) AS cnclConfmTime,
-			TO_CHAR(b.cancel_dt,'YYYY-MM-DD') AS cancel_dt,  
+				    AND delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')), 'YYYYMMDDHH24MISS') AS cnclConfmDt,
 			b.bigo,  
 			e.mber_name,  
 			e.company_name,  
@@ -145,51 +139,22 @@
 		       on c.mber_code =e.mber_code 
 			WHERE b.delng_se_code IN('CARD_ISSUE','CARD_CNCL','CASH_RCIPT_CNCL','CASH_RCIPT_ISSUE')
 			<include refid="delng" />
-			ORDER BY b.confm_dt DESC,b.confm_time DESC 
 	</select>
 	
 	<!--입출 내역 페이징   -->
 	<select id="pageList" resultType="InqireDelng" >
-		SELECT 
-			info.cmpnm,
-			info.adres,
-			info.biz_type_name,
-			info.biz_item,
-			info.trmnl_no,
-			info.pg_trmnl_no,
-			info.pg_van,
-			info.usid,
-			info.pay_type as payType,
-			info.rcipt_no as rciptNo,
-			info.purchsr_mbtlnum,
-			info.splpc,
-			info.vat,
-			info.delng_se_code,
-			info.card_type,
-			info.instlmt_month ,
-			info.issue_cmpny_nm,
-			info.card_no,
-			info.pg_van_gb,
-			info.van_pg_comp,
-			info.confm_dt,
-			info.confm_time,
-			info.confm_no,
-			info.sms_auth_number,
-			info.good_nm,
-			info.payment_device,
-			info.mbtlnum,
-			info.cncl_confm_dt,
-			info.cncl_confm_time,
-			info.cancel_dt,
-			info.bigo,  
-			info.mber_name,  
-			info.company_name,  
-			info.biz_num,  
-			info.mber_mobile, 
-			info.mber_phone, 
-			info.calculate_type  
+		select * from 
+		( 
+		SELECT ROW_NUMBER() 
+			 <if test="orderbyColumn!=null and !orderbyColumn.equals('')" >
+			    OVER( order by ${orderbyColumn} ${orderby} )
+			</if>
+			<if test="orderbyColumn==null or orderbyColumn.equals('')" >
+			 	OVER(ORDER BY confm_dt DESC)  
+			</if>	
+				AS rnum, info.*
 		 FROM ( 
-			SELECT ROW_NUMBER() OVER(ORDER BY b.confm_dt DESC,b.confm_time DESC) AS rnum,
+			SELECT
 				d.cmpnm,
 				e.adres,
 				e.biz_type_name,
@@ -215,26 +180,19 @@
 				a.card_no,
 				a.pg_van_gb,
 				a.van_pg_comp,
-				b.confm_dt,
-				b.confm_time,
+				TO_DATE( b.confm_dt || b.confm_time  ,  'YYYYMMDDHH24MISS') as confm_dt,
+
 				b.confm_no,
 				b.sms_auth_number,
 				b.good_nm,
 				b.payment_device,
 				(SELECT mbtlnum FROM mber_basis WHERE mber_code=c.mber_code) AS mbtlnum,
-				(SELECT confm_dt 
-					FROM delng 
-					WHERE trget_mber_code=b.mber_code 
-					    AND trget_mber_code_sn=b.mber_code_sn 
-					    AND trget_rcipt_no=b.rcipt_no 
-					    AND delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')) AS cncl_confm_dt,
-				(SELECT confm_time 
-				    FROM delng 
-				    WHERE trget_mber_code=b.mber_code 
-				        AND trget_mber_code_sn=b.mber_code_sn 
-				        AND trget_rcipt_no=b.rcipt_no 
-				        AND delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')) AS cncl_confm_time,
-				TO_CHAR(b.cancel_dt,'YYYY-MM-DD') AS cancel_dt,  
+				TO_DATE((SELECT confm_dt || confm_time
+				FROM delng 
+				WHERE trget_mber_code=b.mber_code 
+				    AND trget_mber_code_sn=b.mber_code_sn 
+				    AND trget_rcipt_no=b.rcipt_no 
+				    AND delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')), 'YYYYMMDDHH24MISS') AS cnclConfmDt,
 				b.bigo,  
 				e.mber_name,  
 				e.company_name,  
@@ -253,8 +211,8 @@
 		        on c.mber_code =e.mber_code 
 				WHERE b.delng_se_code IN('CARD_ISSUE','CARD_CNCL','CASH_RCIPT_CNCL','CASH_RCIPT_ISSUE')
 				<include refid="delng" />
-				ORDER BY b.confm_dt DESC,b.confm_time DESC 
 			) info
+			) aa
 			WHERE rnum BETWEEN #{startIndex} AND #{endIndex}
 	</select>
 	
@@ -276,4 +234,150 @@
 
 	</select>
 	
+	<!-- 거래조회 취소 페이징 목록  -->
+	<select id="cancelPage" resultType="InqireDelng" >
+	select 
+	    d.cmpnm
+	    , e.adres
+		, e.biz_type_name
+	    , e.biz_item
+	    , d.trmnl_no
+		, d.pg_trmnl_no
+		, d.pg_van
+	    , c.usid
+	    , case e.pay_type when 'N' then '일반' else ( case e.pay_type  when 'B' then '바로정산' else '익일입금' end ) end as pay_type
+	    , b.TRGET_RCIPT_NO as RCIPT_NO
+	    ,(SELECT adi_cn 
+						FROM delng_adi 
+						WHERE mber_code=b.mber_code 
+							AND mber_code_sn=b.mber_code_sn 
+							AND rcipt_no=b.TRGET_RCIPT_NO 
+							AND adi_code='PURCHSR_MBTLNUM') AS purchsr_mbtlnum                    
+	    , b.SPLPC
+	    , b.VAT
+	    , a.card_type
+	    , a.instlmt_month
+	    , a.issue_cmpny_nm
+	    , a.card_no
+	    , a.pg_van_gb
+	    , a.van_pg_comp
+	    , b.confm_time
+	    , b.confm_no
+	    , b.sms_auth_number
+	    , b.good_nm
+		, b.payment_device
+	    , e.mbtlnum	    
+	    , TO_DATE(  b.CONFM_DT || b.CONFM_TIME ,  'YYYYMMDDHH24MISS') as cnclConfmDt
+	    , TO_DATE(  (select CONFM_DT || CONFM_TIME  from delng dd 
+	        where dd.delng_se_code IN('CARD_ISSUE','CASH_RCIPT_ISSUE') and  dd.MBER_CODE = b.MBER_CODE
+	            and  dd.RCIPT_NO = b.TRGET_RCIPT_NO
+	        )  ,  'YYYYMMDDHH24MISS') as CONFM_DT
+	    , b.delng_se_code
+	    , b.BIGO
+		, e.mber_name
+		, e.company_name
+	    , e.biz_num
+	    , e.mber_mobile
+		, e.mber_phone
+		, e.calculate_type 
+	from delng b
+	inner join MBER_BASIS e
+	on e.MBER_CODE = b.MBER_CODE
+	inner join mber c
+	on c.MBER_CODE = e.MBER_CODE
+	inner join biz d
+	on d.biz_code = c.biz_code
+	left join delng_credt a
+	 on a.mber_code=b.mber_code AND a.mber_code_sn=b.mber_code_sn AND b.TRGET_RCIPT_NO=a.rcipt_no
+	where b.delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')
+		<include refid="delng" />
+	</select>
+	
+	<!-- 거래조회 취소 전체 목록  -->
+	<select id="cancelList" resultType="InqireDelng" >
+	select * from
+		(SELECT ROW_NUMBER()		 
+		 	<if test="orderbyColumn!=null and !orderbyColumn.equals('')" >
+			    OVER( order by ${orderbyColumn} ${orderby} )
+			</if>
+			<if test="orderbyColumn==null or orderbyColumn.equals('')" >
+			 	OVER(ORDER BY confm_dt DESC)  
+			</if>	
+			as RNUM , aa.*
+		from
+		(select 
+		    d.cmpnm
+		    , e.adres
+			, e.biz_type_name
+		    , e.biz_item
+		    , d.trmnl_no
+			, d.pg_trmnl_no
+			, d.pg_van
+		    , c.usid
+		    , case e.pay_type when 'N' then '일반' else ( case e.pay_type  when 'B' then '바로정산' else '익일입금' end ) end as pay_type
+		    , b.TRGET_RCIPT_NO as RCIPT_NO
+		    ,(SELECT adi_cn 
+							FROM delng_adi 
+							WHERE mber_code=b.mber_code 
+								AND mber_code_sn=b.mber_code_sn 
+								AND rcipt_no=b.TRGET_RCIPT_NO 
+								AND adi_code='PURCHSR_MBTLNUM') AS purchsr_mbtlnum                    
+		    , b.SPLPC
+		    , b.VAT
+		    , a.card_type
+		    , a.instlmt_month
+		    , a.issue_cmpny_nm
+		    , a.card_no
+		    , a.pg_van_gb
+		    , a.van_pg_comp
+		    , b.confm_no
+		    , b.sms_auth_number
+		    , b.good_nm
+			, b.payment_device
+		    , e.mbtlnum
+		    ,b.CONFM_DT || b.CONFM_TIME as cnclConfmDt
+		    , (select CONFM_DT || CONFM_TIME  from delng dd 
+		        where dd.delng_se_code IN('CARD_ISSUE','CASH_RCIPT_ISSUE') and  dd.MBER_CODE = b.MBER_CODE
+		            and  dd.RCIPT_NO = b.TRGET_RCIPT_NO
+		        ) as CONFM_DT
+		    , b.delng_se_code
+		    , b.BIGO
+			, e.mber_name
+			, e.company_name
+		    , e.biz_num
+		    , e.mber_mobile
+			, e.mber_phone
+			, e.calculate_type 
+		from delng b
+		inner join MBER_BASIS e
+		on e.MBER_CODE = b.MBER_CODE
+		inner join mber c
+		on c.MBER_CODE = e.MBER_CODE
+		inner join biz d
+		on d.biz_code = c.biz_code
+		left join delng_credt a
+		 on a.mber_code=b.mber_code AND a.mber_code_sn=b.mber_code_sn AND b.TRGET_RCIPT_NO=a.rcipt_no
+		where b.delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')
+		<include refid="delng" />
+		) aa
+		) aaa
+		WHERE rnum BETWEEN #{startIndex} AND #{endIndex}
+	</select>
+	
+	<!-- 거래조회 취소 전체갯수 -->
+	<select id="cancelTotCount" resultType="int">
+	select 
+  	  count(1) cnt
+		from delng b
+		inner join MBER_BASIS e
+		on e.MBER_CODE = b.MBER_CODE
+		inner join mber c
+		on c.MBER_CODE = e.MBER_CODE
+		inner join biz d
+		on d.biz_code = c.biz_code
+		left join delng_credt a
+		 on a.mber_code=b.mber_code AND a.mber_code_sn=b.mber_code_sn AND b.TRGET_RCIPT_NO=a.rcipt_no
+		where b.delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')
+		<include refid="delng" />
+	</select>
   </mapper>

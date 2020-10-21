@@ -15,4 +15,11 @@ public interface InqireDelngMapper {
 	public List<InqireDelng> pageList(InqireDelingParam param) throws Exception;
 	// 페이징 처리를 위한 전체갯수 
 	public int totCount(InqireDelingParam param) throws Exception;
+	
+	// 취소조회용
+	public List<InqireDelng> cancelList(InqireDelingParam param) throws Exception;
+
+	public List<InqireDelng> cancelPage(InqireDelingParam param) throws Exception;
+ 
+	public int cancelTotCount(InqireDelingParam param) throws Exception;
 }
