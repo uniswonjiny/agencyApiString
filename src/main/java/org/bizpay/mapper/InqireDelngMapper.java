@@ -6,6 +6,7 @@ import org.bizpay.common.domain.InqireDelingParam;
 import org.bizpay.domain.InqireDelng;
 import org.bizpay.domain.InqireDelngSum;
 //거래내역
+import org.bizpay.domain.TransByDate;
 public interface InqireDelngMapper {
 	// 전체합계정보
 	public InqireDelngSum totInfo(InqireDelingParam param) throws Exception;
@@ -22,4 +23,7 @@ public interface InqireDelngMapper {
 	public List<InqireDelng> cancelPage(InqireDelingParam param) throws Exception;
  
 	public int cancelTotCount(InqireDelingParam param) throws Exception;
+	
+	//  날짜별 전체거래량 전체거래금액 
+	public List<TransByDate> transByDate(InqireDelingParam param) throws Exception;
 }

@@ -380,4 +380,27 @@
 		where b.delng_se_code IN('CARD_CNCL','CASH_RCIPT_CNCL')
 		<include refid="delng" />
 	</select>
+	
+	<!-- 일자별(달력형)  데이터 조회 -->
+	<select id="transByDate" resultType="TransByDate">
+		select distinct
+		    a.confm_dt ,
+		    a.delng_se_code,
+		    sum(a.splpc + a.vat) over (PARTITION BY  a.confm_dt ,  a.delng_se_code ) totSum,
+		    count(1) over (PARTITION BY  a.confm_dt ,  a.delng_se_code ) totCnt
+		from delng a
+		inner join MBER c
+		on a.mber_code = c.mber_code 
+		where 1=1
+		and a.delng_se_code IN('CARD_ISSUE','CARD_CNCL','CASH_RCIPT_CNCL','CASH_RCIPT_ISSUE')
+		AND a.confm_dt between :dateStart and :dateEnd
+		AND c.biz_code in 
+				 	(SELECT aaa.biz_code FROM biz aaa START WITH aaa.biz_code = :memberBizeCode
+				 	CONNECT BY NOCYCLE PRIOR aaa.biz_code = aaa.trget_biz_code)
+		<include refid="delng" />
+		order by a.confm_dt , a.delng_se_code
+		
+	</select>
+	
+	
   </mapper>
