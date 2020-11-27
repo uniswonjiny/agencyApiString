@@ -7,31 +7,32 @@
 		AND d.biz_code in 
 		 	(SELECT aaa.biz_code FROM biz aaa START WITH aaa.biz_code = #{memberBizeCode}
 		 	CONNECT BY NOCYCLE PRIOR aaa.biz_code = aaa.trget_biz_code)
+		 <if test="dateStart!=null and !dateStart.equals('') " >
 		 AND b.confm_dt between #{dateStart} and #{dateEnd}
-		 
-		 <if test="bizCode!='all'" >
+		 </if>
+		  <if test="bizCode!=null and !bizCode.equals('') and bizCode!='all' " >
 		     AND c.biz_code=#{bizCode}
 	     </if>
-	     <if test="delngSeCode!='all'" >
+	     <if test="delngSeCode!=null and !delngSeCode.equals('') and  delngSeCode!='all' " >
 	     	AND b.delng_se_code= #{delngSeCode}
 	     </if>
-	     <if test="calculateType!='all'" >
+	     <if test="calculateType!=null and !calculateType.equals('') and calculateType!='all'" >
 			AND e.calculate_type= #{calculateType}
 	     </if>
 	     
-	     <if test="mberName!=null" >
+	     <if test="mberName!=null and !mberName.equals('')" >
 			AND e.mber_name like '%'||#{mberName}||'%'
 	     </if>
 	     <if test="confmNo!=0" >
 			AND b.confm_no= #{confmNo}
 	     </if>
-	     <if test="mberId!=null" >
+	     <if test="mberId!=null and !mberId.equals('') " >
 			AND e.induty_id= #{mberId}
 	     </if>
-	     <if test="bizNum!=null" >
+	     <if test="bizNum!=null and !bizNum.equals('')" >
 			AND e.biz_num like '%'||#{bizNum}||'%'
 	     </if>
-	     <if test="issueCmpnyNm!=null" >
+	     <if test="issueCmpnyNm!=null and !issueCmpnyNm.equals('')" >
 			AND a.issue_cmpny_nm like '%'||#{issueCmpnyNm}||'%'
 	     </if>
 	     <if test="tot!=0" >
@@ -46,7 +47,9 @@
 			        FROM delng aai, delng_credt bbi  
 			        WHERE aai.rcipt_no = bbi.rcipt_no  
 			        	AND aai.mber_code = bbi.mber_code
+			        	<if test="dateStart!=null and !dateStart.equals('') " >
 						AND aai.confm_dt between #{dateStart} and #{dateEnd}
+						</if>
 			        	AND aai.delng_se_code='CARD_ISSUE'  
 			        	AND aai.splpc + aai.vat >= '300000'  
 			        GROUP BY bbi.card_no 
@@ -383,24 +386,35 @@
 	
 	<!-- 일자별(달력형)  데이터 조회 -->
 	<select id="transByDate" resultType="TransByDate">
+	select * from (
 		select distinct
-		    a.confm_dt ,
-		    a.delng_se_code,
-		    sum(a.splpc + a.vat) over (PARTITION BY  a.confm_dt ,  a.delng_se_code ) totSum,
-		    count(1) over (PARTITION BY  a.confm_dt ,  a.delng_se_code ) totCnt
-		from delng a
+		    b.confm_dt ,
+		    b.delng_se_code,
+		    sum(b.splpc + b.vat) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totSum,
+		    count(1) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totCnt
+		from delng b
 		inner join MBER c
-		on a.mber_code = c.mber_code 
+			on b.mber_code = c.mber_code 
+		inner join biz d
+			on d.biz_code = c.biz_code
 		where 1=1
-		and a.delng_se_code IN('CARD_ISSUE','CARD_CNCL','CASH_RCIPT_CNCL','CASH_RCIPT_ISSUE')
-		AND a.confm_dt between :dateStart and :dateEnd
-		AND c.biz_code in 
-				 	(SELECT aaa.biz_code FROM biz aaa START WITH aaa.biz_code = :memberBizeCode
-				 	CONNECT BY NOCYCLE PRIOR aaa.biz_code = aaa.trget_biz_code)
+		and b.delng_se_code IN ('CARD_ISSUE','CASH_RCIPT_ISSUE')
 		<include refid="delng" />
-		order by a.confm_dt , a.delng_se_code
-		
+		union all
+		select distinct
+		    b.confm_dt ,
+		    b.delng_se_code,
+		    sum(b.splpc + b.vat) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totSum,
+		    count(1) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totCnt
+		from delng b
+		inner join MBER c
+			on b.mber_code = c.mber_code 
+		inner join biz d
+			on d.biz_code = c.biz_code
+		where 1=1
+		and b.delng_se_code IN ('CARD_CNCL','CASH_RCIPT_CNCL')
+		<include refid="delng" />
+		)
+		order by confm_dt , delng_se_code
 	</select>
-	
-	
   </mapper>
