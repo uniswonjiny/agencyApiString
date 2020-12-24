@@ -22,6 +22,7 @@ public class InqireDelng {
 	private String purchsrMbtlnum;
 	private String splpc;
 	private String vat;
+	private String amount;
 	private String delngSeCode;
 	private String delngSeCodeNm;
 	private String cardType;
@@ -36,6 +37,7 @@ public class InqireDelng {
 	private String paymentDevice;
 	private String mbtlnum;
 	private String cnclConfmDt;
+	private String cancelDt;
 	private String bigo;
 	private String mberName;
 	private String companyName;
@@ -43,4 +45,8 @@ public class InqireDelng {
 	private String mberMobile;
 	private String calculateType;
 	private String mberPhone;
+	private String gubun;
+	private String delngsecodestring;
+	private String bizTelno;
+	
 }

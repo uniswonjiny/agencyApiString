@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.TransMapper">
+  	<sql id="whereTrans">
+  			AND d.biz_code in (select biz_code from biz start with biz_code = #{memberBizeCode} connect by nocycle prior biz_code = trget_biz_code)  
+  		<if test="mberName!=null and !mberName.equals('')" >
+			AND b.mber_name like '%'||#{mberName}||'%'
+	     </if>
+	     
+  		<if test="confmNo!=0" >
+			AND a.confm_no= #{confmNo}
+	     </if>
+  		<if test="mberId!=null and !mberId.equals('') " >
+  			AND b.induty_id like '%'||#{usid}||'%' 
+  		</if>
+  		<if test="bizNum!=null and !bizNum.equals('') " >
+  			AND b.biz_num like '%'||#{bizNum}||'%'
+  		</if>
+  		<if test="issueCmpnyNm!=null and !issueCmpnyNm.equals('') " >
+  			AND e.issue_cmpny_nm like '%'||#{issueCmpnyNm}||'%'
+  		</if>
+  	
+  		<if test="calculateType!=null and !calculateType.equals('') " >
+  			AND a.calculate_type= #{calculateType}
+  		</if>
+  		
+  		<if test="delngPayType!=null and !delngPayType.equals('') " >
+  			AND a.delng_pay_type = #{delngPayType}
+  		</if>
+  		<if test="bizCode!=null and !bizCode.equals('') " >
+  			AND c.biz_code=#{bizCode}
+  		</if>
+  		
+  		<if test="sellPrice!=0" >
+			AND b.splpc+b.vat= #{sellPrice}
+	     </if>
+	     
+	     
+		<if test='badCardSearch=="Y"' >
+			AND	e.card_no IN 
+			( 
+				SELECT card_no from  
+				    ( 
+			        SELECT bbi.card_no, count(bbi.card_no) as cnt 
+			        FROM delng aai, delng_credt bbi  
+			        WHERE aai.rcipt_no = bbi.rcipt_no  
+			        	AND aai.mber_code = bbi.mber_code
+			        	<if test="dateStart!=null and !dateStart.equals('') " >
+						AND aai.confm_dt between #{dateStart} and #{dateEnd}
+						</if>
+			        	AND aai.delng_se_code='CARD_ISSUE'  
+			        	AND aai.splpc + aai.vat >= '300000'  
+			        GROUP BY bbi.card_no 
+				    ) 
+			    WHERE cnt > 1 
+			)
+	     </if>
+ 
+
+  	</sql>
+  	
+  	<sql id="transList">
+		select distinct
+			  case when GET_CANCEL_DATE(a.confm_no , a.TRGET_MBER_CODE , a.TRGET_RCIPT_NO) is null  
+			  	then '승인'  
+			  else  
+			  '승인후취소'  
+			   end 
+			as gubun  
+		    , d.cmpnm -- 대리점명  
+		    , b.adres -- 판매자 주소 
+		    , b.biz_type_name -- 업종 
+		    , b.biz_item --취급품목 
+		    , d.trmnl_no 
+		    , d.pg_trmnl_no 
+		    , d.pg_van 
+		    , c.usid -- 판매자 아이디  
+		    , case b.pay_type when 'n' then '일반' else ( case b.pay_type  when 'b' then '바로정산' else '익일입금' end ) end as pay_type --  코드  
+		    , a.rcipt_no -- 영수증번호  
+		    , (select  adi_cn   
+		        from delng_adi adi  
+				where adi.mber_code=a.mber_code  
+				and adi.mber_code_sn=a.mber_code_sn  
+				and adi.rcipt_no=a.rcipt_no  
+				and adi.adi_code='purchsr_mbtlnum') as purchsr_mbtlnum  
+		    , a.confm_no -- 승인번호  
+		    , b.mber_name -- 판매자명  
+		    , b.company_name -- 상호  
+		    , to_number (replace(a.splpc , '-' , '' ))  +to_number ( replace(a.vat , '-' , '' )) as amount  -- 판매금액  
+		    , get_delng_se_name(a.delng_se_code  ,e.card_type ) as delngsecodestring -- 구분  
+		    , case e.instlmt_month   
+		        when '00' then '일시불'  
+		        else   
+		             case  when a.delng_se_code like '%CARD%' then TO_NUMBER(e.instlmt_month) || '개월' 
+		            else ''  
+		            end  
+		        end as instlmtmonth -- 할부 개월  
+		    , e.van_pg_comp -- 발급사명  
+		    , e.card_no -- 카드번호  
+		    , to_char(TO_DATE(CONFM_DT || ' ' || CONFM_TIME , 'YY/MM/DD HH24:MI:SS') ,'YY/MM/DD HH24:MI') as confm_dt -- 승인일시  
+		    , b.biz_num -- 사업자번호  
+		    , d.biz_telno -- 대표번호  
+		    , b.mber_mobile -- 핸드폰번호  
+		    , a.cust_phone -- 구매자 연락처  
+		    , case a.calculate_type   
+		        when 'u' then '유니코아'  
+		        when 'k' then 'ksnet'  
+		        else '유니코아'  
+		        end as calculate_type -- 정산  
+		    , e.issue_cmpny_nm -- 발급사명 
+		    , GET_CANCEL_DATE(a.confm_no , a.TRGET_MBER_CODE , a.TRGET_RCIPT_NO) as cancel_dt   
+		    , (select code_nm from code where code = a.payment_device and group_nm = '디바이스'  ) as payment_device -- 결제방법  
+		from delng a  
+		inner join mber_basis b  
+			on a.mber_code = b.mber_code  
+		inner join mber c  
+			on a.mber_code = c.mber_code  
+		inner join biz d  
+			on c.biz_code = d.biz_code      
+		left join delng_credt e  
+			on e.mber_code=a.mber_code and e.mber_code_sn=a.mber_code_sn and a.trget_rcipt_no=e.rcipt_no  
+		 where a.confm_dt between #{dateStart} and #{dateEnd}
+		 <if test="delngSeCode.equals('all')" > 
+		 and a.delng_se_code in ('CARD_ISSUE' , 'CASH_RCIPT_ISSUE')
+		 </if>
+		 <if test="delngSeCode.equals('transCard')" > 
+		 and a.delng_se_code in ('CARD_ISSUE')
+		 </if>
+		 <if test="delngSeCode.equals('transCash')" > 
+		 and a.delng_se_code in ('CASH_RCIPT_ISSUE')
+		 </if>
+			<include refid="whereTrans" />		
+
+  	</sql>
+  	
+  	<sql id="cancelCash">
+		 select distinct 
+		      '취소' as gubun 
+		     , d.cmpnm -- 대리점명 
+		     , b.adres -- 판매자 주소 
+		     , b.biz_type_name -- 업종 
+		     , b.biz_item --취급품목 
+		     , d.trmnl_no 
+		     , d.pg_trmnl_no 
+		     , d.pg_van -- pg/ van     
+		     , c.usid -- 판매자 아이디 
+		     , case b.pay_type when 'n' then '일반' else ( case b.pay_type  when 'b' then '바로정산' else '익일입금' end ) end as pay_type --  코드    
+		     , a.rcipt_no -- 영수증번호  
+		     , (select  adi_cn 
+		 	        from delng_adi adi 
+		 			where adi.mber_code=a.mber_code 
+		 			and adi.mber_code_sn=a.mber_code_sn 
+		 			and adi.rcipt_no=a.rcipt_no 
+		 			and adi.adi_code='purchsr_mbtlnum') as purchsr_mbtlnum 
+		     , a.confm_no -- 승인번호 
+		     , b.mber_name -- 판매자명 
+		     , b.company_name -- 상호    
+		     , to_number (replace(a.splpc , '-' , '' ))  + to_number ( replace(a.vat , '-' , '' )) as amount  -- 판매금액 
+		     , get_delng_se_name(a.delng_se_code  ,e.card_type ) as delngsecodestring -- 구분 
+		     , case e.instlmt_month  
+		         when '00' then '일시불' 
+		         else  
+		             case  when a.delng_se_code like '%CARD%' then TO_NUMBER(e.instlmt_month) || '개월' 
+		             else '' 
+		             end 
+		         end as instlmtmonth -- 할부 개월 
+		     , e.van_pg_comp -- 발급사명 
+		     , e.card_no -- 카드번호 
+		     , to_char(TO_DATE(CONFM_DT || ' ' || CONFM_TIME , 'YY/MM/DD HH24:MI:SS') ,'YY/MM/DD HH24:MI') as confm_dt -- 승인일시 
+		     , b.biz_num -- 사업자번호 
+		     , d.biz_telno -- 대표번호 
+		     , b.mber_mobile -- 핸드폰번호 
+		     , a.cust_phone -- 구매자 연락처 
+		     , case a.calculate_type  
+		         when 'u' then '유니코아' 
+		         when 'k' then 'ksnet' 
+		         else '유니코아' 
+		         end as calculate_type -- 정산 
+		     , e.issue_cmpny_nm -- 발급사명 
+		     , to_char(nvl(cancel_dt , (TO_DATE(CONFM_DT || ' ' || CONFM_TIME , 'YY/MM/DD HH24:MI:SS') ) ) ,'YY/MM/DD HH24:MI') as cancel_dt   
+		     , (select code_nm from code where code = a.payment_device and group_nm = '디바이스'  ) as payment_device -- 결제방법 
+		 from  
+		 (select aa.* from delng aa 
+		 inner join  
+		 (select * from delng  
+		 where delng_se_code = 'CASH_RCIPT_CNCL' 
+		 and cancel_dt is null 
+		 and confm_dt between #{dateStart} and #{dateEnd}
+		 union all 
+		 select * from delng  
+		 where delng_se_code = 'CASH_RCIPT_CNCL' 
+		 and cancel_dt is not null 
+		 and cancel_dt between #{dateStart} and #{dateEnd}
+		 ) bb 
+		 on aa.mber_code = bb.trget_mber_code  
+		 and aa.rcipt_no = bb.trget_rcipt_no 
+		 ) a 
+		 inner join mber_basis b 
+		 on a.mber_code = b.mber_code 
+		 inner join mber c 
+		 on a.mber_code = c.mber_code 
+		 inner join biz d 
+		 on c.biz_code = d.biz_code     
+		 left join delng_credt e 
+		 on e.mber_code=a.mber_code and e.mber_code_sn=a.mber_code_sn and a.trget_rcipt_no=e.rcipt_no 
+		where 1=1
+		<include refid="whereTrans" />		
+  	</sql>
+  
+	<sql id="cancelCard">
+			 select distinct 
+		      '취소' as gubun 
+		     , d.cmpnm -- 대리점명 
+		     , b.adres -- 판매자 주소 
+		     , b.biz_type_name -- 업종 
+		     , b.biz_item --취급품목 
+		     , d.trmnl_no 
+		     , d.pg_trmnl_no 
+		     , d.pg_van 
+		     , c.usid -- 판매자 아이디 
+		     , case b.pay_type when 'n' then '일반' else ( case b.pay_type  when 'b' then '바로정산' else '익일입금' end ) end as pay_type --  코드    
+		     , a.rcipt_no -- 영수증번호  
+		     , (select  adi_cn 
+		 	        from delng_adi adi 
+		 			where adi.mber_code=a.mber_code 
+		 			and adi.mber_code_sn=a.mber_code_sn 
+		 			and adi.rcipt_no=a.rcipt_no 
+		 			and adi.adi_code='purchsr_mbtlnum') as purchsr_mbtlnum 
+		     , a.confm_no -- 승인번호 
+		     , b.mber_name -- 판매자명 
+		     , b.company_name -- 상호    
+		     , to_number (replace(a.splpc , '-' , '' ))  +to_number ( replace(a.vat , '-' , '' )) as amount  -- 판매금액 
+		     , get_delng_se_name(a.delng_se_code  ,e.card_type ) as delngsecodestring -- 구분 
+		     , case e.instlmt_month 
+		         when '00' then '일시불' 
+		         else  
+		             case  when a.delng_se_code like '%CARD%' then TO_NUMBER(e.instlmt_month) || '개월' 
+		             else '' 
+		             end 
+		         end as instlmtmonth -- 할부 개월 
+		     , e.van_pg_comp -- 발급사명 
+		     , e.card_no -- 카드번호 
+		     , to_char(TO_DATE(CONFM_DT || ' ' || CONFM_TIME , 'YY/MM/DD HH24:MI:SS') ,'YY/MM/DD HH24:MI') as confm_dt -- 승인일시 
+		     , b.biz_num -- 사업자번호 
+		     , d.biz_telno -- 대표번호 
+		     , b.mber_mobile -- 핸드폰번호 
+		     , a.cust_phone -- 구매자 연락처 
+		     , case a.calculate_type  
+		         when 'u' then '유니코아' 
+		         when 'k' then 'ksnet' 
+		         else '유니코아' 
+		         end as calculate_type -- 정산 
+		     , e.issue_cmpny_nm -- 발급사명 
+		     , to_char(nvl(cancel_dt , (TO_DATE(CONFM_DT || ' ' || CONFM_TIME , 'YY/MM/DD HH24:MI:SS') ) ) ,'YY/MM/DD HH24:MI') as cancel_dt   
+		     , (select code_nm from code where code = a.payment_device and group_nm = '디바이스'  ) as payment_device -- 결제방법 
+		 from  
+		 ( select aa.* from delng aa 
+		 inner join  
+		 ( select * from delng  
+		 where delng_se_code = 'CARD_CNCL' 
+		 and cancel_dt is null 
+		 and card_delete_yn = 'Y'  
+		 and confm_dt between #{dateStart} and #{dateEnd}
+		 union all 
+		 select * from delng  
+		 where delng_se_code = 'CARD_CNCL' 
+		 and cancel_dt is not null 
+		 and card_delete_yn = 'Y'  
+		 and cancel_dt between #{dateStart} and #{dateEnd}
+		 ) bb 
+		 on aa.mber_code = bb.trget_mber_code  
+		 and aa.rcipt_no = bb.trget_rcipt_no 
+		 union all 
+		 select a.* from delng a where a.confm_no not in ( 
+		    select confm_no from delng where delng_se_code = 'CARD_CNCL' and confm_no is not null 
+		 ) 
+		 and a.card_delete_yn = 'Y' and a.delng_se_code = 'CARD_ISSUE' 
+		 and a.confm_dt between #{dateStart} and #{dateEnd}
+		 ) a 
+		 inner join mber_basis b 
+		 on a.mber_code = b.mber_code 
+		 inner join mber c 
+		 on a.mber_code = c.mber_code 
+		 inner join biz d 
+		 on c.biz_code = d.biz_code     
+		 left join delng_credt e 
+		 on e.mber_code=a.mber_code and e.mber_code_sn=a.mber_code_sn and a.trget_rcipt_no=e.rcipt_no 
+		 where 1=1
+ 		<include refid="whereTrans" /> 
+	</sql>
+	
+	<!-- 거래내역 , 취소내역 모두 조회가능하도록함 , 키 - 취소날짜 확보를 위한 개발 부분이 90%  -->
+  	<!-- 데이터 테이블 용도 이므로 페이징 처리 하지 않는다.  -->
+  	<select id="transInfo" resultType="InqireDelng" >
+  		select * from ( 
+  			<if test="delngSeCode.equals('all')" >
+	  			<include refid="transList" ><property name="code" value="all"/> </include>
+	  			union all
+	  			<include refid="cancelCash" > </include>
+	  			union all
+	  			<include refid="cancelCard" > </include>
+  			</if>
+  			<if test="delngSeCode.equals('transAll')" >
+	  			<include refid="transList" > </include>
+  			</if>
+  			<if test="delngSeCode.equals('transCard')" >
+	  			<include refid="transList" ></include>
+  			</if>
+  			<if test="delngSeCode.equals('transCash')" >
+	  			<include refid="transList" ><property name="codea" value="cash"/> </include>
+  			</if>
+  			<if test="delngSeCode.equals('cancelAll')" >
+	  			<include refid="cancelCash" > </include>
+	  			union all
+	  			<include refid="cancelCard" > </include>
+  			</if>
+  			<if test="delngSeCode.equals('cancelCard')" >
+	  			<include refid="cancelCard" > </include>
+  			</if>
+  			<if test="delngSeCode.equals('cancelCash')" >
+	  			<include refid="cancelCash" > </include>
+  			</if>  			
+  		) ORDER BY confm_dt DESC , usid 
+  	
+  	</select>
+	
+
+	
+  </mapper>

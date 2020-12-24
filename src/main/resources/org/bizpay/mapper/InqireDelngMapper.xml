@@ -10,13 +10,13 @@
 		 <if test="dateStart!=null and !dateStart.equals('') " >
 		 AND b.confm_dt between #{dateStart} and #{dateEnd}
 		 </if>
-		  <if test="bizCode!=null and !bizCode.equals('') and bizCode!='all' " >
+		  <if test="bizCode!=null and !bizCode.equals('') " >
 		     AND c.biz_code=#{bizCode}
 	     </if>
-	     <if test="delngSeCode!=null and !delngSeCode.equals('') and  delngSeCode!='all' " >
+	     <if test="delngSeCode!=null and !delngSeCode.equals('') " >
 	     	AND b.delng_se_code= #{delngSeCode}
 	     </if>
-	     <if test="calculateType!=null and !calculateType.equals('') and calculateType!='all'" >
+	     <if test="calculateType!=null and !calculateType.equals('') " >
 			AND e.calculate_type= #{calculateType}
 	     </if>
 	     
@@ -38,6 +38,15 @@
 	     <if test="tot!=0" >
 			AND b.splpc+b.vat= #{tot}
 	     </if>
+	    <if test="tid!=null and !tid.equals('')" >
+	    	<if test="tid.equals('SP01')">
+	    		AND (b.trmnlno = '2002307047' OR b.trmnlno = 'DPT0A17745' OR b.trmnlno = '2002307048' OR b.trmnlno = 'DPT0A17746')
+	    	</if>
+	    	<if test="tid.equals('SP02')">
+	    		AND (b.trmnlno = '2041700459' OR b.trmnlno = 'DPT0A17747' OR b.trmnlno = '2041700460' OR b.trmnlno = 'DPT0A17748')
+	    	</if>
+	    </if>
+	     
 	     <if test='badCardSearch=="Y"' >
 			AND	a.card_no IN 
 			( 
@@ -386,42 +395,54 @@
 	
 	<!-- 일자별(달력형)  데이터 조회 -->
 	<select id="transByDate" resultType="TransByDate">
-	select * from (
-		select distinct
-		    b.confm_dt ,
-		    b.delng_se_code,
-		    sum(b.splpc + b.vat) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totSum,
-		    count(1) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totCnt
-		from delng b
-		inner join MBER c
-			on b.mber_code = c.mber_code 
-		inner join biz d
-			on d.biz_code = c.biz_code
-		where 1=1
-		and b.delng_se_code IN ('CARD_ISSUE','CASH_RCIPT_ISSUE')
-		AND b.confm_dt between #{dateStart} and #{dateEnd}
-
-		union all
-		select distinct
-		    bo.confm_dt as confm_dt ,
-		    b.delng_se_code,
-		    sum(b.splpc + b.vat) over (PARTITION BY  bo.confm_dt ,  b.delng_se_code ) totSum,
-		    count(1) over (PARTITION BY bo.confm_dt,  b.delng_se_code ) totCnt
-		from delng b
-		inner join delng bo
-		on b.TRGET_RCIPT_NO = bo.RCIPT_NO 
-        and b.TRGET_MBER_CODE = bo.MBER_CODE
-        and b.confm_no = bo.confm_no
-		inner join MBER c
-			on b.mber_code = c.mber_code 
-		inner join biz d
-			on d.biz_code = c.biz_code
-		where 1=1
-		and b.delng_se_code IN ('CARD_CNCL','CASH_RCIPT_CNCL')
-		AND bo.confm_dt between #{dateStart} and #{dateEnd}
-
-		)
+		select * from (
+			-- 거래내역
+			select distinct
+			    b.confm_dt ,
+			    b.delng_se_code,
+			    sum(b.splpc + b.vat) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totSum,
+			    count(1) over (PARTITION BY  b.confm_dt ,  b.delng_se_code ) totCnt
+			from delng b
+			inner join MBER c
+				on b.mber_code = c.mber_code 
+			inner join biz d
+				on d.biz_code = c.biz_code
+			where 1=1
+			and b.delng_se_code IN ('CARD_ISSUE','CASH_RCIPT_ISSUE')
+			AND b.confm_dt between #{dateStart} and #{dateEnd}
 	
-		order by confm_dt , delng_se_code
+			union all
+			-- 현금취소내역 --  현금취소내역만 있고 현금 결제 내역이 없는 경우 다수
+			select distinct
+			    b.confm_dt as confm_dt ,
+			    'CASH_RCIPT_CNCL' as  delng_se_code,
+			    sum(b.splpc*-1 + b.vat*-1) over (PARTITION BY  b.confm_dt ) totSum,
+			    count(1) over (PARTITION BY b.confm_dt ) totCnt
+			from delng b
+			where 1=1
+			and b.delng_se_code IN ('CASH_RCIPT_CNCL')
+			AND b.confm_dt between #{dateStart} and #{dateEnd}
+			
+			union all
+			-- 카드취소내역 -- 1. 결제내역만 존재하고 취소내역이 없는 경우 2. 취소내역 결제내역 둘다 존재하지만 취소날짜자 존재하지 않는 경우 다수
+			select 
+		    distinct
+		    confm_dt,
+		    'CARD_CNCL' as delng_se_code ,
+		    sum(splpc + vat) over (PARTITION BY confm_dt ) totSum,
+			count(1) over (PARTITION BY confm_dt ) totCnt
+		from 
+		    (select
+
+		     SUBSTR(GET_CANCEL_DATE2(CONFM_NO ,MBER_CODE  ,TRGET_RCIPT_NO   )  , 0 , 8) as confm_dt , 
+		        delng_se_code , splpc , vat,CONFM_NO ,MBER_CODE
+		    from delng
+		    where 1=1
+			AND delng_se_code IN ('CARD_ISSUE')
+		    AND CARD_DELETE_YN = 'Y' 
+			AND confm_dt between #{dateStart} and #{dateEnd}
+		)aa
+		
+		)
 	</select>
   </mapper>

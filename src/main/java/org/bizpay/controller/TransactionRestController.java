@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bizpay.common.domain.InqireDelingParam;
+import org.bizpay.domain.InqireDelng;
 import org.bizpay.domain.TransByDate;
 import org.bizpay.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,4 +34,15 @@ public class TransactionRestController {
 		log.info("일자별 거래내역조회");
 		return new ResponseEntity<>( tService.TransByDateList(param), HttpStatus.OK);
 	}
+	
+	// 거래내역조회 and 취소내역조회
+	@RequestMapping(value = "transListSearch", method = RequestMethod.POST)
+	public ResponseEntity<List<InqireDelng>> transSearch(@RequestBody InqireDelingParam param) throws Exception{
+		log.info("검색기간별 거래내역조회 ");
+		log.info("============================================================================================= ");
+		log.info(param.toString());
+		log.info("============================================================================================= ");
+		return new ResponseEntity<>( tService.transSearchList(param), HttpStatus.OK);
+	}
+	
 }

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.AgencyMapper">
+  	
+  	<select id="summaryInfo" resultType="AgencySales" >
+  		        SELECT
+                    cmpnm,
+                    biz_type,
+                    dealer_kind,
+                    usid,
+                    tot,
+                    pymnt_rate,
+                    mber_name,
+                    company_name,
+                    biz_num,
+                    fee_rate,
+                    cnt,
+                    fee_distributor,
+                    fee_agency,
+                    fee_dealer,
+                    t1_biz_code,
+                    t1_cmpnm,
+                    t1_biz_type,
+                    t1_dealer_kind,
+                    t2_biz_code,
+                    t2_cmpnm,
+                    t2_biz_type,
+                    t2_dealer_kind,
+                    t3_biz_code,
+                    t3_cmpnm,
+                    t3_biz_type,
+                    t3_dealer_kind,
+                    (
+                        CASE
+                            WHEN t2_biz_code = '0000002' THEN t1_biz_code
+                            ELSE(
+                                    CASE
+                                        WHEN t3_biz_code = '0000002' THEN t2_biz_code
+                                        ELSE t3_biz_code
+                                    END
+                                )
+                        END
+                    )  AS t4,
+                    (
+                        CASE
+                            WHEN t2_biz_code = '0000002' THEN ''
+                            ELSE
+                                (
+                                    CASE
+                                        WHEN t3_biz_code = '0000002' THEN t1_biz_code
+                                        ELSE t2_biz_code
+                                    END
+                                )
+                        END
+                    )  AS t5,
+                    (
+                        CASE
+                            WHEN t2_biz_code = '0000002' THEN ''
+                            ELSE
+                                (
+                                    CASE
+                                        WHEN t3_biz_code = '0000002' THEN ''
+                                        ELSE t1_biz_code
+                                    END
+                                )
+                        END
+                    )  AS t6
+                FROM
+                    (
+                        SELECT
+                            cmpnm,
+                            biz_type,
+                            dealer_kind,
+                            usid,
+                            tot,
+                            pymnt_rate,
+                            mber_name,
+                            company_name,
+                            biz_num,
+                            fee_rate,
+                            cnt,
+                            fee_distributor,
+                            fee_agency,
+                            fee_dealer,
+                            t1_biz_code,
+                            t1_cmpnm,
+                            t1_biz_type,
+                            t1_dealer_kind,
+                            t2_biz_code,
+                            t2_cmpnm,
+                            t2_biz_type,
+                            t2_dealer_kind,
+                            t3_biz_code,
+                            (
+                                SELECT cmpnm
+                                FROM biz
+                                WHERE biz_code = t3_biz_code
+                            )  AS t3_cmpnm,
+                            (
+                                SELECT biz_type
+                                FROM biz
+                                WHERE biz_code = t3_biz_code
+                            )  AS t3_biz_type,
+                            (
+                                SELECT dealer_kind
+                                FROM biz
+                                WHERE biz_code = t3_biz_code
+                            )  AS t3_dealer_kind
+                        FROM
+                            (
+                                SELECT
+                                    cmpnm,
+                                    biz_type,
+                                    dealer_kind,
+                                    usid,
+                                    tot,
+                                    pymnt_rate,
+                                    mber_name,
+                                    company_name,
+                                    biz_num,
+                                    fee_rate,
+                                    cnt,
+                                    fee_distributor,
+                                    fee_agency,
+                                    fee_dealer,
+                                    t1_biz_code,
+                                    t1_cmpnm,
+                                    t1_biz_type,
+                                    t1_dealer_kind,
+                                    t2_biz_code,
+                                    t2_cmpnm,
+                                    t2_biz_type,
+                                    t2_dealer_kind,
+                                    (SELECT trget_biz_code
+                                        FROM biz
+                                        WHERE biz_code = t2_biz_code
+                                    ) AS t3_biz_code
+                                FROM
+                                    (
+                                        SELECT
+                                            cmpnm,
+                                            biz_type,
+                                            dealer_kind,
+                                            usid,
+                                            tot,
+                                            pymnt_rate,
+                                            mber_name,
+                                            company_name,
+                                            biz_num,
+                                            fee_rate,
+                                            cnt,
+                                            fee_distributor,
+                                            fee_agency,
+                                            fee_dealer,
+                                            t1_biz_code,
+                                            t1_cmpnm,
+                                            t1_biz_type,
+                                            t1_dealer_kind,
+                                            t2_biz_code,
+                                            (
+                                                SELECT
+                                                    cmpnm
+                                                FROM
+                                                    biz
+                                                WHERE
+                                                    biz_code = t2_biz_code
+                                            )  AS t2_cmpnm,
+                                            (
+                                                SELECT
+                                                    biz_type
+                                                FROM
+                                                    biz
+                                                WHERE
+                                                    biz_code = t2_biz_code
+                                            )  AS t2_biz_type,
+                                            (SELECT dealer_kind FROM biz
+                                                WHERE biz_code = t2_biz_code
+                                            )  AS t2_dealer_kind
+                                        FROM
+                                            (SELECT
+                                                    cmpnm,
+                                                    biz_type,
+                                                    dealer_kind,
+                                                    usid,
+                                                    tot,
+                                                    pymnt_rate,
+                                                    mber_name,
+                                                    company_name,
+                                                    biz_num,
+                                                    fee_rate,
+                                                    cnt,
+                                                    fee_distributor,
+                                                    fee_agency,
+                                                    fee_dealer,
+                                                    t1_biz_code,
+                                                    cmpnm        AS t1_cmpnm,
+                                                    biz_type     AS t1_biz_type,
+                                                    dealer_kind  AS t1_dealer_kind,
+                                                    (SELECT trget_biz_code FROM biz
+                                                        WHERE biz_code = t1_biz_code
+                                                    ) AS t2_biz_code
+                                                FROM (
+                                                        SELECT  *
+                                                        FROM
+                                                            (
+                                                                SELECT
+                                                                    a.biz_code               AS t1_biz_code,
+                                                                    a.cmpnm,
+                                                                    a.biz_type,
+                                                                    a.dealer_kind,
+                                                                    b.usid,
+                                                                    SUM(splpc + vat)           AS tot,
+                                                                    a.pymnt_rate,
+                                                                    d.mber_name,
+                                                                    d.company_name,
+                                                                    d.biz_num,
+                                                                    d.fee_rate,
+                                                                    COUNT(d.mber_name)       cnt,
+                                                                    d.fee_distributor,
+                                                                    d.fee_agency,
+                                                                    d.fee_dealer
+                                                                FROM
+                                                                    biz         a,
+                                                                    mber        b,
+                                                                    delng       c,
+                                                                    mber_basis  d
+                                                                WHERE
+                                                                        a.biz_code = b.biz_code
+                                                                    AND a.biz_code IN (
+                                                                        SELECT biz_code FROM biz
+                                                                        START WITH biz_code = #{bizCode}
+                                                                        CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code
+                                                                    )
+                                                                    AND b.mber_code = c.mber_code
+                                                                    AND b.mber_code = d.mber_code
+                                                                    AND c.card_delete_yn = 'N'
+                                                                    AND c.confm_dt between #{dateStart} and #{dateEnd}
+                                                                    AND c.delng_se_code = 'CARD_ISSUE'
+                                                                    <if test=""> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
+                                                                    AND A.biz_code= #{biz_code}
+                                                                    </if>
+                                                                    <if test="mberName!=null and !mberName.equals('')" >
+																		AND d.mber_name like '%'||#{mberName}||'%'
+																     </if>
+																    <if test="bizNum!=null and !bizNum.equals('') " >
+															  			AND d.biz_num like '%'||#{bizNum}||'%'
+															  		</if>
+															  		<if test="mberId!=null and !mberId.equals('') " >
+															  			AND d.induty_id like '%'||#{usid}||'%' 
+															  		</if>
+                                                                GROUP BY a.cmpnm,a.biz_type,a.dealer_kind,b.usid,a.biz_code,a.pymnt_rate,d.mber_name,
+                                                                    d.company_name,d.biz_num,d.fee_rate,d.fee_distributor,d.fee_agency,d.fee_dealer
+                                                                HAVING
+                                                                    SUM(splpc + vat) != 0
+                                                            )
+                                                    )
+                                            )
+                                    )
+                            )
+                    ) ORDER BY t4,t5 DESC,t6 DESC
+        
+  	
+  	</select>
+	
+
+	
+  </mapper>
