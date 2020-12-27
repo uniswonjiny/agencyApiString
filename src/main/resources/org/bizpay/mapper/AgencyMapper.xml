@@ -230,7 +230,7 @@
                                                                         a.biz_code = b.biz_code
                                                                     AND a.biz_code IN (
                                                                         SELECT biz_code FROM biz
-                                                                        START WITH biz_code = #{bizCode}
+                                                                        START WITH biz_code = #{memberBizeCode}
                                                                         CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code
                                                                     )
                                                                     AND b.mber_code = c.mber_code
@@ -238,8 +238,8 @@
                                                                     AND c.card_delete_yn = 'N'
                                                                     AND c.confm_dt between #{dateStart} and #{dateEnd}
                                                                     AND c.delng_se_code = 'CARD_ISSUE'
-                                                                    <if test=""> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
-                                                                    AND A.biz_code= #{biz_code}
+                                                                    <if test="bizCode!=null and !bizCode.equals('')"> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
+                                                                    AND A.biz_code= #{bizCode}
                                                                     </if>
                                                                     <if test="mberName!=null and !mberName.equals('')" >
 																		AND d.mber_name like '%'||#{mberName}||'%'

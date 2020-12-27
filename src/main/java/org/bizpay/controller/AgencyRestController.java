@@ -25,7 +25,7 @@ public class AgencyRestController {
 	 AgencyService service;
 	
 	// 대리점매출1
-	@RequestMapping(value = "agency", method = RequestMethod.POST)
+	@RequestMapping(value = "agency1", method = RequestMethod.POST)
 	public ResponseEntity<List<AgencySales>> transByDay(@RequestBody AgencySalesParam param) throws Exception{
 		log.info("일자별 거래내역조회");
 		return new ResponseEntity<>( service.agencySalesList(param), HttpStatus.OK);

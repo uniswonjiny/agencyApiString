@@ -16,10 +16,10 @@ public class AgencySales {
 	private int feeAgency;
 	private int feeDealer;
 	private int feeDistributor;
-	private float feeRate;
+	private double feeRate;
 	private int key;
 	private String mberName;
-	private float pymntRate;
+	private double pymntRate;
 	private String t1BizCode ;
 	private String t1BizType;
 	private String t1Cmpnm;
@@ -33,16 +33,23 @@ public class AgencySales {
 	private String t3Cmpnm;
 	private int t3dealerKind;
 	private String t4;
-	private long tot ;
+	private double tot ;
 	private String usid;
-	private String agencyName; // 대리점명
-	private long agencyIncome; // 대리점수익
-	private String dealerName; // 딜러이름
-	private long dealerIncome; // 딜러수익
+	
 	private String totSellPrice;  // 총판매금액;
 	private String soleAgencyName; // 총판이름
-	private long soleAgencyIncome; // 총판수익
+	private double soleAgencyIncome; // 총판수익
+	private String soleAgencyBizType; // 총판_biz_type
+	
+	private String agencyName; // 대리점명
+	private double agencyIncome; // 대리점수익
+	private String agencyBizType; // 대리점_biz_type
+	
+	private String dealerName; // 딜러이름
+	private double dealerIncome; // 딜러수익
+	private String dealerBizType; // 딜러_biz_type
+	
 	private int sellerFee; //판매자 수수료
-	private long sellerIncome; // 판매자 지급금액 수익
+	private double sellerIncome; // 판매자 지급금액 수익
 
 }
