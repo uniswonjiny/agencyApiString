@@ -13,9 +13,9 @@ public class AgencySales {
 	private int cnt;
 	private String companyName;
 	private int dealerKind;
-	private int feeAgency;
-	private int feeDealer;
-	private int feeDistributor;
+	private double feeAgency;
+	private double feeDealer;
+	private double feeDistributor;
 	private double feeRate;
 	private int key;
 	private String mberName;
@@ -49,7 +49,7 @@ public class AgencySales {
 	private double dealerIncome; // 딜러수익
 	private String dealerBizType; // 딜러_biz_type
 	
-	private int sellerFee; //판매자 수수료
+	private double sellerFee; //판매자 수수료
 	private double sellerIncome; // 판매자 지급금액 수익
 
 }
