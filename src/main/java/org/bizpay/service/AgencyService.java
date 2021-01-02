@@ -5,10 +5,13 @@ import java.util.List;
 import org.bizpay.common.domain.AgencySalesParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
+import org.bizpay.domain.AgencySales3;
 
 public interface AgencyService {
 	// 대리점 매출수익
 	public List<AgencySales> agencySalesList(AgencySalesParam param) throws Exception;
 	// 추천 수수료수익
 	public List<AgencySales2> agencySalesList2(AgencySalesParam param) throws Exception;
+	// 가맹비 수익
+	public List<AgencySales3> agencySalesList3(AgencySalesParam param) throws Exception;
 }
