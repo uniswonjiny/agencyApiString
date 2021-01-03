@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
+import org.bizpay.common.domain.SellerParam;
 import org.bizpay.common.util.TaxCalculator;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.SellerSummary;
 import org.bizpay.mapper.AgencyMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -153,6 +155,17 @@ public class AgencyServiceImpl implements AgencyService {
 		list2.addAll(list3);
 		System.out.println(list2.toString());
 		return list2;
+	}
+
+	@Override
+	public List<SellerSummary> sellerSummaryList(SellerParam param) throws Exception {
+		List<SellerSummary> list = mapper.sellerSummaryList(param);
+		for (SellerSummary dto : list) {
+			TaxCalculator tax=new TaxCalculator(true,false,false,dto.getFeeRate() ,dto.getTot());
+			dto.setPay(tax.getSupplyAmount().subtract(tax.getTaxAmount() ).doubleValue());
+			dto.setFee(tax.getTaxAmount().doubleValue());
+		}
+		return list;
 	}
 
 }

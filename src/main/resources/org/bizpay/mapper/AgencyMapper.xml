@@ -438,4 +438,50 @@
  	ORDER BY recommend_biz_code  
 	</select>
 	
+	<select id="sellerSummaryList" resultType="SellerSummary" >
+		SELECT
+			case b.pay_type when 'N' then '일반' else ( case b.pay_type  when 'B' then '바로정산' else '익일입금' end ) end as kpay_type,
+			   a.cmpnm,
+		       b.induty_id AS usid,
+			   SUM( case when c.delng_se_code IN('CARD_ISSUE','CARD_CNCL') then splpc+vat else 0 end ) AS card_tot,
+			   SUM( case when c.delng_se_code IN('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL') then splpc+vat else 0 end ) AS cash_tot,
+			   SUM( splpc+vat ) AS tot,
+			   b.fee_rate, 
+			   b.mber_name, 
+			   b.company_name, 
+			   b.biz_num, 
+			   b.pay_type, 
+			   SUM(case when c.delng_se_code IN('CARD_ISSUE','CARD_CNCL') then 1 else 0 end) AS card_cnt, 
+			   SUM(case when c.delng_se_code IN('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL') then 1 else 0 end) AS cash_cnt, 
+			   COUNT(b.mber_name) AS tot_cnt 
+		  FROM biz a,mber_basis b,delng c 
+		 WHERE a.biz_code=b.biz_code 
+		   AND b.mber_code=c.mber_code 
+		   AND c.card_delete_yn = 'N'
+		   AND b.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
+		   AND c.delng_se_code IN('CARD_ISSUE','CASH_RCIPT_ISSUE') 
+		   AND c.confm_dt between #{dateStart} and #{dateEnd} 
+	<if test="bizCode!=null and !bizCode.equals('')"> 
+		AND A.biz_code= #{bizCode}
+	</if>
+	<if test="bizNum!=null and !bizNum.equals('') " >
+		AND a.biz_num like '%'||#{bizNum}||'%'
+	</if>
+	<if test="mberId!=null and !mberId.equals('') " >
+		AND a.induty_id like '%'||#{mberId}||'%' 
+	</if>
+	<if test="companyName!=null and !companyName.equals('') " >
+		AND a.company_name like '%'||#{companyName}||'%' 
+	</if>
+	<if test="mberName!=null and !mberName.equals('') " >
+		AND b.mber_name like '%'||#{mberName}||'%' 
+	</if>
+		GROUP BY a.cmpnm,b.induty_id,b.fee_rate,b.mber_name, b.company_name, b.biz_num , b.pay_type 
+			HAVING SUM(splpc+vat)!=0 
+		    ORDER BY a.cmpnm,b.induty_id 
+			
+	
+	
+	</select>
+	
   </mapper>

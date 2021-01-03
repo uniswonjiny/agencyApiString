@@ -3,9 +3,11 @@ package org.bizpay.controller;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
+import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.SellerSummary;
 import org.bizpay.service.AgencyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,5 +45,12 @@ public class AgencyRestController {
 	public ResponseEntity<List<AgencySales3>> agency3(@RequestBody AgencySalesParam param) throws Exception{
 		log.info("일자별 거래내역조회");
 		return new ResponseEntity<>( service.agencySalesList3(param), HttpStatus.OK);
+	}
+	
+	// 판매자 매출
+	@RequestMapping(value = "seller", method = RequestMethod.POST)
+	public ResponseEntity<List<SellerSummary>> seller(@RequestBody SellerParam param) throws Exception{
+		log.info("일자별 거래내역조회");
+		return new ResponseEntity<>( service.sellerSummaryList(param), HttpStatus.OK);
 	}
 }
