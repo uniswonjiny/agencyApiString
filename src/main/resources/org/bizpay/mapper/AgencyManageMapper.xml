@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.AgencyManageMapper">
+  	<!-- 대리점목록 -->
+  	<select id="agencyList" resultType="AgencyManage" >
+				select a.bizrno, a.cmpnm, a.trmnl_no, a.pg_trmnl_no, a.pg_van, a.pay_bprprr, a.pay_telno, a.pay_cmpnm, a.pay_bizrno, a.pay_bplc
+						, a.m_telno, a.email, a.bank_name, a.bank_serial, a.create_dt, a.bank_user, a.dealer_rate, a.member_input_yn, a.member_rate, a.memo, a.history_memo
+				        , a.join_amt, a.limit_one, a.limit_day, a.limit_month, a.limit_year, a.installment_months
+				        , a.biz_limit_one, a.biz_limit_day, a.biz_limit_month, a.biz_limit_year, a.biz_installment_months
+				        , a.pg_gb, a.van_gb, a.biz_type
+							, b.usid, b.mber_code, b.biz_code, a.bprprr, a.bplc, a.biz_telno, a.pymnt_rate, a.dealer_id, a.dt, a.trget_biz_code, a.recommend_biz_code, a.baro_rate, a.etc_rate, a.dealer_kind, 
+				(SELECT code_nm FROM code WHERE group_nm = '대리점구분' AND sn = nvl(a.dealer_kind, (SELECT MAX(sn) FROM code WHERE group_nm = '대리점구분'))) as gubun,
+				(SELECT cmpnm FROM biz WHERE biz_code = a.trget_biz_code) as target,
+				(SELECT cmpnm FROM biz WHERE biz_code = a.recommend_biz_code) as recommend, 	
+				GET_AGENCY(a.trget_biz_code, a.dealer_kind) as agent,
+				GET_DISTRIBUTOR(a.trget_biz_code, a.dealer_kind) as distributor,
+				(SELECT COUNT(*) FROM mber WHERE biz_code=b.biz_code AND author_code NOT IN('AUTHOR_MNGR','AUTHOR_DEALER')) AS mber_cnt, 
+				(SELECT hist_cn FROM mber_hist2 WHERE mber_code=b.mber_code AND sn=(SELECT MAX(sn) FROM mber_hist2 WHERE mber_code=b.mber_code AND hist_code='MH_USE_AT')) as use_at, 
+				(SELECT creat_dt FROM mber_hist2 WHERE mber_code=b.mber_code AND sn=(SELECT MAX(sn) FROM mber_hist2 WHERE mber_code=b.mber_code AND hist_code='MH_USE_AT')) as creat_dt 
+				FROM biz a, mber b
+				WHERE a.biz_code=b.biz_code
+		  		<if test="cmpnm!=null and !cmpnm.equals('')"> 
+                	AND A.cmpnm= #{cmpnm}
+                </if>
+                <if test="dealerId!=null and !dealerId.equals('')"> 
+                	AND A.dealer_id= #{dealerId}
+                </if>
+                <if test="useAt!=null and !useAt.equals('')"> 
+                	AND b.use_at= #{useAt}
+                </if>
+				<if test="bizNum!=null and !bizNum.equals('')"> <!-- 암호화해서 비교해야 한다. -->
+                	AND b.bizrno= #{bizNum}
+                </if>
+		
+				AND b.author_code in('AUTHOR_MNGR','AUTHOR_DEALER') 
+				AND a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
+				ORDER BY b.biz_code DESC 
+		
+
+  	</select>
+  	
+  	<update id="">
+  	UPDATE BIZ
+		SET 
+		    BIZ_CODE               = #{}, 
+		    BIZRNO                 = #{bizrno}, <!-- 필수 :  암호화후저장  --> 
+		    CMPNM                  = #{cmpnm}, 
+		    BPRPRR                 =  #{bprprr}, 
+		    BPLC                   = #{bprprr} , 
+		    BIZ_TELNO              = #{bizTelno}, 
+		    
+		    <!--  HEADOFFICE -->
+		    TRMNL_NO            = #{}, 
+		    PG_TRMNL_NO       = #{}, 
+		    PG_VAN                = #{},
+		    PG_GB                  = #{}, 
+		    VAN_GB                = #{},
+		    BIZ_TYPE               = #{}, 
+		    <!--end !HEADOFFICE -->
+		    
+		    <!-- 유니코어 변경안되도록함 즉 최고 관리자를 변경못하도록 막음 -->
+		    DEALER_KIND            = #{}, 
+		    <!--end ! -->
+		    
+		    <if test="useAt!=null and !useAt.equals('')"> <!-- 딜러 수정기준대리점 소속대리점  -->
+		    	
+		    </if>
+		    
+		    PYMNT_RATE             = #{}, 
+		    DEALER_ID              = #{}, 
+		    DT                     = #{}, 
+		    TRGET_BIZ_CODE         = #{}, 
+		    
+		    PAY_BPRPRR             = #{}, 
+		    PAY_TELNO              = #{}, 
+		    PAY_CMPNM              = #{}, 
+		    PAY_BIZRNO             = #{}, 
+		    PAY_BPLC               = #{}, 
+		  
+		 
+		    M_TELNO                = #{}, 
+		    EMAIL                  = #{}, 
+		    BANK_NAME              = #{}, 
+		    BANK_SERIAL            = #{}, 
+		    BANK_USER              = #{}, 
+		    DEALER_RATE            = #{}, 
+		    MEMBER_INPUT_YN        = #{}, 
+		    MEMBER_RATE            = #{}, 
+		    LIMIT_ONE              = #{}, 
+		    LIMIT_DAY              = #{}, 
+		    LIMIT_MONTH            = #{}, 
+		    LIMIT_YEAR             = #{}, 
+		    INSTALLMENT_MONTHS     = #{}, 
+		    BIZ_LIMIT_ONE          = #{}, 
+		    BIZ_LIMIT_DAY          = #{}, 
+		    BIZ_LIMIT_MONTH        = #{}, 
+		    BIZ_LIMIT_YEAR         = #{}, 
+		    BIZ_INSTALLMENT_MONTHS = #{}, 
+	
+		   
+		    MEMO                   = #{}, 
+		    HISTORY_MEMO           = #{}, 
+		    CREATE_DT              = #{}, 
+		    RECOMMEND_BIZ_CODE     = #{}, 
+		    BARO_RATE              = #{}, 
+		    ETC_RATE               = #{}, 
+		    JOIN_AMT               = #{joinAmt}
+		WHERE #{memberBizeCode}
+  	</update>
+  	<!--  존재하는 대리점인지 확인 -->
+  	<select id="bizCount" resultType="int">
+  	SELECT count(1) FROM biz WHERE biz_code= #{val}
+  	</select>
+  	
+	<!-- 하위대리점에 속하는 대리점인지 확인 -->
+	<select id="agencyConfirm1" resultType="int">
+		SELECT nvl(min(dealer_kind), 0) as minDealerKind
+		FROM ( SELECT biz_code, nvl(dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind FROM biz START WITH biz_code =  #{bizCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code ) a 
+		WHERE a.biz_code != #{val}
+	</select>
+	
+	<!-- 소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다-->
+	<select id="agencyConfirm2" resultType="int">
+		SELECT nvl(min(dealer_kind), 0) as minDealerKind
+		FROM ( SELECT biz_code, nvl(dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind FROM biz START WITH biz_code = #{bizCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code ) a
+		WHERE a.biz_code != #{val}	
+	</select>
+
+  </mapper>

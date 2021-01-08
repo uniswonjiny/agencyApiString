@@ -15,5 +15,8 @@ public class SellerParam {
 	private String mberName;// 판매자성명
 	private String mberId; // 판매자 아이디
 	private String companyName; // 상호
-	private String bizNum; // 사업자 번호
+	private String bizNum; // 사업자 번호 
+	private String calculateType; // 정산구분-직거래상태
+	private String delngSeCode; // 거래구분코드 - 매출구분
+	private int confmNo; // 승인번호
 }

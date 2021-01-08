@@ -7,6 +7,7 @@ import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.SalesAdjustment;
 import org.bizpay.domain.SellerSummary;
 import org.bizpay.service.AgencyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +53,19 @@ public class AgencyRestController {
 	public ResponseEntity<List<SellerSummary>> seller(@RequestBody SellerParam param) throws Exception{
 		log.info("일자별 거래내역조회");
 		return new ResponseEntity<>( service.sellerSummaryList(param), HttpStatus.OK);
+	}
+	
+	// 매출조정
+	@RequestMapping(value = "salesAdjustment", method = RequestMethod.POST)
+	public ResponseEntity<List<SalesAdjustment>> salesAdjustment(@RequestBody SellerParam param) throws Exception{
+		log.info("매출조정조회");
+		return new ResponseEntity<>( service.salesAdjustment(param), HttpStatus.OK);
+	}
+	
+	//매출취소
+	@RequestMapping(value = "cancelAdjustment", method = RequestMethod.POST)
+	public ResponseEntity<List<SalesAdjustment>> cancelAdjustment(@RequestBody SellerParam param) throws Exception{
+		log.info("매출취소");
+		return new ResponseEntity<>( service.salesAdjustment(param), HttpStatus.OK);
 	}
 }

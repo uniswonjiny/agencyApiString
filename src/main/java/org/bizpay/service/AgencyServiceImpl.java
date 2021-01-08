@@ -5,10 +5,12 @@ import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
 import org.bizpay.common.domain.SellerParam;
+import org.bizpay.common.util.StringUtils;
 import org.bizpay.common.util.TaxCalculator;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.SalesAdjustment;
 import org.bizpay.domain.SellerSummary;
 import org.bizpay.mapper.AgencyMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ import lombok.extern.java.Log;
 public class AgencyServiceImpl implements AgencyService {
 	@Autowired
 	AgencyMapper mapper;
+	
+	@Autowired
+	StringUtils stringUtil;
 	
 	@Override
 	public List<AgencySales> agencySalesList(AgencySalesParam param) throws Exception {
@@ -161,6 +166,17 @@ public class AgencyServiceImpl implements AgencyService {
 	public List<SellerSummary> sellerSummaryList(SellerParam param) throws Exception {
 		List<SellerSummary> list = mapper.sellerSummaryList(param);
 		for (SellerSummary dto : list) {
+			TaxCalculator tax=new TaxCalculator(true,false,false,dto.getFeeRate() ,dto.getTot());
+			dto.setPay(tax.getSupplyAmount().subtract(tax.getTaxAmount() ).doubleValue());
+			dto.setFee(tax.getTaxAmount().doubleValue());
+		}
+		return list;
+	}
+
+	@Override
+	public List<SalesAdjustment> salesAdjustment(SellerParam param) throws Exception {
+		List<SalesAdjustment> list = mapper.salesAdjustmentList(param);
+		for (SalesAdjustment dto : list) {
 			TaxCalculator tax=new TaxCalculator(true,false,false,dto.getFeeRate() ,dto.getTot());
 			dto.setPay(tax.getSupplyAmount().subtract(tax.getTaxAmount() ).doubleValue());
 			dto.setFee(tax.getTaxAmount().doubleValue());

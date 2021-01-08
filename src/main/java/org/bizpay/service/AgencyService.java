@@ -7,6 +7,7 @@ import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.SalesAdjustment;
 import org.bizpay.domain.SellerSummary;
 
 public interface AgencyService {
@@ -18,4 +19,6 @@ public interface AgencyService {
 	public List<AgencySales3> agencySalesList3(AgencySalesParam param) throws Exception;
 	// 대리점 매출
 	public List<SellerSummary> sellerSummaryList(SellerParam param) throws Exception;
+	// 매출조정 내역조회
+	public List<SalesAdjustment> salesAdjustment(SellerParam param) throws Exception;
 }
