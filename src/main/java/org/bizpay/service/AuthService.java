@@ -18,5 +18,8 @@ public interface AuthService {
 	public MemberInfo loginConfirm(LoginParam param) throws Exception;
 	// 사용자 정보확인
 	public MemberInfo memberInfo(String userId) throws Exception;
-	
+	// 사용자 Id 확인
+	public int memberIdChk(String userId) throws Exception;
+	// 사업자 번호 확인
+	public int biznoChk(String bizno) throws Exception;
 }

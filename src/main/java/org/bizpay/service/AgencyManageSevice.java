@@ -11,4 +11,6 @@ public interface AgencyManageSevice {
 	public List<AgencyManage> agencyList(AgencyManageParam params ) throws Exception;
 	// 대리점 정보 수정
 	public HashMap<String, Object> upatgeAgency(AgencyManageParam params ) throws Exception;
+	// 대리점 정보 입력
+	public HashMap<String, Object> insertAgency(AgencyManageParam params ) throws Exception;
 }

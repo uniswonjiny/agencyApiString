@@ -109,4 +109,63 @@
 			CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code
 		ORDER BY cmpnm
 	</select>
+	
+	<select id="dealerKind" resultType="String">
+	select
+	 case dealer_kind 
+		        when '31' then 'HEADOFFICE'
+		        when '32' then 'DISTRIBUTOR'
+		        when '33' then 'AGENCY'
+		        else 'DEALER'
+		        end as grade
+	FROM
+		    biz
+		where biz_code = #{val}
+	</select>
+	
+	<!--  사용자 사용여부만 수정한다. -->
+	<update id="updateMberUseAt" parameterType="HashMap">
+	UPDATE MBER
+	SET 
+	    USE_AT =  #{useAt}
+	WHERE MBER_CODE = #{mberCode}
+	</update>
+	
+	<!-- 사용여부 변경 이력 입력  -->
+	<insert id="insertMberHistUserAt" parameterType="HashMap">
+	insert 
+	into 
+	mber_hist2(
+		mber_code,
+		sn,
+		hist_code,
+		hist_cn
+	)
+	values (
+		#{mberCode},<!--  수정당하는 대상 -->
+		nvl( (SELECT MAX(sn)+1 FROM mber_hist2 WHERE mber_code= #{mberCode} ) , 1) ,
+		'MH_USE_AT',
+		#{useAt} 
+	)
+	</insert>
+	
+	<!-- 추천대리점 변경  -->
+	<update id="updateRecommendBizCode" parameterType="HashMap">
+		update mber_basis set recommend_biz_code = #{recommendBizCode} where biz_Code  =  #{bizCode}
+	</update>
+	<!-- 사용자 아이디 존재 확인  -->
+	<select id="selectMemberUsidChk" resultType="int">
+		SELECT
+			count(1)
+		FROM
+		    mber 
+		where usid = #{val}
+
+	</select>
+	
+	<!-- 사업자번호 확인  -->
+	<select id="selectBizrno" resultType="int">
+		select count(1) from biz where bizrno =  #{val}
+	</select>
+	
   </mapper>

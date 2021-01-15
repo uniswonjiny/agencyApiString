@@ -17,7 +17,7 @@
 				GET_AGENCY(a.trget_biz_code, a.dealer_kind) as agent,
 				GET_DISTRIBUTOR(a.trget_biz_code, a.dealer_kind) as distributor,
 				(SELECT COUNT(*) FROM mber WHERE biz_code=b.biz_code AND author_code NOT IN('AUTHOR_MNGR','AUTHOR_DEALER')) AS mber_cnt, 
-				(SELECT hist_cn FROM mber_hist2 WHERE mber_code=b.mber_code AND sn=(SELECT MAX(sn) FROM mber_hist2 WHERE mber_code=b.mber_code AND hist_code='MH_USE_AT')) as use_at, 
+				Nvl((SELECT hist_cn FROM mber_hist2 WHERE mber_code=b.mber_code AND sn=(SELECT MAX(sn) FROM mber_hist2 WHERE mber_code=b.mber_code AND hist_code='MH_USE_AT')) , 'N') as use_at, 
 				(SELECT creat_dt FROM mber_hist2 WHERE mber_code=b.mber_code AND sn=(SELECT MAX(sn) FROM mber_hist2 WHERE mber_code=b.mber_code AND hist_code='MH_USE_AT')) as creat_dt 
 				FROM biz a, mber b
 				WHERE a.biz_code=b.biz_code
@@ -41,73 +41,56 @@
 
   	</select>
   	
-  	<update id="">
+  	<update id="updateBiz">
   	UPDATE BIZ
 		SET 
-		    BIZ_CODE               = #{}, 
 		    BIZRNO                 = #{bizrno}, <!-- 필수 :  암호화후저장  --> 
+		    DEALER_ID              = #{dealerId}, 
 		    CMPNM                  = #{cmpnm}, 
 		    BPRPRR                 =  #{bprprr}, 
 		    BPLC                   = #{bprprr} , 
 		    BIZ_TELNO              = #{bizTelno}, 
 		    
 		    <!--  HEADOFFICE -->
-		    TRMNL_NO            = #{}, 
-		    PG_TRMNL_NO       = #{}, 
-		    PG_VAN                = #{},
-		    PG_GB                  = #{}, 
-		    VAN_GB                = #{},
-		    BIZ_TYPE               = #{}, 
+		    TRMNL_NO            = #{trmnlNo}, 
+		    PG_TRMNL_NO       = #{pgTrmnlNo}, 
+		    PG_VAN                = #{pgVan},
+		    PG_GB                  = #{pgGb}, 
+		    VAN_GB                = #{vanGb},
+		    BIZ_TYPE               = #{bizType}, 
 		    <!--end !HEADOFFICE -->
-		    
-		    <!-- 유니코어 변경안되도록함 즉 최고 관리자를 변경못하도록 막음 -->
-		    DEALER_KIND            = #{}, 
-		    <!--end ! -->
-		    
-		    <if test="useAt!=null and !useAt.equals('')"> <!-- 딜러 수정기준대리점 소속대리점  -->
-		    	
-		    </if>
-		    
-		    PYMNT_RATE             = #{}, 
-		    DEALER_ID              = #{}, 
-		    DT                     = #{}, 
-		    TRGET_BIZ_CODE         = #{}, 
-		    
-		    PAY_BPRPRR             = #{}, 
-		    PAY_TELNO              = #{}, 
-		    PAY_CMPNM              = #{}, 
-		    PAY_BIZRNO             = #{}, 
-		    PAY_BPLC               = #{}, 
-		  
-		 
-		    M_TELNO                = #{}, 
-		    EMAIL                  = #{}, 
-		    BANK_NAME              = #{}, 
-		    BANK_SERIAL            = #{}, 
-		    BANK_USER              = #{}, 
-		    DEALER_RATE            = #{}, 
-		    MEMBER_INPUT_YN        = #{}, 
-		    MEMBER_RATE            = #{}, 
-		    LIMIT_ONE              = #{}, 
-		    LIMIT_DAY              = #{}, 
-		    LIMIT_MONTH            = #{}, 
-		    LIMIT_YEAR             = #{}, 
-		    INSTALLMENT_MONTHS     = #{}, 
-		    BIZ_LIMIT_ONE          = #{}, 
-		    BIZ_LIMIT_DAY          = #{}, 
-		    BIZ_LIMIT_MONTH        = #{}, 
-		    BIZ_LIMIT_YEAR         = #{}, 
-		    BIZ_INSTALLMENT_MONTHS = #{}, 
-	
 		   
-		    MEMO                   = #{}, 
-		    HISTORY_MEMO           = #{}, 
-		    CREATE_DT              = #{}, 
-		    RECOMMEND_BIZ_CODE     = #{}, 
-		    BARO_RATE              = #{}, 
-		    ETC_RATE               = #{}, 
-		    JOIN_AMT               = #{joinAmt}
-		WHERE #{memberBizeCode}
+		    DEALER_KIND            = #{dealerKind}, 		    
+   			TRGET_BIZ_CODE        = #{trgetBizCode}, 
+	  		RECOMMEND_BIZ_CODE     = #{recommendBizCode},
+	  		PAY_BPRPRR             = #{payBprprr}, 
+	  		PAY_TELNO              = #{payTelno}, 
+	  		PAY_CMPNM              = #{payCmpnm}, 
+	  		PAY_BIZRNO             = #{payBizrno}, 
+	  		PAY_BPLC               = #{payBplc},
+	  		M_TELNO                = #{mTelno}, 
+	  		EMAIL                  = #{email},
+	  		BANK_NAME              = #{bankName},
+	  		BANK_SERIAL            = #{bankSerial},
+	  		BANK_USER              = #{bankUser}, 
+	  		DEALER_RATE            = #{dealerRate}, 
+	  		MEMBER_INPUT_YN        = #{memberInputYn}, 
+	  		MEMBER_RATE            = #{memberRate},
+	  		MEMO                   = #{memo}, 
+		    HISTORY_MEMO           = #{historyMemo}, 
+	  		LIMIT_ONE              = #{limitOne}, 
+		    LIMIT_DAY              = #{limitDay}, 
+		    LIMIT_MONTH            = #{limitMonth}, 
+		    LIMIT_YEAR             = #{limitYear}, 
+		    INSTALLMENT_MONTHS     = #{installmentMonths}, 
+		    BIZ_LIMIT_ONE          = #{bizLimitOne}, 
+		    BIZ_LIMIT_DAY          = #{bizLimitDay}, 
+		    BIZ_LIMIT_MONTH        = #{bizLimitMonth}, 
+		    BIZ_LIMIT_YEAR         = #{bizLimitYear}, 
+		    BIZ_INSTALLMENT_MONTHS = #{bizInstallmentMonths},
+		    JOIN_AMT               = #{joinAmt}, 		   
+		    DT                     = SYSDATE
+		WHERE BIZ_CODE     = #{bizCode}		 
   	</update>
   	<!--  존재하는 대리점인지 확인 -->
   	<select id="bizCount" resultType="int">
@@ -121,11 +104,206 @@
 		WHERE a.biz_code != #{val}
 	</select>
 	
-	<!-- 소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다-->
+	<!-- trget_biz_code -->
 	<select id="agencyConfirm2" resultType="int">
-		SELECT nvl(min(dealer_kind), 0) as minDealerKind
-		FROM ( SELECT biz_code, nvl(dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind FROM biz START WITH biz_code = #{bizCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code ) a
-		WHERE a.biz_code != #{val}	
+		SELECT dealer_kind FROM biz WHERE biz_code = #{val} 
+	</select>
+	<!-- agent member_biz_code -->
+	<select id="agencyConfirm3" resultType="int">
+		SELECT dealer_kind FROM biz WHERE biz_code = ( SELECT trget_biz_code FROM biz WHERE biz_code = #{val} )
+	</select>
+	
+	<insert id="insertBizHist">
+	insert into
+    BIZ_HIST (
+        BIZ_CODE,
+        SN,
+        BIZRNO,
+        CMPNM,
+        BPRPRR,
+        BPLC,
+        BIZ_TELNO,
+        TRMNL_NO,
+        PG_TRMNL_NO,
+        PG_VAN,
+        CREAT_MBER_CODE,
+        DEALER_KIND,
+        PAY_BPRPRR,
+        PAY_TELNO,
+        PAY_CMPNM,
+        PAY_BIZRNO,
+        PAY_BPLC,
+        M_TELNO,
+        EMAIL,
+        BANK_NAME,
+        BANK_SERIAL,
+        BANK_USER,
+        DEALER_RATE,
+        MEMBER_INPUT_YN,
+        MEMBER_RATE,
+        MEMO,
+        HISTORY_MEMO,
+        LIMIT_ONE,
+        LIMIT_DAY,
+        LIMIT_MONTH,
+        LIMIT_YEAR,
+        INSTALLMENT_MONTHS,
+        BIZ_LIMIT_ONE,
+        BIZ_LIMIT_DAY,
+        BIZ_LIMIT_MONTH,
+        BIZ_LIMIT_YEAR,
+        BIZ_INSTALLMENT_MONTHS,
+        PG_GB,
+        VAN_GB,
+        BIZ_TYPE,
+        JOIN_AMT
+    )
+	values
+    (
+       #{bizCode},
+       (SELECT nvl( MAX(sn)+1 , 1)  FROM biz_hist WHERE biz_code=#{bizCode}),
+       #{bizrno},
+       #{cmpnm},
+       #{bprprr},
+       #{bplc},
+       #{bizTelno},
+       #{trmnlNo},
+       #{pgTrmnlNo},
+       #{pgVan},
+       #{creatMberCode},
+       #{dealerKind},
+       #{payBprprr},
+       #{payTelno},
+       #{payCmpnm},
+       #{payBizrno},
+       #{payBplc},
+       #{mTelno},
+       #{email},
+       #{bankName},
+       #{bankSerial},
+       #{bankUser},
+       #{dealerRate},
+       #{memberInputYn},
+       #{memberRate},
+       #{memo},
+       #{historyMemo},
+       #{limitOne},
+       #{limitDay},
+       #{limitMonth},
+       #{limitYear},
+       #{installmentMonths},
+       #{bizLimitOne},
+       #{bizLimitDay},
+       #{bizLimitMonth},
+       #{bizLimitYear},
+       #{bizInstallmentMonths},
+       #{pgGb},
+       #{vanGb},
+       #{bizType},
+       #{joinAmt}
+    )
+	
+	</insert>
+	
+	<insert id="insertBiz">
+		INSERT INTO biz (
+			biz_code,
+			bizrno,
+			cmpnm,
+			bprprr,
+			bplc,
+			biz_telno,
+			trmnl_no,
+			pymnt_rate,
+			dealer_id,
+			trget_biz_code,-- 널인경우 뺀다
+			recommend_biz_code,
+			trget_biz_code ,
+			dealer_kind,
+			pay_bprprr,
+			pay_telno,
+			pay_cmpnm,
+			pay_bizrno,
+			pay_bplc,
+			pg_van,
+			pg_trmnl_no,
+			m_telno,
+			email,
+			bank_name,
+			bank_serial,
+			bank_user,
+			dealer_rate,
+			member_input_yn,
+			member_rate,
+			limit_one,
+			limit_day,
+			limit_month,
+			limit_year,
+			installment_months,
+			biz_limit_one,
+			biz_limit_day,
+			biz_limit_month,
+			biz_limit_year,
+			biz_installment_months,
+			pg_gb,
+			van_gb,
+			biz_type,
+			create_dt,
+			join_amt
+		) VALUES (
+			#{biz_code} , -- 코드추출용 로직 필요
+			#{bizrno},
+			#{cmpnm}, 
+			#{bprprr}, -- 사업주냐 개인이냐에 따라 달라진다. 사업주 - bprprr  개인 -cmpnm
+			#{bplc},
+			#{biz_telno},
+			#{trmnl_no},
+			#{pymnt_rate},
+			#{dealer_id},
+			#{trget_biz_code},
+			#{recommend_biz_code},
+			#{trget_biz_code},
+			#{dealer_kind},
+			#{pay_bprprr},
+			#{pay_telno},
+			#{pay_cmpnm},
+			#{pay_bizrno},
+			#{pay_bplc},
+			#{pg_van},
+			#{pg_trmnl_no},
+			#{m_telno},
+			#{email},
+			#{bank_name},
+			#{bank_serial},
+			#{bank_user},
+			#{dealer_rate},
+			#{member_input_yn},
+			#{member_rate},
+			#{limit_one},
+			#{limit_day},
+			#{limit_month},
+			#{limit_year},
+			#{installment_months},
+			#{biz_limit_one},
+			#{biz_limit_day},
+			#{biz_limit_month},
+			#{biz_limit_year},
+			#{biz_installment_months},
+			#{pg_gb},
+			#{van_gb},
+			#{biz_type},
+			to_char(sysdate , 'YYYY-MM-DD' ),
+			#{join_amt}
+			)
+		
+	</insert>
+	
+	<select id="selectBizCode" resultType="int">
+		SELECT NVL(MAX(biz_code)+1,1)  FROM biz
+	</select>
+	
+	<select id="selectBizCount" resultType="int">
+		SELECT count(1) FROM biz WHERE bizrno = #{val}
 	</select>
 
   </mapper>

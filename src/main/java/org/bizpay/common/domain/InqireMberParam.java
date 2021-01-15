@@ -10,6 +10,7 @@ import lombok.ToString;
 public class InqireMberParam {
 	private String bizCode; // 비즈코드 -- 조회용
 	private String memberBizeCode; // 비즈코드 -- 멤버용
+	private String memberMberCode;
 	private String dateStart; // 등록일자시작
 	private String dateEnd; // 등록일자종료
 	private String mberName; // 판매자성명

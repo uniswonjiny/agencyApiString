@@ -13,7 +13,7 @@ public class AgencyManageParam {
 	public String useAt; // 거래구분
 	public String bizNum; // 사업자번호
 	public String memberBizeCode; // 로그인한 비즈코드
-	
+	public String memberMberCode; // 로그인한 사용자코드 -- 로그인 인증키기능 강화 -> 인증키정보로 자동으로 사용자 정보 추출 기능개발 
 	public String bizrno;
 	public String trmnlNo;
 	public String pgTrmnlNo;
@@ -73,7 +73,6 @@ public class AgencyManageParam {
 	public String prevDealerKind;
 	public int cDealerKind; // 바꾸고자 하는 대리점 구분
 	public int pDearlerKind;// 현재 대리점 구분
-	
-	
+	public String creatMberCode; // 입력하고 있는 멤버코드
 	
 }

@@ -1,5 +1,6 @@
 package org.bizpay.mapper;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.domain.BizInfo;
@@ -14,4 +15,10 @@ public interface AuthMapper {
 	public MemberInfo userInfo(String id) throws Exception;
 	public BizInfo bizInfo(String bizCode) throws Exception;
 	public List<DealerInfo> dealerList(String bizCode) throws Exception;
+	public String dealerKind(String bizCode) throws Exception;
+	public int updateMberUseAt (HashMap<String, Object> map) throws Exception;
+	public int insertMberHistUserAt(HashMap<String, Object> map) throws Exception;
+	public int updateRecommendBizCode(HashMap<String, Object> map) throws Exception;
+	public int selectMemberUsidChk(String usId) throws Exception;
+	public int selectBizrno(String bizrno) throws Exception;
 }

@@ -35,6 +35,8 @@ public class CertUtil {
 	 */
 	public String encrypt(String text) {
 		try{
+			if(text == null || text.length()<1) return "";
+			
 			Key key = generateKey("AES", byteUtils.toBytes("696d697373796f7568616e6765656e61", 16));
 			String transformation = "AES/ECB/PKCS5Padding";
 			Cipher cipher = Cipher.getInstance(transformation);
@@ -56,6 +58,11 @@ public class CertUtil {
 	 */
 	public String decrypt(String text){
 		try{
+
+			if(text== null || text.length() ==0) {
+
+				return "";
+			}
 			Key key = generateKey("AES", byteUtils.toBytes("696d697373796f7568616e6765656e61", 16));
 			String transformation = "AES/ECB/PKCS5Padding";
 			Cipher cipher = Cipher.getInstance(transformation);
@@ -63,9 +70,13 @@ public class CertUtil {
 			 
 			byte[] hexId=byteUtils.toBytesFromHexString(text);
 			hexId = cipher.doFinal(hexId);
-			String decodingData = new String(hexId, "euc-kr");
-	
-			return decodingData;
+			String decodingData = new String(hexId, "utf-8");
+			
+
+			if(decodingData==null || decodingData.length() <1 ) {
+				return text; 
+			}
+			else return decodingData;
 		}catch(Exception e){
 			return "";
 		}

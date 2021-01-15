@@ -1,5 +1,6 @@
 package org.bizpay.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
@@ -32,9 +33,22 @@ public class AgencyManageController {
 		return new ResponseEntity<>(serve.agencyList(param),   HttpStatus.OK);
 	}
 	// 대리점 정보 수정
-	@RequestMapping(value = "agency", method = RequestMethod.PATCH)
-	public ResponseEntity<List<AgencyManage>> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
+	@RequestMapping(value = "updateAgency", method = RequestMethod.POST)
+	public ResponseEntity<String> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 수정");
-		return new ResponseEntity<>(serve.agencyList(param),   HttpStatus.OK);
+		HashMap< String, Object> map =  serve.upatgeAgency(param);
+		if( (boolean) map.get("flag") ) {
+			return new ResponseEntity<>("",   HttpStatus.OK);
+		}else 	return new ResponseEntity<>(map.get("message").toString() ,   HttpStatus.BAD_GATEWAY);
 	}
+	
+	// 대리점 정보 수정
+		@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
+		public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
+			log.info("대리점정보 입력");
+			HashMap< String, Object> map =  serve.upatgeAgency(param);
+			if( (boolean) map.get("flag") ) {
+				return new ResponseEntity<>("",   HttpStatus.OK);
+			}else 	return new ResponseEntity<>(map.get("message").toString() ,   HttpStatus.BAD_GATEWAY);
+		}
 }

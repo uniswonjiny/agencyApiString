@@ -78,4 +78,20 @@ public class AuthServiceImpl implements AuthService {
 		return  aMapper.userInfo(userId);
 	}
 
+	@Override
+	public int memberIdChk(String userId) throws Exception {
+		return aMapper.selectMemberUsidChk(userId);
+	}
+
+	@Override
+	public int biznoChk(String bizno) throws Exception {
+		int temp = 0;
+		temp = aMapper.selectBizrno(bizno);
+		if(temp ==0) {
+			bizno = cert.encrypt(bizno);
+			temp = aMapper.selectBizrno(bizno);	
+		}
+		return temp;
+	}
+
 }
