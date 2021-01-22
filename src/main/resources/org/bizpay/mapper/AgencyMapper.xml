@@ -548,7 +548,7 @@
 	ORDER BY a.cmpnm,b.induty_id 
 	</select>
 	
-	<update id="">
+	<update id="tetmp111">
 		UPDATE delng 
 					SET card_delete_yn = 'Y' 
 					 ,cancel_mber = '"+usid+"' 
@@ -559,5 +559,7 @@
 					 AND mber_code_sn='"+회원코드생성순번+"' 
 					 AND rcipt_no='"+영수증번호
 	</update>
+	
+	
 
   </mapper>

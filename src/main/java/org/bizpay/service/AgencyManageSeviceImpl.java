@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
+import org.bizpay.common.domain.SellerManageParam;
 import org.bizpay.common.util.CertUtil;
 import org.bizpay.common.util.DataFormatUtil;
 import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.AgencyManage;
+import org.bizpay.domain.SellerList;
 import org.bizpay.mapper.AgencyManageMapper;
 import org.bizpay.mapper.AuthMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -264,5 +266,25 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		
 		
 		return map;
+	}
+	@Override
+	public List<SellerList> selectSellerList(SellerManageParam param) throws Exception {
+		List<SellerList> list = mapper.selectSellerList(param);
+		// 복호화 및 데이터 변환
+		for (SellerList dto : list) {
+			dto.setAdres( util.decrypt(  dto.getAdres()  ) );
+			dto.setMberMobile( util.decrypt( dto.getMberMobile() ));
+			dto.setMberPhone( util.decrypt( dto.getMberPhone() ));
+			dto.setMberJumi( util.decrypt( dto.getMberJumi() ));
+			dto.setAccountNo( util.decrypt( dto.getAccountNo()  ));
+			dto.setEmail( util.decrypt( dto.getEmail()  ));
+			if("".equals(dto.getRecommendBizCode() )) {
+				dto.setRecommendBizCode(  dto.getBRecommendBizCode() );
+				if( "".equals( dto.getBRecommendBizCode()  ) ) {
+					dto.setRecommendBizCode(  "0000002");
+				}
+			}
+		}
+		return list;
 	}
 }

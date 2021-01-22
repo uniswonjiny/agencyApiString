@@ -70,11 +70,11 @@ public class CertUtil {
 			 
 			byte[] hexId=byteUtils.toBytesFromHexString(text);
 			hexId = cipher.doFinal(hexId);
-			String decodingData = new String(hexId, "utf-8");
+			String decodingData = new String(hexId, "euc-kr");
 			
 
 			if(decodingData==null || decodingData.length() <1 ) {
-				return text; 
+				return "";
 			}
 			else return decodingData;
 		}catch(Exception e){

@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.AccountMapper">
+  	<select id="accountInOutList" resultType="AccountInOut">
+  		select
+		    c.cmpnm,
+		    d.induty_id,
+		    d.mber_name,
+		    d.company_name,
+		    d.biz_num,
+		    b.mber_code,
+			b.inout_no,
+			b.inout_code,
+			b.req_amt,
+			b.balance,
+			TO_DATE(b.req_dt || b.req_time ,  'YYYYMMDDHH24MISS') as req_dt,
+			b.charge,
+			b.req_result,
+			b.bank,
+			b.account,
+			b.depositor,
+			b.bigo,
+			b.biz_code,
+			b.in_daily_sales_tot_amt,
+			b.in_daily_sales_fee_per,
+			b.in_daily_sales_fee_amt,
+			b.in_daily_sales_dt,
+			b.in_daily_sales_count,
+			b.sales_tot_amt,
+			b.sales_fee_per,
+			b.sales_fee_amt,
+			b.sales_dt,
+			b.sales_time,
+			b.sales_rcipt_no
+		from
+		    mber a,tbl_atm b,biz c,mber_basis d
+		where
+		    a.biz_code = c.biz_code
+		    and a.biz_code in (select biz_code
+		        from biz start with biz_code =#{memberBizeCode}
+		        connect by nocycle prior biz_code = trget_biz_code)
+		    and a.mber_code = b.mber_code
+		    and a.mber_code = d.mber_code
+		    and b.req_result = 'OK' -- 하드코딩
+		    and b.req_dt between #{dateStart} and #{dateEnd}
+		    <if test='mberName!=null and !mberName.equals("")' >
+	        	AND d.mber_name LIKE '%'||#{mberName}||'%'
+	       	</if>	
+		    <if test='indutyId!=null and !indutyId.equals("")' >
+	        	AND d.induty_id LIKE '%'||#{indutyId}||'%'
+	       	</if>
+		    <if test='companyName!=null and !companyName.equals("")' >
+	        	AND d.company_name LIKE '%'||#{companyName}||'%'
+	       	</if>
+	       	<if test='bizNum!=null and !bizNum.equals("")' >
+	        	AND d.biz_num LIKE '%'||#{bizNum}||'%'
+	       	</if>	
+		    
+		    --//입출금 구분 코드 (IN:입금, IN_DAILY:정기입금, IN_M:마이너스입금, OT:출금, OT_SF:관리비, OT_TF:통신비, OT_CANCEL : 결제취소건 출금, OT_UC : 본사출금)
+	        <if test='inoutCode!=null and inoutCode.equals( "IN"  )' >
+	        	AND b.inout_code LIKE '%'||#{inoutCode}||'%'
+	       	</if>
+	       	<if test='inoutCode!=null and inoutCode.equals( "IN_PAID"  )' >
+	        	AND b.inout_code LIKE '%'||#{inoutCode}||'%'
+	       	</if>
+	       	<if test='inoutCode!=null and inoutCode.equals( "IN_PAID_M"  )' >
+	        	AND b.inout_code LIKE '%'||#{inoutCode}||'%'
+	       	</if>
+	       	<if test='inoutCode!=null and inoutCode.equals( "IN_PAID_T"  )' >
+	        	AND b.inout_code LIKE '%'||#{inoutCode}||'%'
+	       	</if>
+	       	<if test='inoutCode!=null and inoutCode.equals( "OT"  )' >
+	        	AND b.inout_code = #{inoutCode}
+	       	</if>
+	       	<if test='inoutCode!=null  and inoutCode.equals( "OT_CANCEL"  )' >
+	        	AND b.inout_code = #{inoutCode}
+	       	</if>
+	        <if test='inoutCode!=null and inoutCode.equals( "OT_SF"  )' >
+	        	AND b.inout_code = #{inoutCode}
+	       	</if>
+			<if test='inoutCode!=null and inoutCode.equals( "OT_TF"  )' >
+	        	AND b.inout_code = #{inoutCode}
+	       	</if>
+		    <if test='inoutCode!=null and inoutCode.equals( "OT_UC"  )' >
+	        	AND b.inout_code = #{inoutCode}
+	       	</if>
+		order by b.req_dt desc,b.req_time desc,b.inout_no desc
+  	</select>
+  	
+  	<select id="accountExcelList" resultType="AccountExcel">
+  		select
+		    a.van_pg_comp,
+		    d.cmpnm,
+		    GET_AGENCY(d.trget_biz_code, d.dealer_kind) as agent,
+		    GET_DISTRIBUTOR(d.trget_biz_code, d.dealer_kind) as distributor,
+
+		    TO_DATE(b.confm_dt || b.confm_time ,  'YYYYMMDDHH24MISS') as confm_dt,
+
+		    e.mber_name,
+		    e.company_name,
+		    e.biz_num,
+		    e.trmnl_no,
+		    e.pg_trmnl_no,
+		    e.pg_van,
+		    (
+		        select
+		            confm_dt
+		        from
+		            delng
+		        where
+		            trget_mber_code = b.mber_code
+		            and trget_mber_code_sn = b.mber_code_sn
+		            and trget_rcipt_no = b.rcipt_no
+		            and delng_se_code in ('CARD_CNCL')
+		    ) as cncl_confm_dt,
+		    (
+		        select
+		            confm_time
+		        from
+		            delng
+		        where
+		            trget_mber_code = b.mber_code
+		            and trget_mber_code_sn = b.mber_code_sn
+		            and trget_rcipt_no = b.rcipt_no
+		            and delng_se_code in ('CARD_CNCL')
+		    ) as cncl_confm_time,
+		    b.confm_no,
+		    c.usid,
+		    (
+		        select
+		            mbtlnum
+		        from
+		            mber_basis
+		        where
+		            mber_code = c.mber_code
+		    ) as mbtlnum,
+		    (
+		        select
+		            adi_cn
+		        from
+		            delng_adi
+		        where
+		            mber_code = b.mber_code
+		            and mber_code_sn = b.mber_code_sn
+		            and rcipt_no = b.rcipt_no
+		            and adi_code = 'PURCHSR_MBTLNUM'
+		    ) as purchsr_mbtlnum,
+		    a.issue_cmpny_nm,
+		    b.delng_se_code,
+		    case a.card_type when 'C' then 'Check 카드' else '카드 ' end as card_type,
+		    a.instlmt_month,
+		    a.card_no,
+		    nvl(b.splpc,0) + nvl(b.vat,0) as tot,
+		    case e.pay_type
+		        when 'N' then '일반'
+		        else (
+		                case e.pay_type
+		                    when 'B' then '바로정산'
+		                    else '익일입금'
+		                end
+		            )
+		    end as pay_type,
+		    case a.van_pg_comp
+		        when 'DANAL' then get_pg_fee((b.splpc + b.vat), 'DANAL', e.pay_type)
+		        else get_pg_fee((b.splpc + b.vat), 'KSNET', e.pay_type)
+		    end as card_fee,
+		    round((
+		        (b.splpc + b.vat) * (
+		            100 - (
+		                select
+		                    fee_rate
+		                from
+		                    mber_basis
+		                where
+		                    mber_code = c.mber_code
+		            )
+		        )
+		    ) / 100) seler_pymntamt,
+		    b.splpc - trunc(decode(a.card_type, 'N', (b.splpc * 1.5) / 100, 'C', b.splpc / 100, (b.splpc * 1.5) / 100)) - trunc((
+		        b.splpc * (
+		            100 - (
+		                select
+		                    fee_rate
+		                from
+		                    mber_basis
+		                where
+		                    mber_code = c.mber_code
+		            )
+		        )
+		    ) / 100) fee_ern,
+		    trunc((
+		        b.splpc * (
+		            select
+		                pymnt_rate
+		            from
+		                biz
+		            where
+		                biz_code = d.biz_code
+		        )
+		    ) / 100) dealer_pymntamt,
+		    trunc((
+		        (
+		            (
+		                (
+		                    b.splpc * (
+		                        select
+		                            fee_rate
+		                        from
+		                            mber_basis
+		                        where
+		                            mber_code = c.mber_code
+		                    )
+		                ) / 100
+		            ) - (decode(a.card_type, 'N', (b.splpc * 1.5) / 100, 'C', b.splpc / 100, (b.splpc * 1.5) / 100))
+		        ) - (
+		            (
+		                b.splpc * (
+		                    select
+		                        pymnt_rate
+		                    from
+		                        biz
+		                    where
+		                        biz_code = d.biz_code
+		                )
+		            ) / 100
+		        )
+		    ) * 0.25) as linkapp,
+		    trunc((
+		        (
+		            b.splpc * (
+		                select
+		                    fee_rate
+		                from
+		                    mber_basis
+		                where
+		                    mber_code = c.mber_code
+		            )
+		        ) / 100
+		    ) - (decode(a.card_type, 'N', (b.splpc * 1.5) / 100, 'C', b.splpc / 100, (b.splpc * 1.5) / 100))) - trunc((
+		        b.splpc * (
+		            select
+		                pymnt_rate
+		            from
+		                biz
+		            where
+		                biz_code = d.biz_code
+		        )
+		    ) / 100) - trunc((
+		        (
+		            (
+		                (
+		                    b.splpc * (
+		                        select
+		                            fee_rate
+		                        from
+		                            mber_basis
+		                        where
+		                            mber_code = c.mber_code
+		                    )
+		                ) / 100
+		            ) - (decode(a.card_type, 'N', (b.splpc * 1.5) / 100, 'C', b.splpc / 100, (b.splpc * 1.5) / 100)) - (
+		                (
+		                    b.splpc * (
+		                        select
+		                            pymnt_rate
+		                        from
+		                            biz
+		                        where
+		                            biz_code = d.biz_code
+		                    )
+		                ) / 100
+		            )
+		        ) * 20
+		    ) / 100) unicore,
+		    trunc((
+		        B.Splpc * (
+		            select
+		                Fee_Distributor
+		            from
+		                Mber_Basis
+		            where
+		                Mber_Code = C.Mber_Code
+		        )
+		    ) / 100) as Fee_Distributor,
+		    trunc((
+		        B.Splpc * (
+		            select
+		                Fee_Agency
+		            from
+		                Mber_Basis
+		            where
+		                Mber_Code = C.Mber_Code
+		        )
+		    ) / 100) as Fee_Agency,
+		    trunc((
+		        b.splpc * (
+		            select
+		                fee_dealer
+		            from
+		                mber_basis
+		            where
+		                mber_code = c.mber_code
+		        )
+		    ) / 100) as fee_dealer
+		from
+		    delng_credt a,
+		    delng b,
+		    mber c,
+		    biz d,
+		    mber_basis e
+		where
+		    a.mber_code(+) = b.mber_code
+		    and a.mber_code_sn(+) = b.mber_code_sn
+		    and a.rcipt_no(+) = b.rcipt_no
+		    and b.mber_code = c.mber_code
+		    and c.biz_code = d.biz_code
+		    and c.mber_code = e.mber_code
+		    and b.card_delete_yn != 'Y'
+		    and e.biz_code in (
+		        select
+		            biz_code
+		        from
+		            biz
+		        start with
+		            biz_code = #{memberBizeCode}
+		        connect by nocycle
+		            prior biz_code = trget_biz_code
+		    )
+		    and b.delng_se_code in ('CARD_ISSUE') 
+		    and b.confm_dt between #{dateStart} and #{dateEnd}
+		    and b.delng_se_code = 'CARD_ISSUE'
+		    <if test='bizCode!=null and !bizCode.equals("")' >
+	        	AND c.biz_code = #{bizCode}
+	       	</if>	
+		    <if test='bizrno!=null and !bizrno.equals("")' >
+	        	AND e.biz_num LIKE '%'||#{bizrno}||'%'
+	       	</if>	
+		    <if test='mberName!=null and !mberName.equals("")' >
+	        	AND d.mber_name LIKE '%'||#{mberName}||'%'
+	       	</if>	
+		    <if test='indutyId!=null and !indutyId.equals("")' >
+	        	AND e.induty_id LIKE '%'||#{indutyId}||'%'
+	       	</if>	
+		    <if test='companyName!=null and !companyName.equals("")' >
+	        	AND e.company_name LIKE '%'||#{companyName}||'%'
+	       	</if>	
+		    
+		    
+		order by b.confm_dt desc, b.confm_time desc
+		  	
+  	</select>
+  	
+  </mapper>

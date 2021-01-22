@@ -7,9 +7,11 @@ import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.DealerInfo;
 import org.bizpay.domain.SalesAdjustment;
 import org.bizpay.domain.SellerSummary;
 import org.bizpay.service.AgencyService;
+import org.bizpay.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,9 @@ import lombok.extern.java.Log;
 public class AgencyRestController {
 	@Autowired
 	 AgencyService service;
+	
+	@Autowired
+	AuthService aService;
 	
 	// 대리점 매출수익
 	@RequestMapping(value = "agency1", method = RequestMethod.POST)
@@ -67,5 +72,12 @@ public class AgencyRestController {
 	public ResponseEntity<List<SalesAdjustment>> cancelAdjustment(@RequestBody SellerParam param) throws Exception{
 		log.info("매출취소");
 		return new ResponseEntity<>( service.salesAdjustment(param), HttpStatus.OK);
+	}
+	// 대리점 전체 목록
+	@RequestMapping(value = "dealerList", method = RequestMethod.POST)
+	public ResponseEntity<List<DealerInfo>> dealerList() throws Exception{
+		log.info("이용가능한 전체 대리점 목록");
+		List<DealerInfo> dealerList = aService.dealerList("0000002");
+		return new ResponseEntity<>( dealerList, HttpStatus.OK);
 	}
 }

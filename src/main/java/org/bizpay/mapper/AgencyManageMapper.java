@@ -3,7 +3,9 @@ package org.bizpay.mapper;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
+import org.bizpay.common.domain.SellerManageParam;
 import org.bizpay.domain.AgencyManage;
+import org.bizpay.domain.SellerList;
 
 //대리점관리
 public interface AgencyManageMapper {	
@@ -27,4 +29,6 @@ public interface AgencyManageMapper {
 	public int selectBizCode() throws Exception;
 	// 사업자 번호 존재 확인
 	public int selectBizCount(String bizno) throws Exception;
+	// 판매자목록
+	public List<SellerList> selectSellerList(SellerManageParam param) throws Exception;
 }

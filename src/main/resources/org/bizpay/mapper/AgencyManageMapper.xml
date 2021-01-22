@@ -305,5 +305,153 @@
 	<select id="selectBizCount" resultType="int">
 		SELECT count(1) FROM biz WHERE bizrno = #{val}
 	</select>
+	
+	<!-- 대리점 목록 -->
+	<select id="selectSellerList" resultType="SellerList" >
+	select * from
+	(select
+	    b.induty_id,
+	    b.memo,
+	    b.history_memo,
+	    b.adres,
+	    b.mbtlnum,
+	    b.mber_code,
+	    a.biz_code,
+	    a.recommend_biz_code as b_recommend_biz_code,
+	    nvl(b.calculate_type , 'U' ) as calculate_type,
+	    a.cmpnm,
+	    b.fee_rate,
+	    b.creat_dt,
+	    nvl(b.reg_case ,'대리점' ) as reg_case,
+	    b.mber_mobile,
+	    b.mber_phone,
+	    b.mber_name,
+	    b.mber_jumi,
+	    b.bank_name,
+	    bank_code,
+	    b.account_no,
+	    b.email,
+	    b.depositor,
+	    b.atm_stop,
+	    b.pay_type,
+	    case pay_type when 'N' then '일반' else (case pay_type when 'B' then '바로정산' else '익일입금' end) end as kpay_type,
+	    b.code_rate,
+	    b.one_limit_rate,
+	    b.recommend_biz_code,
+	    b.document_reg,
+	    b.lv1_rate,
+	    b.lv2_rate,
+	    b.lv3_rate,
+	    b.fee_distributor,
+	    b.fee_agency,
+	    b.fee_dealer,
+	    b.fee_bank,
+	    (select hist_cn from mber_hist2 where mber_code = b.mber_code and sn = (select max(sn) from mber_hist2 where mber_code = b.mber_code and hist_code = 'MH_USE_AT')) as use_at,
+	    (select creat_dt from mber_hist2 where mber_code = b.mber_code and sn = ( select max(sn) from mber_hist2 where mber_code = b.mber_code and hist_code = 'MH_USE_AT')) as creat_dt_can,
+	    b.limit_one,
+	    b.limit_day,
+	    b.limit_month,
+	    b.limit_year,
+	    b.trmnl_no,
+	    b.pg_trmnl_no,
+	    b.pg_sugi_trmnl_no,
+	    nvl(b.pg_van , 'VAN' ) as pg_van,
+	    b.pg_gb,
+	    b.van_gb,
+	    nvl(b.set_device , '') as set_device,
+	    nvl(b.sugi , 'N' ) as sugi,
+	    nvl(b.sugi_certification , 'N' ) as sugi_certification,
+	    nvl(b.sms_autosend ,'N') as sms_autosend,
+	    nvl(b.set_sms_auth,'N') as set_sms_auth,
+	    b.sms_auth_money,
+	    b.biz_type_name,
+	    b.biz_item,
+	    nvl(b.cash_trmnl_no , '') as cash_trmnl_no,
+	    b.installment_months,
+	    b.biz_type,
+	    b.company_name,
+	    b.biz_num,
+	    (select balance from tbl_atm 
+		    where mber_code = b.mber_code and req_result = 'OK' and inout_no = (
+	                select max(inout_no)from tbl_atm where mber_code = b.mber_code and req_result = 'OK'
+	            )
+	    ) as balance,
+	    (select dealer_id from biz where biz_code = b.biz_code) as dealer_id,
+	    (select dealer_kind from biz where biz_code = b.biz_code) as dealer_kind,
+	    (select dealer_rate from biz where biz_code = b.biz_code) as dealer_rate
+	from
+	    biz a,
+	    mber_basis b
+	where
+	    a.biz_code = b.biz_code
+	    and a.biz_code in (
+	        select biz_code from biz
+	        start with biz_code = '0000002'
+	        connect by nocycle
+	            prior biz_code = trget_biz_code
+	    )
+	    and b.mber_name is not null
+	    <if test="bizCode!=null and !bizCode.equals('')">
+			AND  a.biz_code=#{bizCode}
+        </if>
+        <if test="calculateType!=null and !calculateType.equals('')">
+			AND b.calculate_type=#{calculateType}
+        </if>
+        <if test="indutyId!=null and !indutyId.equals('')">
+			AND b.induty_id LIKE #{indutyId}
+        </if>
+        <if test="memberName!=null and !memberName.equals('')">
+			AND b.mber_name LIKE '%'||#{memberName}||'%'
+			
+        </if>
+        <if test="bizNum!=null and !bizNum.equals('')">
+			AND b.biz_num like  '%'||#{bizNum}||'%'
+        </if>
+        <if test="depositor!=null and !depositor.equals('')">
+			AND b.depositor LIKE '%'||#{depositor}||'%'
+        </if>
+        <if test="bizTypeName!=null and !bizTypeName.equals('')">
+			AND b.biz_type_name LIKE '%'||#{bizTypeName}||'%'
+        </if>
+        <if test="bizItem!=null and !bizItem.equals('')">
+			AND b.biz_item LIKE '%'||#{bizItem}||'%'
+        </if>
+ 
+        <if test="dateStart!=null and !dateStart.equals('')">
+			AND TO_CHAR(b.creat_dt,'yyyymmdd') >= #{dateStart}
+        </if>
+        <if test="dateEnd!=null and !dateEnd.equals('')">
+			AND TO_CHAR(b.creat_dt,'yyyymmdd') &lt;= #{dateEnd}
+        </if>
+        <if test="nm!=null and !nm.equals('')">
+			AND b.company_name LIKE '%'||#{nm}||'%'
+        </if>
+        
+        	<if test='useAt.equals("S")'>
+			AND b.reg_case is null        	  
+        	</if>
+        	<if test='useAt.equals("T")'>
+			AND b.reg_case  = 'APP'     	  
+        	</if>
+        	<if test='useAt.equals("U")'>
+			AND b.document_reg = 'O'  	  
+        	</if>
+        	<if test='useAt.equals("V")'>
+			AND b.document_reg != 'O' 
+        	</if>
+      
+	    ORDER BY b.creat_dt DESC )
+	    where 1=1 
+		<choose>
+			<when test='useAt!=null and  useAt.equals("Y") '>
+				AND use_at='Y' OR use_at is null
+			</when>
+			<when test='useAt!=null and  useAt.equals("N") '>
+				AND use_at='N' 
+			</when>
+			
+		</choose>
+
+	</select>
 
   </mapper>
