@@ -1,5 +1,6 @@
 package org.bizpay.mapper;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
@@ -31,4 +32,8 @@ public interface AgencyManageMapper {
 	public int selectBizCount(String bizno) throws Exception;
 	// 판매자목록
 	public List<SellerList> selectSellerList(SellerManageParam param) throws Exception;
+	// agencySettingList
+	public List<HashMap<String, Object>> agencySettingList(HashMap< String, Object> map) throws Exception;
+	// 기준대리점목록
+	public List<HashMap<String, Object>> agencySettingList2(HashMap< String, Object> map) throws Exception;
 }

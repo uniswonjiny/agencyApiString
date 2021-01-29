@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.TaxMapper">
+  	<select id="taxIssueList" resultType="TaxIssue">
+	SELECT 
+		c.induty_id AS usid, 
+		c.adres, c.company_name, c.biz_num, 
+		SUM(round(((b.splpc*(SELECT fee_rate FROM mber_basis WHERE mber_code = b.mber_code))/100))) tot, 
+		SUM(round((((b.splpc*(SELECT fee_rate FROM mber_basis WHERE mber_code = b.mber_code))/100))/1.1)) splpc1, 
+		SUM( round(((b.splpc*(SELECT fee_rate FROM mber_basis WHERE mber_code = b.mber_code))/100))  
+		   -round(((b.splpc*(SELECT fee_rate FROM mber_basis WHERE mber_code = b.mber_code))/100)/1.1) 
+		 ) vat, 
+		SUM(round(((b.splpc*(SELECT fee_rate FROM mber_basis WHERE mber_code = b.mber_code))/100)-(decode(a.card_type,'N',(b.splpc*1.5)/100,'C',b.splpc/100,(b.splpc*1.5)/100)))) fee_ern, 
+		SUM(b.splpc) splpc, 
+		c.mber_name, 
+		c.mber_jumi, 
+		SUM((b.splpc*(SELECT fee_rate FROM mber_basis WHERE mber_code = b.mber_code))/100) tot_fee, 
+	    SUM(round(decode(a.card_type,'N',(b.splpc*1.5)/100,'C',b.splpc/100,(b.splpc*1.5)/100))) card_fee, 
+	    COUNT(c.adres) cnt, 
+	    CASE WHEN c.email IS NULL THEN ' ' ELSE c.email END email 
+	FROM delng_credt a,delng b,mber_basis c,biz d 
+	WHERE a.mber_code(+)=b.mber_code 
+	   	AND a.mber_code_sn(+)=b.mber_code_sn 
+	   	AND a.rcipt_no(+)=b.rcipt_no 
+	   	AND b.mber_code=c.mber_code 
+	   	AND c.biz_code=d.biz_code 
+	   	AND b.card_delete_yn != 'Y' 
+	   	AND b.confm_dt BETWEEN #{dateStart} and #{dateEnd}  
+		AND c.calculate_type='U' 
+		AND b.delng_se_code='CARD_ISSUE' 
+		<if test='bizCode!=null and !bizCode.equals("")' >
+			AND c.biz_code= #{bizCode}
+		</if>
+		GROUP BY c.induty_id, c.adres, c.mber_name, c.mber_jumi, c.email, c.company_name, c.biz_num 
+		ORDER BY c.induty_id asc
+  	</select>
+  	
+  	<select id="taxReportList" resultType="TaxReport">
+	  SELECT                                                               
+        CASE WHEN RANK = 1 THEN A.INDUTY_ID ELSE '' END AS INDUTY_ID
+        ,CASE WHEN RANK = 1 THEN A.MBER_NAME ELSE '' END AS MBER_NAME      
+        ,CASE WHEN RANK = 1 THEN A.MBER_JUMI ELSE '' END AS MBER_JUMI      
+        ,CASE WHEN RANK = 1 THEN A.MBER_MOBILE ELSE '' END AS MBER_MOBILE  
+        ,SUBSTR(A.CONFM_DT,1,4)||'-'||SUBSTR(A.CONFM_DT,5,2) AS CONFM_DT   
+        ,A.SPLPC                                                              
+        ,A.CNT, A.COMPANY_NAME, A.BIZ_NUM
+      FROM (                                                               
+      SELECT                                                               
+        B.INDUTY_ID,                                                       
+        B.MBER_NAME,                                                       
+        B.MBER_JUMI,                                                       
+        B.MBER_MOBILE, B.COMPANY_NAME, B.BIZ_NUM, 								                      
+        A.CNFM_MNTH AS CONFM_DT,                                           
+        SUM(A.TAXX_GAEK) AS SPLPC,                                         
+        SUM(A.MECH_CUNT) AS CNT,                                           
+        RANK() OVER(PARTITION BY B.INDUTY_ID ORDER BY A.CNFM_MNTH) AS RANK 
+      FROM (                                                               
+        SELECT                                                             
+          A.MBER_CODE,                                                     
+          SUBSTR(A.CONFM_DT,1,6) CNFM_MNTH,                                
+          A.CONFM_NO,                                                      
+          SUM(A.SPLPC+A.VAT) TAXX_GAEK,                                    
+          1 as  MECH_CUNT                                                      
+	FROM DELNG A  									 
+	WHERE 												
+
+	<choose>
+		<when test='paymentType.equals("CARD_ISSUE")' >
+		EXISTS ( 												
+			    SELECT 1 											
+			    FROM DELNG_CREDT B 						
+			    WHERE B.MBER_CODE = A.MBER_CODE                                    
+			        AND B.MBER_CODE_SN = A.MBER_CODE_SN                              
+			        AND B.RCIPT_NO = A.RCIPT_NO          
+			        AND A.CONFM_DT BETWEEN #{dateStart} and #{dateEnd}                            	
+			)	
+		</when>
+		<otherwise> 
+			EXISTS ( 	
+				    SELECT 1 													
+				    FROM DELNG_CASH B , MBER_BASIS M_BASIS		
+				    WHERE B.MBER_CODE = A.MBER_CODE                              
+				        AND B.MBER_CODE_SN = A.MBER_CODE_SN                        
+				        AND B.RCIPT_NO = A.RCIPT_NO              	
+				        AND A.CONFM_DT BETWEEN #{dateStart} and #{dateEnd}                           	
+				        AND M_BASIS.MBER_CODE = A.MBER_CODE	
+				        AND A.CANCEL_DT IS NULL						
+				)	
+		</otherwise>
+	</choose>
+        GROUP BY                                                           
+          A.MBER_CODE,                                                     
+          SUBSTR(A.CONFM_DT,1,6),                                          
+          A.CONFM_NO                                                       
+        ) A, MBER_BASIS B, MBER C, BIZ D                                   
+      WHERE B.MBER_CODE = A.MBER_CODE                                      
+        AND A.MBER_CODE = C.MBER_CODE                                      
+        AND C.BIZ_CODE = D.BIZ_CODE                                        
+        AND A.TAXX_GAEK != 0 
+	<if test='bizCode!=null and !bizCode.equals("") and !bizCode.equals("0000002")' >
+		AND D.TRGET_BIZ_CODE = #{bizCode}
+	</if>
+	<if test='mberName!=null and !mberName.equals("")' >
+		AND b.mber_name LIKE '%'||#{mberName}||'%'
+	</if>
+	<if test='bizNum!=null and !bizNum.equals("")' >
+		AND b.biz_num like '%'||#{bizNum}||'%'
+	</if>
+	<if test='usid!=null and !usid.equals("")' >
+		AND b.induty_id LIKE '%'||#{usid}||'%'
+	</if>
+
+	AND not (b.calculate_type='K') 
+	GROUP BY                                                             
+        B.INDUTY_ID,                                                       
+        B.MBER_NAME,                                                       
+        B.MBER_JUMI,                                                       
+        B.MBER_MOBILE,                                                     
+        A.CNFM_MNTH, B.COMPANY_NAME, B.BIZ_NUM                                                      
+      ) A                                                                  
+      ORDER BY A.INDUTY_ID, A.CONFM_DT                                                         
+  	</select>
+  	<!-- 보증료 목록 -->
+  	<select id="guarantList" resultType="Guarant">
+		SELECT 
+			c.usid, 
+			c.mber_code, 
+			e.mber_name,  
+			e.mber_mobile, 
+			b.payment_date, 
+			b.sms_send_date, 
+			trunc(b.payment_date + 10000) as next_date, 
+			b.payment_amount, 
+			e.limit_one, 
+			e.limit_day, 
+			e.limit_month, 
+			e.limit_year, 
+			f.hist_cn AS use_at 
+			FROM tbl_guaranteedfee b,mber c, mber_basis e, MBER_HIST2 f  
+			WHERE c.mber_code(+)=e.mber_code  
+			and b.usid(+)=c.usid 
+			and f.mber_code(+)=e.mber_code 
+			AND f.sn = (SELECT MAX(sn) from mber_hist2 WHERE mber_code=e.mber_code AND hist_code='MH_USE_AT')
+			<if test='target.equals("GENERAL")' >
+				AND b.PAYMENT_DATE between #{dateStart} and #{dateEnd}
+			</if>
+			<if test='target.equals("TODO")' >
+				AND trunc(b.payment_date + 10000 - 100) &lt;  TO_CHAR(SYSDATE, 'YYYYMMDD') 
+			</if>
+			<if test='target.equals("DEFAULTER")' >
+				AND trunc(b.payment_date + 10000) &lt;  TO_CHAR(SYSDATE, 'YYYYMMDD')
+			</if>
+			<if test='mberName!=null and !mberName.equals("")' >
+				AND e.mber_name LIKE '%'||#{mberName}||'%'
+			</if>
+			<if test='usid!=null and !usid.equals("")' >
+				AND e.induty_id LIKE '%'||#{usid}||'%'
+			</if>
+			<if test='bizNum!=null and !bizNum.equals("")' >
+				AND e.biz_num like '%'||#{bizNum}||'%'
+			</if>	
+		ORDER BY b.payment_date DESC
+	
+  	</select>
+  	
+  </mapper>

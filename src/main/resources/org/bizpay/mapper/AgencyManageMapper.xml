@@ -22,16 +22,16 @@
 				FROM biz a, mber b
 				WHERE a.biz_code=b.biz_code
 		  		<if test="cmpnm!=null and !cmpnm.equals('')"> 
-                	AND A.cmpnm= #{cmpnm}
+                	AND A.cmpnm like '%'||#{cmpnm}||'%'
                 </if>
                 <if test="dealerId!=null and !dealerId.equals('')"> 
-                	AND A.dealer_id= #{dealerId}
+                	AND A.dealer_id like '%'||#{dealerId}||'%'
                 </if>
                 <if test="useAt!=null and !useAt.equals('')"> 
                 	AND b.use_at= #{useAt}
                 </if>
 				<if test="bizNum!=null and !bizNum.equals('')"> <!-- 암호화해서 비교해야 한다. -->
-                	AND b.bizrno= #{bizNum}
+                	AND b.bizrno  like '%'||#{bizNum}||'%'
                 </if>
 		
 				AND b.author_code in('AUTHOR_MNGR','AUTHOR_DEALER') 
@@ -45,7 +45,6 @@
   	UPDATE BIZ
 		SET 
 		    BIZRNO                 = #{bizrno}, <!-- 필수 :  암호화후저장  --> 
-		    DEALER_ID              = #{dealerId}, 
 		    CMPNM                  = #{cmpnm}, 
 		    BPRPRR                 =  #{bprprr}, 
 		    BPLC                   = #{bprprr} , 
@@ -100,7 +99,7 @@
 	<!-- 하위대리점에 속하는 대리점인지 확인 -->
 	<select id="agencyConfirm1" resultType="int">
 		SELECT nvl(min(dealer_kind), 0) as minDealerKind
-		FROM ( SELECT biz_code, nvl(dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind FROM biz START WITH biz_code =  #{bizCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code ) a 
+		FROM ( SELECT biz_code, nvl(dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind FROM biz START WITH biz_code =  #{val} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code ) a 
 		WHERE a.biz_code != #{val}
 	</select>
 	
@@ -218,7 +217,7 @@
 			dealer_id,
 			trget_biz_code,-- 널인경우 뺀다
 			recommend_biz_code,
-			trget_biz_code ,
+
 			dealer_kind,
 			pay_bprprr,
 			pay_telno,
@@ -251,49 +250,49 @@
 			create_dt,
 			join_amt
 		) VALUES (
-			#{biz_code} , -- 코드추출용 로직 필요
+			#{bizCode} , -- 코드추출용 로직 필요
 			#{bizrno},
 			#{cmpnm}, 
 			#{bprprr}, -- 사업주냐 개인이냐에 따라 달라진다. 사업주 - bprprr  개인 -cmpnm
 			#{bplc},
-			#{biz_telno},
-			#{trmnl_no},
-			#{pymnt_rate},
-			#{dealer_id},
-			#{trget_biz_code},
-			#{recommend_biz_code},
-			#{trget_biz_code},
-			#{dealer_kind},
-			#{pay_bprprr},
-			#{pay_telno},
-			#{pay_cmpnm},
-			#{pay_bizrno},
-			#{pay_bplc},
-			#{pg_van},
-			#{pg_trmnl_no},
-			#{m_telno},
+			#{bizTelno},
+			#{trmnlNo},
+			#{pymntRate},
+			#{dealerId},
+			#{trgetBizCode},
+			#{recommendBizCode},
+
+			#{dealerKind},
+			#{payBprprr},
+			#{payTelno},
+			#{payCmpnm},
+			#{payBizrno},
+			#{payBplc},
+			#{pgVan},
+			#{pgTrmnlNo},
+			#{mTelno},
 			#{email},
-			#{bank_name},
-			#{bank_serial},
-			#{bank_user},
-			#{dealer_rate},
-			#{member_input_yn},
-			#{member_rate},
-			#{limit_one},
-			#{limit_day},
-			#{limit_month},
-			#{limit_year},
-			#{installment_months},
-			#{biz_limit_one},
-			#{biz_limit_day},
-			#{biz_limit_month},
-			#{biz_limit_year},
-			#{biz_installment_months},
-			#{pg_gb},
-			#{van_gb},
-			#{biz_type},
+			#{bankName},
+			#{bankSerial},
+			#{bankUser},
+			#{dealerRate},
+			#{memberInputYn},
+			#{memberRate},
+			#{limitOne},
+			#{limitDay},
+			#{limitMonth},
+			#{limitYear},
+			#{installmentMonths},
+			#{bizLimitOne},
+			#{bizLimitDay},
+			#{bizLimitMonth},
+			#{bizLimitYear},
+			#{bizInstallmentMonths},
+			#{pgGb},
+			#{vanGb},
+			#{bizType},
 			to_char(sysdate , 'YYYY-MM-DD' ),
-			#{join_amt}
+			#{joinAmt}
 			)
 		
 	</insert>
@@ -452,6 +451,44 @@
 			
 		</choose>
 
+	</select>
+	<!-- 대리점구분  -->
+	<select id="agencySettingList" resultType="HashMap" parameterType="HashMap">
+		SELECT 
+			sn, 
+			code, 
+			code_nm 
+		FROM code 
+		WHERE 
+			group_nm = '대리점구분'
+		<choose>
+			<when test='!memberBizCode.equals(agencyCode) '>
+				AND sn &gt;= #{dealerKind} 
+			</when>
+			<otherwise>
+	  			AND sn &gt; #{dealerKind}
+	        </otherwise>
+		</choose>
+	</select>
+	<!-- 기준대리점 -->
+	<select id="agencySettingList2" resultType="HashMap" parameterType="HashMap">
+		<choose>
+			<when test='!memberBizCode.equals(agencyCode) '>
+			SELECT * 
+				FROM (  SELECT a.biz_code, a.cmpnm, a.dealer_id, nvl(a.dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind  
+				        FROM (SELECT biz_code, cmpnm, dealer_id, dealer_kind FROM biz START WITH biz_code = #{memberBizCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code ) a  	
+				      ) b 
+				WHERE b.dealer_kind &lt; (SELECT nvl(dealer_kind, (SELECT max(sn) FROM code WHERE group_nm = '대리점구분')) as dealer_kind FROM biz 
+						WHERE biz_code =#{agencyCode}) 
+				ORDER BY cmpnm
+			</when>
+			<otherwise>
+	  			SELECT biz_code, cmpnm, dealer_id, nvl(dealer_kind, '0') as dealer_kind 
+			FROM biz 
+			WHERE biz_code = (SELECT nvl(b.trget_biz_code, (SELECT biz_code FROM biz WHERE biz_code = #{memberBizCode} )) as trget_biz_code FROM
+					 (SELECT trget_biz_code FROM biz WHERE biz_code = #{memberBizCode} ) b) ORDER BY cmpnm
+	        </otherwise>
+		</choose>
 	</select>
 
   </mapper>

@@ -9,6 +9,7 @@ import org.bizpay.common.util.CertUtil;
 import org.bizpay.common.util.DataFormatUtil;
 import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.AgencyManage;
+import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.SellerList;
 import org.bizpay.mapper.AgencyManageMapper;
 import org.bizpay.mapper.AuthMapper;
@@ -48,7 +49,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			dto.setPayBplc( util.decrypt( dto.getPayBplc()  )  );
 			if( dto.getPayTelno()!=null && dto.getPayTelno().length() > 20 ) dto.setPayTelno( util.decrypt( dto.getPayTelno() ) );
 			if( dto.getMTelno()!=null && dto.getMTelno().length() > 20 ) dto.setMTelno( util.decrypt(dto.getMTelno()  ) );
-			dto.setBankSerial(  util.decrypt( dto.getBankSerial() ) );
+			if( dto.getBankSerial() !=null && dto.getBankSerial().length() > 20 )	dto.setBankSerial(  util.decrypt( dto.getBankSerial() ) );
 		}
 		return list;
 	}
@@ -59,7 +60,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		map.put("flag", true);
 		map.put("message", "");
 		
-		// 수정하려는 대리점이 존재하는지 검사
+		// 1. 수정하려는 대리점이 존재하는지 검사
 		int tempCount = mapper.bizCount(params.getBizCode() );
 		if(tempCount <1 ) {
 			map.put("flag", false);
@@ -90,7 +91,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			}else if(dirtyKind) {
 				
 				if(params.getCDealerKind() > params.getPDearlerKind()) {
-					iDealerKind = mapper.agencyConfirm1(params.getBizCode()) ;
+					iDealerKind = mapper.agencyConfirm1(params.getMemberBizeCode()) ; // params.getBizCode()
 					if(iDealerKind !=0 &&   iDealerKind <= params.getCDealerKind() ) {
 						map.put("flag", false);
 						map.put("message", "소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다.");
@@ -122,7 +123,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 	
 		AgencyManageParam inputParam = new AgencyManageParam();
 		inputParam.setBizrno( util.encrypt(params.getBizrno()) );
-		inputParam.setDealerId(params.getDealerId() );
+		//inputParam.setDealerId(params.getDealerId() );
 		inputParam.setCmpnm( params.getCmpnm() );
 		inputParam.setBprprr( params.getBprprr()  );
 		inputParam.setBplc( params.getBplc() );
@@ -232,20 +233,20 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			return map;
 		}
 		params.setPgVan( strUtil.getString(params.getPgVan().toLowerCase().trim() , "VAN" )  );
-		params.setVanGb( strUtil.getString(params.getVanGb().toLowerCase().trim() , "" )  );
-		params.setPgGb( strUtil.getString(params.getPgGb().toLowerCase().trim() , "" )  );
-		params.setBizType( strUtil.getString(params.getBizType().toLowerCase().trim() , "" )  );
+		if(params.getVanGb()!=null) params.setVanGb( strUtil.getString(params.getVanGb().toLowerCase().trim() , "" )  );
+		if(params.getPgGb()!=null) params.setPgGb( strUtil.getString(params.getPgGb().toLowerCase().trim() , "" )  );
+		if(params.getBizType()!=null) params.setBizType( strUtil.getString(params.getBizType().toLowerCase().trim() , "" )  );
 		
-		params.setPayTelno( util.encrypt( params.getPayTelno()  )  );
-		params.setPayBizrno( util.encrypt( params.getPayBizrno()  )  );
-		params.setPayBplc( util.encrypt( params.getPayBplc()  )  );
+		if(params.getPayTelno()!=null) params.setPayTelno( util.encrypt( params.getPayTelno()  )  );
+		if(params.getPayBizrno()!=null) params.setPayBizrno( util.encrypt( params.getPayBizrno()  )  );
+		if(params.getPayBplc()!=null) params.setPayBplc( util.encrypt( params.getPayBplc()  )  );
 		
-		params.setEmail( util.encrypt( params.getEmail())  );
-		params.setBankSerial(  strUtil.getString(params.getBankSerial().toLowerCase().trim() , "VAN" ) );
-		params.setMemberInputYn( strUtil.getString(params.getMemberInputYn().toLowerCase().trim() , "0" ) );
+		if(params.getEmail()!=null) params.setEmail( util.encrypt( params.getEmail())  );
+		if(params.getBankSerial()!=null) params.setBankSerial(  strUtil.getString(params.getBankSerial().toLowerCase().trim() , "VAN" ) );
+		if(params.getMemberInputYn()!=null) params.setMemberInputYn( strUtil.getString(params.getMemberInputYn().toLowerCase().trim() , "0" ) );
 		params.setPymntRate(0); // 지급률 100 넘는지 검사하는 부분이 이전 소스에 있는데 0 을 강제로 세팅하는 부분도 있다.!!
 		
-		params.setMTelno( util.encrypt( params.getMTelno() ) );
+		if(params.getMTelno()!=null) params.setMTelno( util.encrypt( params.getMTelno() ) );
 		//bizCodeStirng
 		int bizCode = mapper.selectBizCode();
 		String bizCodeString = dataUtil.format(""+bizCode, "0000000" , dataUtil.ALIGN_RIGHT);
@@ -285,6 +286,27 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 				}
 			}
 		}
+		return list;
+	}
+	@Override
+	public List<HashMap< String, Object>> settingAgencyList(String memberCode , String agencyCode ) throws Exception {
+		MemberInfo mInfo = authMapper.userInfo2(memberCode);
+		HashMap< String, Object> map = new HashMap<String, Object>();
+		
+		map.put("dealerKind", mInfo.getDealerKind());
+		map.put("memberBizCode", mInfo.getBizCode());
+		map.put("agencyCode", agencyCode);
+		List<HashMap< String, Object>> list  = mapper.agencySettingList(map);
+		
+		return list;
+	}
+	@Override
+	public List<HashMap<String, Object>> settingAgencyList2(String memberCode, String agencyCode) throws Exception {
+		MemberInfo mInfo = authMapper.userInfo2(memberCode);
+		HashMap< String, Object> map = new HashMap<String, Object>();
+		map.put("memberBizCode", mInfo.getBizCode());
+		map.put("agencyCode", agencyCode);
+		List<HashMap< String, Object>> list  = mapper.agencySettingList2(map);
 		return list;
 	}
 }

@@ -17,4 +17,5 @@ public class MemberInfo {
     private String recommendBizCode;
     private String useAt;
     private String grade;
+    private int dealerKind;
 }

@@ -13,6 +13,7 @@ import org.bizpay.domain.MemberInfo;
  */
 public interface AuthMapper {
 	public MemberInfo userInfo(String id) throws Exception;
+	public MemberInfo userInfo2(String mberCode) throws Exception;
 	public BizInfo bizInfo(String bizCode) throws Exception;
 	public List<DealerInfo> dealerList(String bizCode) throws Exception;
 	public String dealerKind(String bizCode) throws Exception;

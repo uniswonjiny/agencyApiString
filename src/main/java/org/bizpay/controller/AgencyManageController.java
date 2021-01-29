@@ -2,6 +2,7 @@ package org.bizpay.controller;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bizpay.common.domain.AgencyManageParam;
 import org.bizpay.common.domain.SellerManageParam;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -43,11 +45,24 @@ public class AgencyManageController {
 		}else 	return new ResponseEntity<>(map.get("message").toString() ,   HttpStatus.BAD_GATEWAY);
 	}
 	
+	// 기준대리점정보획득
+	@RequestMapping(value = "settingAgencyList/{memberCode}/{agencyCode}", method = RequestMethod.GET)
+	public ResponseEntity<HashMap< String, Object>> settingAgencyList(@PathVariable("memberCode") String memberCode ,@PathVariable("agencyCode") String agencyCode ) throws Exception{
+		log.info("기준대리점정보획득");
+		HashMap< String, Object> map = new HashMap<String, Object>();
+		List<HashMap< String, Object>> agencyKindList =  serve.settingAgencyList(memberCode ,agencyCode );
+		List<HashMap< String, Object>> settingAgencyList =  serve.settingAgencyList2(memberCode ,agencyCode );
+		map.put("agencyKindList", agencyKindList);
+		map.put("settingAgencyList", settingAgencyList);
+		return new ResponseEntity<>(map,   HttpStatus.OK);
+	
+	}
+	
 	// 대리점 정보 수정
 	@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
 	public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 입력");
-		HashMap< String, Object> map =  serve.upatgeAgency(param);
+		HashMap< String, Object> map =  serve.insertAgency(param);
 		if( (boolean) map.get("flag") ) {
 			return new ResponseEntity<>("",   HttpStatus.OK);
 		}else 	return new ResponseEntity<>(map.get("message").toString() ,   HttpStatus.BAD_GATEWAY);
