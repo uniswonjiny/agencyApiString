@@ -1,5 +1,6 @@
 package org.bizpay.service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AccountExcelParam;
@@ -59,6 +60,16 @@ public class AccountServiceImpl implements AccountService {
 			dto.setAccountNo( cUtil.decrypt(dto.getAccountNo()));
 		}
 		return list;
+	}
+
+	@Override
+	public int inOutSetting(HashMap<String, Object> map) throws Exception {
+		return aMaper.inOutSetting(map);
+	}
+
+	@Override
+	public HashMap<String, Object> inOutSettingInfo() throws Exception {
+		return aMaper.inOutSettingInfo();
 	}
 
 }

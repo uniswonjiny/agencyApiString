@@ -11,6 +11,7 @@
 
 	<typeAliases>
 		<package name="org.bizpay.domain" />
+		<package name="org.bizpay.common.domain" />
 	</typeAliases>
 
 </configuration>

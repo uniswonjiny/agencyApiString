@@ -1,5 +1,6 @@
 package org.bizpay.service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AccountExcelParam;
@@ -20,5 +21,8 @@ public interface AccountService {
 	public List<AccountTrans> transferList(AccountTransParam param) throws Exception;
 	// 은행계좌이체
 	public List<BankAcntTrans> bankAcntTransList(BankAcntTransParam param) throws Exception;
-	
+	// 출금정지설정
+	public int inOutSetting(HashMap<String, Object> map) throws Exception;
+	// 출금정지상태
+	public HashMap<String, Object> inOutSettingInfo() throws Exception;
 }

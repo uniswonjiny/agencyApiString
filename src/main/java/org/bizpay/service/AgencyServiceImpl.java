@@ -1,10 +1,14 @@
 package org.bizpay.service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
+import org.bizpay.common.domain.DelngCancelParam;
 import org.bizpay.common.domain.SellerParam;
+import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.common.util.StringUtils;
 import org.bizpay.common.util.TaxCalculator;
 import org.bizpay.domain.AgencySales;
@@ -25,6 +29,9 @@ public class AgencyServiceImpl implements AgencyService {
 	
 	@Autowired
 	StringUtils stringUtil;
+	
+	@Autowired
+	KSPayMsgBean ksPay;
 	
 	@Override
 	public List<AgencySales> agencySalesList(AgencySalesParam param) throws Exception {
@@ -182,6 +189,116 @@ public class AgencyServiceImpl implements AgencyService {
 			dto.setFee(tax.getTaxAmount().doubleValue());
 		}
 		return list;
+	}
+
+	@Override
+	public HashMap<String, Object> delngCancel(DelngCancelParam param) throws Exception {
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("flag", true);
+		map.put("message", "");
+		
+		DelngCancelParam p2 = mapper.delngConfirm(param);
+		
+		if(p2==null) {
+			map.put("flag", false);
+			map.put("message", "수정할 데이터가 존재하지 않습니다.");
+			return map;
+		}
+		
+		if("CARD_CNCL".equals(p2.getDelngSeCode())) {
+			map.put("flag", false);
+			map.put("message", "이미 취소된 거래입니다.");
+			return map;
+		}
+			
+		if("CASH_RCIPT_CNCL".equals(p2.getDelngSeCode())) {
+			map.put("flag", false);
+			map.put("message", "이미 취소된 거래입니다.");
+			return map;
+		}
+		// 카드결제인경우
+		if("CARD_ISSUE".equals(p2.getDelngSeCode())) {
+			if(param.getConfmDt()==null || param.getConfmDt().length() ==0 ) {
+				map.put("flag", false);
+				map.put("message", "결제확정일이 없습니다.");
+				return map;
+			}
+			
+			DelngCancelParam p3 = mapper.delngCardConfirm(param);
+			param.setPgRciptNo(p3.getPgRciptNo() );
+			param.setTId(p3.getTId());
+			// 관리자인 경우 모든경우 취소가능  -- 세션관리 기능 개발이후 처리한다.
+			
+			
+			
+			// 관리자가 아닌경우 가능한 경우만 취소
+			if( (p3.getPgRciptNo() != null && !"".equals(p3.getPgRciptNo() ) )  && ( p3.getTId()!=null && !"".equals( p3.getTId() ))) {
+				String payType = mapper.getPayType(param.getMberCode()  );
+				int gapDate = stringUtil.getGapDay( param.getConfmDt().substring(0,8));
+				//익일인경우. 당일취소만.
+				if("T".equals(payType)) {
+					if(0 != gapDate ) {
+						map.put("flag", false);
+						map.put("message", "취소할수 없는 거래입니다.");
+						return map;
+					}
+				}
+				//5일입금인경우 4일까지 가능.
+				if("N".equals(payType)) {
+					if( gapDate <0 || gapDate > 5  ) {
+						map.put("flag", false);
+						map.put("message", "취소할수 없는 거래입니다.");
+						return map;
+					}
+				}
+					
+			}
+						
+			
+			
+		
+			
+			
+		}
+		// 현금결제인경우
+		if("CASH_RCIPT_ISSUE".equals(p2.getDelngSeCode())) {
+			
+		}
+		
+		
+		
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		///////1. 추후 에러 처리 처리 핸들러 개발후 변경한다. 
+		////// 2. 로그인 인증관리 부분 개발후 권한처리관련 핸들러나 인터셉터로 처리해야 한다. 수정 삭제 입력 여부부분
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		
+		
+		
+		if(mapper.delngCancel(param) <1) {
+			map.put("flag", false);
+			map.put("message", "변경된 정보가 없습니다.");
+		}
+		return map;
+	}
+
+	@Override
+	public Hashtable<String, Object> ksPayCancel(String pgRciptNo, String tId) throws Exception {
+		/////////////////// 결제 관련 부분은 모두 다시 개발한다. !!!!!!!!!!! 이부분은 패스 결제성공 실패 이후 로 개발만 진행함
+		String KSNET_PG_IP = "210.181.28.116";	//-필수- ipaddr X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)
+		int KSNET_PG_PORT = 21001;	
+		String pKeyInType = "K";
+		final Hashtable xht = ksPay.sendCardCancelMsg(
+				KSNET_PG_IP, 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
+				KSNET_PG_PORT,			// -필수- port   9( 5)   *KSNET_PORT(21001)  
+				tId, 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
+				pKeyInType, 							// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
+				pgRciptNo							// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+			);
+		
+		
+		return null;
 	}
 
 }

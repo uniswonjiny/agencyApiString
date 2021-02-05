@@ -1,5 +1,6 @@
 package org.bizpay.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.GuarantParam;
@@ -42,5 +43,12 @@ public class TaxRestController {
 	public ResponseEntity<List<Guarant>> guarantList(@RequestBody GuarantParam param) throws Exception {
 		log.info("보증료 목록 조회");
 		return new ResponseEntity<>(tService.guarantList(param), HttpStatus.OK);
+	}
+	@RequestMapping(value = "taxFileInfo", method = RequestMethod.POST)
+	public ResponseEntity<HashMap<String, Object>>  taxFileInfo(@RequestBody TaxIssueParam param) throws Exception {
+		log.info("세무서 신고파일 정보 조회 - 테스트파일은 화면에서 만든다 - 서버에 임시파일양산되는것 방지");
+		HashMap<String, Object> map = new HashMap<>();
+		
+		return new ResponseEntity<>(map, HttpStatus.OK);
 	}
 }

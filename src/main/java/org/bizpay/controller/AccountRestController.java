@@ -1,5 +1,6 @@
 package org.bizpay.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AccountExcelParam;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.java.Log;
@@ -54,6 +56,28 @@ public class AccountRestController {
 	public ResponseEntity<List<BankAcntTrans>> bankAcntTransList(@RequestBody BankAcntTransParam param) throws Exception{
 		log.info("은행계좌이체목록");
 		return new ResponseEntity<>(aService.bankAcntTransList(param),   HttpStatus.OK);
+	}
+	
+	// inOutSetting 출금정지설정
+	@RequestMapping(value = "inOutSetting", method = RequestMethod.POST)
+	public ResponseEntity<Void> inOutSetting(@RequestParam String enableYn , @RequestParam String msg) throws Exception{
+		log.info("출금정지설정");
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("enableYn", enableYn);
+		map.put("msg", msg);
+		if(aService.inOutSetting(map) <1) {
+			return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
+		}else {
+			return new ResponseEntity<>( HttpStatus.OK);
+		}
+	}
+	
+	// 출금정지상태
+	@RequestMapping(value = "inOutSettingInfo", method = RequestMethod.GET)
+	public ResponseEntity<HashMap<String, Object>> inOutSettingInfo() throws Exception{
+		log.info("출금정지상태");			
+		
+		return new ResponseEntity<>(aService.inOutSettingInfo(),  HttpStatus.OK);
 	}
 	
 }

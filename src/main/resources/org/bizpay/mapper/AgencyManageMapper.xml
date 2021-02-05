@@ -258,7 +258,7 @@
 			#{bizTelno},
 			#{trmnlNo},
 			#{pymntRate},
-			#{dealerId},
+			#{usid},
 			#{trgetBizCode},
 			#{recommendBizCode},
 

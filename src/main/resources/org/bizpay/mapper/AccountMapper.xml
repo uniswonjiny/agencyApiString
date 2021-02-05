@@ -398,70 +398,83 @@
   	</select>
   	
   	<select id="bankAcntTrans" resultType="BankAcntTrans">
-			SELECT 
-				to_char(to_Date(f.confm_dt), 'yyyy-mm-dd') As confm_dt_sub,
-				to_char(to_Date(f.pay_dt), 'yyyy-mm-dd') As fpay_dt,  
-				case epay_type when 'T' then '익일입금' else '일반' end as pay_type, 
-				case fee_bank when 'P' then '500' else '0' end as bank_fee, 
-				case fee_bank when 'P' then seler_pymntamt - 500 else seler_pymntamt end as pay_amount, 
-				f.bank_name , 
-				f.account_no,
-				f.depositor,
-				f.cnt,
-				f.pymnt_yn
-			FROM (
-				SELECT b.pymnt_yn, 
-					Min(B.Confm_Dt) As Confm_Dt,
-					Min(b.pay_dt) As pay_dt,
-					e.bank_name, 
-					e.account_no, 
-					e.depositor, 
-					e.pay_type as epay_type, 
-					e.fee_bank, 		
-					NVL(round(SUM(b.splpc+b.vat)-SUM(((b.splpc+b.vat)*(SELECT fee_rate FROM mber_basis WHERE mber_code = A.mber_code))/100)), 0) AS seler_pymntamt, 
-					COUNT(b.confm_dt) AS cnt 
-				FROM delng_credt a, (Select de.*, To_Char(To_Date(Next_Businessday_Func(To_Char(To_Date(de.Confm_Dt), 'yyyymmdd'), (select pay_type from mber_basis mb where mb.mber_code = de.mber_code))), 'yyyymmdd') as pay_dt from delng de) b, mber c, biz d, mber_basis e 
-				WHERE a.mber_code(+) = b.mber_code 
-					AND a.mber_code_sn(+) = b.mber_code_sn 
-					AND a.rcipt_no(+) = b.rcipt_no 
-					AND b.mber_code = c.mber_code 
-					AND c.biz_code = d.biz_code 
-					AND c.mber_code = e.mber_code 
-					AND b.card_delete_yn != 'Y' 
-		        	AND c.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
-					AND e.pay_type IN ('N','T') 
-					AND e.calculate_type='U'
-					<choose>
-						<when test='dateType.equals("confirm")'>
-							AND b.confm_dt BETWEEN #{dateStart} and #{dateEnd} 
-						</when>
-						<otherwise>
-							AND b.pay_dt BETWEEN #{dateStart} and #{dateEnd} 
-						</otherwise>
-					</choose>
-					<if test='bizCode!=null and !bizCode.equals("")' >
-						AND c.biz_code= #{bizCode}
-					</if>
-					<if test='pymntYn!=null and !pymntYn.equals("")' >
-						AND b.pymnt_yn=#{pymntYn}
-					</if>
-					<if test='mberName!=null and !mberName.equals("")' >
-						AND e.mber_name LIKE '%'||#{mberName}||'%'
-					</if>
-					 <if test='indutyId!=null and !indutyId.equals("")' >
-			        	AND e.induty_id LIKE '%'||#{indutyId}||'%'
-			       	</if>	
-			       	<if test='bizrno!=null and !bizrno.equals("")' >
-			        	AND e.biz_num LIKE '%'||#{bizrno}||'%'
-			       	</if>
-	
-	
-		       	
-					GROUP BY b.pymnt_yn, c.usid, e.bank_name, e.account_no, e.mber_name, e.depositor, e.pay_type, e.fee_bank
-					) f
-					Order By f.Confm_Dt Desc, f.depositor asc
-					
-					
+	SELECT 
+		to_char(to_Date(f.confm_dt), 'yyyy-mm-dd') As confm_dt_sub,
+		to_char(to_Date(f.pay_dt), 'yyyy-mm-dd') As fpay_dt,  
+		case epay_type when 'T' then '익일입금' else '일반' end as pay_type, 
+		case fee_bank when 'P' then '500' else '0' end as bank_fee, 
+		case fee_bank when 'P' then seler_pymntamt - 500 else seler_pymntamt end as pay_amount, 
+		f.bank_name , 
+		f.account_no,
+		f.depositor,
+		f.cnt,
+		f.pymnt_yn
+	FROM (
+		SELECT b.pymnt_yn, 
+			Min(B.Confm_Dt) As Confm_Dt,
+			Min(b.pay_dt) As pay_dt,
+			e.bank_name, 
+			e.account_no, 
+			e.depositor, 
+			e.pay_type as epay_type, 
+			e.fee_bank, 		
+			NVL(round(SUM(b.splpc+b.vat)-SUM(((b.splpc+b.vat)*(SELECT fee_rate FROM mber_basis WHERE mber_code = A.mber_code))/100)), 0) AS seler_pymntamt, 
+			COUNT(b.confm_dt) AS cnt 
+		FROM delng_credt a, (Select de.*, To_Char(To_Date(Next_Businessday_Func(To_Char(To_Date(de.Confm_Dt), 'yyyymmdd'), (select pay_type from mber_basis mb where mb.mber_code = de.mber_code))), 'yyyymmdd') as pay_dt from delng de) b, mber c, biz d, mber_basis e 
+		WHERE a.mber_code(+) = b.mber_code 
+			AND a.mber_code_sn(+) = b.mber_code_sn 
+			AND a.rcipt_no(+) = b.rcipt_no 
+			AND b.mber_code = c.mber_code 
+			AND c.biz_code = d.biz_code 
+			AND c.mber_code = e.mber_code 
+			AND b.card_delete_yn != 'Y' 
+        	AND c.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
+			AND e.pay_type IN ('N','T') 
+			AND e.calculate_type='U'
+			<choose>
+				<when test='dateType.equals("confirm")'>
+					AND b.confm_dt BETWEEN #{dateStart} and #{dateEnd} 
+				</when>
+				<otherwise>
+					AND b.pay_dt BETWEEN #{dateStart} and #{dateEnd} 
+				</otherwise>
+			</choose>
+			<if test='bizCode!=null and !bizCode.equals("")' >
+				AND c.biz_code= #{bizCode}
+			</if>
+			<if test='pymntYn!=null and !pymntYn.equals("")' >
+				AND b.pymnt_yn=#{pymntYn}
+			</if>
+			<if test='mberName!=null and !mberName.equals("")' >
+				AND e.mber_name LIKE '%'||#{mberName}||'%'
+			</if>
+			 <if test='indutyId!=null and !indutyId.equals("")' >
+	        	AND e.induty_id LIKE '%'||#{indutyId}||'%'
+	       	</if>	
+	       	<if test='bizrno!=null and !bizrno.equals("")' >
+	        	AND e.biz_num LIKE '%'||#{bizrno}||'%'
+	       	</if>
+			GROUP BY b.pymnt_yn, c.usid, e.bank_name, e.account_no, e.mber_name, e.depositor, e.pay_type, e.fee_bank
+			) f
+			Order By f.Confm_Dt Desc, f.depositor asc
   	</select>
   	
+  	<!-- 출금정지설정 -->
+  	<update id="inOutSetting" parameterType="HashMap">
+  		UPDATE tbl_config 
+  			SET 
+  		enable_yn = #{enableYn} 
+  		, msg = #{msg} 
+  		WHERE gb_code = '000' 
+  	</update>
+  	
+  	<!-- 출금정지상태확인  -->
+  	<select id="inOutSettingInfo" resultType="HashMap" >
+  		select
+  			enable_yn as enableYn,
+  			msg
+  		from
+  		tbl_config
+  		WHERE gb_code = '000'
+  	</select>
   </mapper>

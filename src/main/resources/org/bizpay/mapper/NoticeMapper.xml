@@ -14,6 +14,33 @@
 	ORDER BY idx DESC
   	</select>
   	
+  	<!-- 공지사항 삭제  -->
+  	<delete id="deleteNotice" parameterType="java.util.List">
+  		DELETE FROM tbl_notice
+  		<where>
+  			<foreach collection="list" item="item" open="" close="" separator="OR">
+  				( idx = #{item} )
+  			</foreach>
+  		</where>
+  	</delete>
+  	
+  	<!-- 공지사항저장 -->
+  	<insert id="saveNotice">
+  		INSERT INTO tbl_notice ( idx, title, content, isactive, type ) 
+  		VALUES (seq_notice.NEXTVAL, #{title}, #{content}, #{isactive}, #{type})
+  	</insert>
+  	
+  	<!--공지사항수정  -->
+  	<update id="updateNotice">
+  		UPDATE tbl_notice 
+  		set 
+  		title = #{title}, 
+  		content = #{content}, 
+  		isactive = #{isactive},
+  		modify_date = sysdate 
+  		WHERE idx = #{idx} 
+  	</update>
+  	
   	<!-- pg 수수료율 목록 -->
   	<select id="pgFeeList" resultType="PgFee">
   		select 
@@ -24,6 +51,46 @@
 			fee03,
 			pg_name
 		 from tbl_pg_fee
+		 order by idx desc 
   	</select>
+  	<!-- pg 수수료율 저장 -->
+  	<insert id="savePgFee">
+		INSERT INTO tbl_pg_fee (
+		    idx,
+		    default_fee,
+		    fee01,
+		    fee02,
+		    fee03,
+		    pg_name
+		) VALUES (
+		    (select nvl(max(idx) , 0) +1 from tbl_pg_fee),
+		    #{defaultFee},
+		    #{fee01},
+		    #{fee02},
+		    #{fee03},
+		    #{pgName}
+		)
+  	</insert>
   	
+  	<!-- pg 수수료율 수정 -->
+  	<update id="updatePgFee">
+  	UPDATE tbl_pg_fee 
+  	set 
+  	DEFAULT_FEE = #{defaultFee}, 
+  	FEE01 = #{fee01},
+  	FEE02 = #{fee02},
+  	FEE03 = #{fee03},
+  	pg_name = #{pgName}
+  	WHERE idx= #{idx}
+  	</update>
+  	
+  	<!--  pg 수수료율 삭제  -->
+  	<delete id="deletePgFee" parameterType="java.util.List">
+  		DELETE FROM tbl_pg_fee
+  		<where>
+  			<foreach collection="list" item="item" open="" close="" separator="OR">
+  				( idx = #{item} )
+  			</foreach>
+  		</where>
+  	</delete>
   </mapper>

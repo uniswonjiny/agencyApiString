@@ -50,6 +50,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			if( dto.getPayTelno()!=null && dto.getPayTelno().length() > 20 ) dto.setPayTelno( util.decrypt( dto.getPayTelno() ) );
 			if( dto.getMTelno()!=null && dto.getMTelno().length() > 20 ) dto.setMTelno( util.decrypt(dto.getMTelno()  ) );
 			if( dto.getBankSerial() !=null && dto.getBankSerial().length() > 20 )	dto.setBankSerial(  util.decrypt( dto.getBankSerial() ) );
+			if( dto.getPayBplc() !=null)	dto.setPayBplc(  util.decrypt( dto.getPayBplc() ) );
 		}
 		return list;
 	}
@@ -165,7 +166,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		inputParam.setMemo(params.getMemo());
 		inputParam.setHistoryMemo(params.getHistoryMemo());
 		inputParam.setLimitOne(params.getLimitOne());
-		inputParam.setLimitDay(params.getBizLimitDay());
+		inputParam.setLimitDay(params.getLimitDay());
 		inputParam.setLimitMonth(params.getLimitMonth());
 		inputParam.setLimitYear(params.getLimitYear());
 		inputParam.setInstallmentMonths(params.getInstallmentMonths());
@@ -239,6 +240,8 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		
 		if(params.getPayTelno()!=null) params.setPayTelno( util.encrypt( params.getPayTelno()  )  );
 		if(params.getPayBizrno()!=null) params.setPayBizrno( util.encrypt( params.getPayBizrno()  )  );
+		
+		
 		if(params.getPayBplc()!=null) params.setPayBplc( util.encrypt( params.getPayBplc()  )  );
 		
 		if(params.getEmail()!=null) params.setEmail( util.encrypt( params.getEmail())  );

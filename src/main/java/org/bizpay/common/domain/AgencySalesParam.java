@@ -16,4 +16,5 @@ public class AgencySalesParam {
 	private String mberId; // 판매자 아이디
 	private String companyName; // 상호
 	private String bizNum; // 사업자 번호
+	private int widthMber; // 소속대리점 딜러포함유무
 }

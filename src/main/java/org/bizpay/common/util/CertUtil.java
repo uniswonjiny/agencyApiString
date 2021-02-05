@@ -35,7 +35,7 @@ public class CertUtil {
 	 */
 	public String encrypt(String text) {
 		try{
-			if(text == null || text.length()<1) return "";
+			if(text == null || text.trim() .length()<1) return "";
 			
 			Key key = generateKey("AES", byteUtils.toBytes("696d697373796f7568616e6765656e61", 16));
 			String transformation = "AES/ECB/PKCS5Padding";

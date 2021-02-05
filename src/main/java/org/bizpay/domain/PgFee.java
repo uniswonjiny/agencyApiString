@@ -9,9 +9,9 @@ import lombok.ToString;
 @ToString
 public class PgFee {
 	private int idx;
-	private float defaultFee;
-	private float fee01;
-	private float fee02;
+	private float defaultFee; // 기본 수수료율
+	private float fee01; // 익일 수수료율
+	private float fee02; // 5일 수수료율
 	private float fee03;
-	private String pgName;
+	private String pgName; // pg 이름
 }

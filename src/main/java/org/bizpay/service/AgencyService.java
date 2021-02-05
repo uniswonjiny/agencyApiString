@@ -1,8 +1,11 @@
 package org.bizpay.service;
 
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
+import org.bizpay.common.domain.DelngCancelParam;
 import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
@@ -21,4 +24,8 @@ public interface AgencyService {
 	public List<SellerSummary> sellerSummaryList(SellerParam param) throws Exception;
 	// 매출조정 내역조회
 	public List<SalesAdjustment> salesAdjustment(SellerParam param) throws Exception;
+	// 매출취소
+	public HashMap<String, Object> delngCancel(DelngCancelParam param) throws Exception;
+	// 거래취소기능
+	public Hashtable<String, Object> ksPayCancel(String pgRciptNo , String tId) throws Exception;
 }

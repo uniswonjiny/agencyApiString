@@ -238,7 +238,8 @@
                                                                     AND c.card_delete_yn = 'N'
                                                                     AND c.confm_dt between #{dateStart} and #{dateEnd}
                                                                     AND c.delng_se_code = 'CARD_ISSUE'
-                                                                    <if test="bizCode!=null and !bizCode.equals('')"> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
+   
+                                                                    <if test="bizCode.equals('') and widthMber==2"> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
                                                                     	AND A.biz_code= #{bizCode}
                                                                     </if>
                                                                     <if test="mberName!=null and !mberName.equals('')" >
@@ -548,18 +549,33 @@
 	ORDER BY a.cmpnm,b.induty_id 
 	</select>
 	
-	<update id="tetmp111">
+	<update id="delngCancel">
 		UPDATE delng 
 					SET card_delete_yn = 'Y' 
-					 ,cancel_mber = '"+usid+"' 
-
-					 ,cancel_dt = '"+거래취소일자+"' 
-					 ,bigo = '"+취소사유+"'" +
-					 WHERE mber_code='"+회원코드+"' 
-					 AND mber_code_sn='"+회원코드생성순번+"' 
-					 AND rcipt_no='"+영수증번호
+					 ,cancel_mber = #{usid} 
+					 ,cancel_dt = #{cancelDate} 
+					 ,bigo = #{cancelReason}
+					 WHERE mber_code=#{mberCode} 
+					 AND mber_code_sn=#{mberCodeSn}
+					 AND rcipt_no=#{rciptNo}
 	</update>
 	
+	<select id="delngConfirm" resultType="DelngCancelParam">
+		SELECT * FROM delng
+		WHERE mber_code= #{mberCode} 
+			AND mber_code_sn=  #{mberCodeSn} 
+			AND rcipt_no= #{rciptNo} 
+	</select>
 	
+	<select id="delngCardConfirm">
+		SELECT * FROM delng_credt 
+		WHERE mber_code= #{mberCode} 
+			AND mber_code_sn=  #{mberCodeSn} 
+			AND rcipt_no= #{rciptNo} 
+	</select>
+	
+	<select id="getPayType" resultType="String">
+		select pay_type from MBER_BASIS where mber_code = #{val}
+	</select>
 
   </mapper>

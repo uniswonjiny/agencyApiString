@@ -38,7 +38,17 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public BizInfo bizInfo(String bizCode) throws Exception {
 		log.info("사업자 정보 추출");
-		return aMapper.bizInfo(bizCode);
+		BizInfo bizInfo = aMapper.bizInfo(bizCode);
+		bizInfo.setBankSerial( cert.decrypt(bizInfo.getBankSerial()));
+		bizInfo.setBizTelno( cert.decrypt(bizInfo.getBizTelno()));
+		bizInfo.setBizrno( cert.decrypt(bizInfo.getBizrno()));
+		bizInfo.setBplc( cert.decrypt( bizInfo.getBplc()));
+		bizInfo.setEmail( cert.decrypt( bizInfo.getEmail()));
+		bizInfo.setMTelno(  cert.decrypt( bizInfo.getMTelno()));
+		bizInfo.setPayBizrno( cert.decrypt( bizInfo.getPayBizrno()));
+		bizInfo.setPayBplc( cert.decrypt( bizInfo.getPayBplc()));
+		bizInfo.setPayTelno( cert.decrypt( bizInfo.getPayTelno()));
+		return bizInfo;
 	}
 
 	@Override

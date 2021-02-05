@@ -1,8 +1,10 @@
 package org.bizpay.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
+import org.bizpay.common.domain.DelngCancelParam;
 import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
@@ -69,9 +71,9 @@ public class AgencyRestController {
 	
 	//매출취소
 	@RequestMapping(value = "cancelAdjustment", method = RequestMethod.POST)
-	public ResponseEntity<List<SalesAdjustment>> cancelAdjustment(@RequestBody SellerParam param) throws Exception{
+	public ResponseEntity<HashMap< String, Object>> cancelAdjustment(@RequestBody DelngCancelParam param) throws Exception{
 		log.info("매출취소");
-		return new ResponseEntity<>( service.salesAdjustment(param), HttpStatus.OK);
+		return new ResponseEntity<>( service.delngCancel(param), HttpStatus.OK);
 	}
 	// 대리점 전체 목록
 	@RequestMapping(value = "dealerList", method = RequestMethod.POST)

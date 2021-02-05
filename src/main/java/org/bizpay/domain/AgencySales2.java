@@ -18,7 +18,7 @@ public class AgencySales2 {
 	public double pymntRate;
 	public String mberName;
 	public String companyName;
-	public int bizNum;
+	public String bizNum;
 	public double feeRate;
 	public String recommendBizCode;
 	public int recommendDealerKind;
