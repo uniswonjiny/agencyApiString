@@ -477,4 +477,19 @@
   		tbl_config
   		WHERE gb_code = '000'
   	</select>
+  	
+  	<!-- 계좌이체조정 지급 / 미지급처리 -->
+  	<update id="acnutTransfrYn" parameterType="java.util.List">
+  	<foreach  item="autVo" collection="list"  index="index" 
+      separator=";" open="DECLARE BEGIN" close="; END;" >
+		  	UPDATE delng
+			SET
+			   pymnt_yn = #{autVo.pymntYn}
+			WHERE
+			        mber_code = #{autVo.mberCode}
+			    AND mber_code_sn = #{autVo.mberCodeSn}
+			    AND rcipt_no = #{autVo.rciptNo}
+	    
+	    </foreach>
+  	</update>
   </mapper>

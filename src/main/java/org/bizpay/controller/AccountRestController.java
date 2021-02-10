@@ -6,6 +6,7 @@ import java.util.List;
 import org.bizpay.common.domain.AccountExcelParam;
 import org.bizpay.common.domain.AccountListParam;
 import org.bizpay.common.domain.AccountTransParam;
+import org.bizpay.common.domain.AcnutTransfrYnParam;
 import org.bizpay.common.domain.BankAcntTransParam;
 import org.bizpay.domain.AccountExcel;
 import org.bizpay.domain.AccountInOut;
@@ -76,8 +77,16 @@ public class AccountRestController {
 	@RequestMapping(value = "inOutSettingInfo", method = RequestMethod.GET)
 	public ResponseEntity<HashMap<String, Object>> inOutSettingInfo() throws Exception{
 		log.info("출금정지상태");			
-		
 		return new ResponseEntity<>(aService.inOutSettingInfo(),  HttpStatus.OK);
+	}
+	// 계좌이체조정 지급, 미지급처리
+	@RequestMapping(value = "acnutTransfrYn", method = RequestMethod.POST)
+	public ResponseEntity<Void> acnutTransfrYn(@RequestBody List<AcnutTransfrYnParam> param) throws Exception{
+		log.info("계좌이체조정 지급, 미지급처리 - param" + param.toString());			
+		//return new ResponseEntity<>(HttpStatus.OK);
+		if(aService.acnutTransfrYn(param)>0 ) {
+			return new ResponseEntity<>(HttpStatus.OK);
+		}else return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 }

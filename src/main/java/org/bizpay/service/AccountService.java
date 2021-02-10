@@ -6,6 +6,7 @@ import java.util.List;
 import org.bizpay.common.domain.AccountExcelParam;
 import org.bizpay.common.domain.AccountListParam;
 import org.bizpay.common.domain.AccountTransParam;
+import org.bizpay.common.domain.AcnutTransfrYnParam;
 import org.bizpay.common.domain.BankAcntTransParam;
 import org.bizpay.domain.AccountExcel;
 import org.bizpay.domain.AccountInOut;
@@ -25,4 +26,6 @@ public interface AccountService {
 	public int inOutSetting(HashMap<String, Object> map) throws Exception;
 	// 출금정지상태
 	public HashMap<String, Object> inOutSettingInfo() throws Exception;
+	// 계좌이체조정 지급, 미지급처리
+	public int acnutTransfrYn(List<AcnutTransfrYnParam> param) throws Exception;
 }

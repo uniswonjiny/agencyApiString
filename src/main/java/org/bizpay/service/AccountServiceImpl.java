@@ -6,6 +6,7 @@ import java.util.List;
 import org.bizpay.common.domain.AccountExcelParam;
 import org.bizpay.common.domain.AccountListParam;
 import org.bizpay.common.domain.AccountTransParam;
+import org.bizpay.common.domain.AcnutTransfrYnParam;
 import org.bizpay.common.domain.BankAcntTransParam;
 import org.bizpay.common.util.CertUtil;
 import org.bizpay.domain.AccountExcel;
@@ -15,6 +16,7 @@ import org.bizpay.domain.BankAcntTrans;
 import org.bizpay.mapper.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.java.Log;
 @Log
@@ -70,6 +72,12 @@ public class AccountServiceImpl implements AccountService {
 	@Override
 	public HashMap<String, Object> inOutSettingInfo() throws Exception {
 		return aMaper.inOutSettingInfo();
+	}
+
+	@Override
+	@Transactional
+	public int acnutTransfrYn(List<AcnutTransfrYnParam> param) throws Exception {
+		return aMaper.acnutTransfrYn(param);
 	}
 
 }
