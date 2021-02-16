@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
+import org.bizpay.common.domain.SellerInsertParam;
 import org.bizpay.common.domain.SellerManageParam;
 import org.bizpay.common.util.CertUtil;
 import org.bizpay.common.util.DataFormatUtil;
@@ -311,5 +312,20 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		map.put("agencyCode", agencyCode);
 		List<HashMap< String, Object>> list  = mapper.agencySettingList2(map);
 		return list;
+	}
+	@Override
+	public int insertSellerList(List<SellerInsertParam> list) throws Exception {
+		log.info("판매자 등록1  : " + list.toString());
+		for (SellerInsertParam dto: list) {
+			dto.setAdres(util.encrypt(   dto.getAdres()  ));
+			dto.setAccountNo(util.encrypt( dto.getAccountNo()));
+			dto.setMberMobile( util.encrypt(dto.getMberMobile()));
+			dto.setMberJumi( util.encrypt( dto.getMberJumi()));
+			dto.setEmail( util.encrypt(dto.getEmail()));
+			dto.setMberPhone( util.encrypt(dto.getMberPhone() ));
+			
+		}
+		log.info("판매자 등록2  : " + list.toString());
+		return mapper.insertSellerList(list);
 	}
 }

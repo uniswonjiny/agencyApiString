@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bizpay.common.domain.AgencyManageParam;
+import org.bizpay.common.domain.SellerInsertParam;
 import org.bizpay.common.domain.SellerManageParam;
 import org.bizpay.domain.AgencyManage;
 import org.bizpay.domain.SellerList;
@@ -58,7 +59,7 @@ public class AgencyManageController {
 	
 	}
 	
-	// 대리점 정보 수정
+	// 대리점 정보 입력
 	@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
 	public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 입력");
@@ -73,5 +74,15 @@ public class AgencyManageController {
 	public ResponseEntity<List<SellerList>> sellerList(@RequestBody SellerManageParam param) throws Exception{
 		log.info("대리점목록");
 		return new ResponseEntity<>(serve.selectSellerList(param),   HttpStatus.OK);
+	}
+	// 판매자 등록
+	@RequestMapping(value = "insertSeller", method = RequestMethod.POST)
+	public ResponseEntity<String> sellerList(@RequestBody List<SellerInsertParam> param) throws Exception{
+		log.info("대리점입력");
+		System.out.println(param.toString());
+//		return new ResponseEntity<>("ok",   HttpStatus.OK);
+		if(serve.insertSellerList(param) > 0)return new ResponseEntity<>("ok",   HttpStatus.OK);
+		else return new ResponseEntity<>("fail",   HttpStatus.OK);
+		
 	}
 }
