@@ -44,11 +44,19 @@
   	<update id="updateBiz">
   	UPDATE BIZ
 		SET 
+			<if test='bizrno!=null !bizrno.equals( "") '> 
 		    BIZRNO                 = #{bizrno}, <!-- 필수 :  암호화후저장  --> 
+			</if>
 		    CMPNM                  = #{cmpnm}, 
+		    <if test="bprprr!=null">
 		    BPRPRR                 =  #{bprprr}, 
-		    BPLC                   = #{bprprr} , 
+		    </if>
+		    <if test="bplc!=null">
+		    BPLC                   = #{bplc} , 
+		    </if>
+		    <if test="bizTelno!=null">
 		    BIZ_TELNO              = #{bizTelno}, 
+		    </if>
 		    
 		    <!--  HEADOFFICE -->
 		    TRMNL_NO            = #{trmnlNo}, 
@@ -89,7 +97,8 @@
 		    BIZ_INSTALLMENT_MONTHS = #{bizInstallmentMonths},
 		    JOIN_AMT               = #{joinAmt}, 		   
 		    DT                     = SYSDATE
-		WHERE BIZ_CODE     = #{bizCode}		 
+		WHERE BIZ_CODE     = #{bizCode}	
+		
   	</update>
   	<!--  존재하는 대리점인지 확인 -->
   	<select id="bizCount" resultType="int">
@@ -119,9 +128,15 @@
         SN,
         BIZRNO,
         CMPNM,
+        <if test="bprprr!=null">  
         BPRPRR,
+        </if>
+        <if test="bplc!=null">
         BPLC,
+        </if>
+        <if test="bizTelno!=null">
         BIZ_TELNO,
+        </if>
         TRMNL_NO,
         PG_TRMNL_NO,
         PG_VAN,
@@ -163,9 +178,15 @@
        (SELECT nvl( MAX(sn)+1 , 1)  FROM biz_hist WHERE biz_code=#{bizCode}),
        #{bizrno},
        #{cmpnm},
+       <if test="bprprr!=null">   
        #{bprprr},
+       </if>
+       <if test="bplc!=null">
        #{bplc},
+       </if>
+       <if test="bizTelno!=null">
        #{bizTelno},
+       </if>
        #{trmnlNo},
        #{pgTrmnlNo},
        #{pgVan},
@@ -305,7 +326,7 @@
 		SELECT count(1) FROM biz WHERE bizrno = #{val}
 	</select>
 	
-	<!-- 대리점 목록 -->
+	<!-- 판매자 목록 -->
 	<select id="selectSellerList" resultType="SellerList" >
 	select * from
 	(select
@@ -498,7 +519,7 @@
 		    adres,
 		    mbtlnum,
 		    biz_code,
-		    mber_code,
+
 		    creat_dt,
 		    fee_rate,
 		    mber_name,
@@ -557,7 +578,7 @@
 			#{item.adres},
 			#{item.mbtlnum},
 			#{item.memberBizeCode},
-			#{item.memberMberCode},<!-- 원래 코딩상에는 안들어감  -->
+
 			sysdate,
 			#{item.feeRate},
 			#{item.mberName},
@@ -612,4 +633,105 @@
 		)
 		</foreach>
 	</insert>
+	<!-- 대리점 수정1 - mber_basis  -->
+	<update id="updateSelerMberBasis" >
+	UPDATE mber_basis
+		SET
+			<if test='grade !=null and grade.equals("HEADOFFICE")'>
+			 trmnl_no =  #{trmnlNo}
+		    , pg_trmnl_no =  #{pgTrmnlNo}
+		    , pg_sugi_trmnl_no = #{pgSugiTrmnlNo}
+		    , calculate_type =  #{calculateType}
+		    , pg_van =  #{pgVan}
+		    , set_device = #{setDevice}
+		    , set_device2 =  #{setDevice2}
+		    , pg_gb = #{pgGb}
+		    , van_gb = #{vanGb}
+		    , sugi =  #{sugi}
+		    , sugi_certification =  #{sugiCertification}
+		    , sms_autosend = #{smsAutosend}
+		    , set_sms_auth =  #{setSmsAuth}
+		    , cash_trmnl_no =  #{cashTrmnlNo}
+		    , sms_auth_money = #{smsAuthMoney} ,
+			</if>
+			<if test=' memberBizeCode !=null and  memberBizeCode.equals("0000002")'> 
+		     limit_one =  #{limitOne}
+		    , limit_day =  #{limitDay}
+		    , limit_month =  #{limitMonth}
+		    , limit_year =  #{limitYear}
+		    , installment_months =  #{installmentMonths} ,			
+			</if>
+		    adres = #{adres}
+		    , mbtlnum =  #{mbtlnum}
+		    , biz_code =  #{bizCode}
+		    , mber_code =  #{mberCode}
+		    , fee_rate =  #{feeRate}
+		    , mber_name = #{mberName}
+		    , bank_name =  #{bankName}
+		    , account_no =  #{accountNo}
+		    , mber_mobile =  #{mberMobile}
+		    , mber_jumi =  #{mberJumi}
+		    , email =  #{email}
+		    , depositor =  #{depositor}
+		    , pay_type =  #{payType}
+		    , fee_distributor =  #{feeDistributor}
+		    , fee_agency = #{feeAgency}
+		    , fee_dealer =  #{feeDealer}
+		    , fee_bank =  #{feeBank}
+
+		    , biz_type = #{bizType}
+		    , company_name =  #{companyName}
+		    , biz_num =  #{bizNum}
+		    , mber_phone =  #{mberPhone}
+		    , biz_type_name =  #{bizTypeName}
+		    , biz_item = #{bizItem}
+		    , memo =  #{memo}
+		    , history_memo =  #{historyMemo}
+		    , bank_code = #{bankCode}
+		    , atm_stop =  #{atmStop}
+		    , recommend_biz_code =  #{recommendBizCode}
+		    , unicore_rate =  #{unicoreRate}
+		    , recommend_dealer_rate =  #{recommendDealerRate}
+		    , code_rate = #{codeRate}
+		    , one_limit_rate =  #{oneLimitRate}
+		    , lv1_rate =  #{lv1Rate}
+		    , lv2_rate =  #{lv2Rate}
+		    , lv3_rate =  #{lv3Rate}
+		    , document_reg =  #{documentReg}
+		WHERE
+		        induty_id =  #{indutyId}
+	</update>
+	
+	<!-- 사용자 정보 수정  -->
+	<update id="updateMber">
+		UPDATE mber
+			SET
+			    biz_code = #{bizCode},
+			    password = #{mbtlnum},
+			    use_at = #{useAt}
+			WHERE
+			    mber_code = #{mberCode} 
+	</update>
+	<!-- mber_hist2  -->
+	<insert id="insertMberHist2" parameterType="HashMap" >
+		INSERT INTO mber_hist2 (
+		    mber_code,
+		    sn,
+		    hist_code,
+		    hist_cn,
+		    creat_mber_code
+		) VALUES (
+		    #{mberCode},
+		    (SELECT MAX(sn)+1 FROM mber_hist2 WHERE mber_code=#{mberCode} ),
+		    #{histCode},
+		    #{histCn},
+		    #{memberMberCode}
+		)
+	
+	</insert>
+	
+	<!-- 수수료율 정보 확인 테스트등 가비지 값으로  -->
+	<select id="selectFeeRate" resultType="double">
+		SELECT  distinct max(fee_rate) over(order by CREAT_DT desc ) FROM mber_basis WHERE mber_code= #{mberCode}  
+	</select>
   </mapper>

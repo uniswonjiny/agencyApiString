@@ -19,6 +19,7 @@ public interface AuthMapper {
 	public String dealerKind(String bizCode) throws Exception;
 	public int updateMberUseAt (HashMap<String, Object> map) throws Exception;
 	public int insertMberHistUserAt(HashMap<String, Object> map) throws Exception;
+	public int insertMberHist2(HashMap<String, Object> map) throws Exception;
 	public int updateRecommendBizCode(HashMap<String, Object> map) throws Exception;
 	public int selectMemberUsidChk(String usId) throws Exception;
 	public int selectBizrno(String bizrno) throws Exception;

@@ -125,6 +125,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 	
 		AgencyManageParam inputParam = new AgencyManageParam();
 		inputParam.setBizrno( util.encrypt(params.getBizrno()) );
+		inputParam.setBizNum( util.encrypt(params.getBizNum()) );
 		//inputParam.setDealerId(params.getDealerId() );
 		inputParam.setCmpnm( params.getCmpnm() );
 		inputParam.setBprprr( params.getBprprr()  );
@@ -296,14 +297,13 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 	public List<HashMap< String, Object>> settingAgencyList(String memberCode , String agencyCode ) throws Exception {
 		MemberInfo mInfo = authMapper.userInfo2(memberCode);
 		HashMap< String, Object> map = new HashMap<String, Object>();
-		
 		map.put("dealerKind", mInfo.getDealerKind());
 		map.put("memberBizCode", mInfo.getBizCode());
 		map.put("agencyCode", agencyCode);
 		List<HashMap< String, Object>> list  = mapper.agencySettingList(map);
-		
 		return list;
 	}
+	
 	@Override
 	public List<HashMap<String, Object>> settingAgencyList2(String memberCode, String agencyCode) throws Exception {
 		MemberInfo mInfo = authMapper.userInfo2(memberCode);
@@ -314,9 +314,15 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		return list;
 	}
 	@Override
+	@Transactional
 	public int insertSellerList(List<SellerInsertParam> list) throws Exception {
 		log.info("판매자 등록1  : " + list.toString());
 		for (SellerInsertParam dto: list) {
+			if(dto.getMbtlnum()==null || dto.getMbtlnum().length() <3) {
+				if(dto.getMberMobile()!=null && dto.getMberMobile().length() >4 ) {
+					dto.setMbtlnum(   dto.getMberMobile().substring( dto.getMberMobile().length()-4  ,dto.getMberMobile().length() )  );
+				}
+			}
 			dto.setAdres(util.encrypt(   dto.getAdres()  ));
 			dto.setAccountNo(util.encrypt( dto.getAccountNo()));
 			dto.setMberMobile( util.encrypt(dto.getMberMobile()));
@@ -327,5 +333,92 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		}
 		log.info("판매자 등록2  : " + list.toString());
 		return mapper.insertSellerList(list);
+	}
+	
+	@Override
+	@Transactional
+	public HashMap<String, Object> updateSeller(SellerInsertParam param) throws Exception {
+		log.info("판매자 수정 - 사전검사");
+		HashMap< String, Object> map = new HashMap<String, Object>();
+		map.put("flag", true);
+		map.put("message", "");
+		if( param.getMbtlnum() == null  ) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "휴대폰번호 뒷자리를 입력");
+			return map;
+		} 
+		if( param.getMbtlnum().length()!=4  ) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "휴대폰 뒷자리수 오류");
+			return map;
+		}
+		if( param.getFeeRate() >100 || param.getFeeRate() <0) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "수수료율입력 오류");
+			return map;
+		}
+		// 수정권한 체크 -- 권한관련 인터셉터 개발예정
+		if( "AUTHOR_MNGR".equals(param.getGrade() ) ||  "HEADOFFICE".equals(param.getGrade() )  || param.getBizCode().equals(  param.getMemberBizeCode()  ) ) {
+			System.out.println("mybatis 에서 처리한다.");
+			
+		}else {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "권한부족");
+			return map;
+		}
+		
+		
+		log.info("판매자 수정1 - mber_basis");
+		// 필요한 항목 암호화처리
+		param.setMberMobile( util.encrypt( param.getMberMobile() ) );
+		param.setMberPhone(util.encrypt( param.getMberPhone() ) );
+		param.setAdres(util.encrypt( param.getAdres() ) );
+		param.setMberJumi( util.encrypt(param.getMberJumi() ) );
+		param.setAccountNo( util.encrypt( param.getAccountNo()  ) );
+		param.setEmail( util.encrypt( param.getEmail()  )  );
+		
+		if(mapper.updateSelerMberBasis(param) <1) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "판매자정보수정오류");
+			return map;
+			//throw new Exception(); // 강제 에러발생 트랜잭션을 위해 -- 향후 에러핸들러 개발후 에러핸들러로 교체!!!!!!!!!!
+		}
+		
+		log.info("판매자 수정2- mber");
+		param.setMbtlnum(util.encrypt( param.getMbtlnum()));
+		if(mapper.updateMber(param) <1 ) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "판매자정보수정오류2");
+			return map;
+		}
+		
+		log.info("판매자 수정3- mber_hist2");
+		HashMap<String, Object> mapHist2 = new HashMap<String, Object>();
+		mapHist2.put("mberCode" , param.getMberCode() );
+		mapHist2.put("histCode" , "MH_USE_AT");
+		mapHist2.put("histCn" , param.getUseAt());
+		mapHist2.put("memberMberCode" , param.getMemberMberCode());
+		if(mapper.insertMberHist2(mapHist2) < 1) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "판매자이력정보수정오류");
+			return map;
+		}
+		
+		log.info("판매자 수정4- mber_hist2 -- 수수료율이 변경된 경우 기록");
+		double reFeeRate = mapper.selectFeeRate(param.getMberCode() ); 
+		if(reFeeRate!=param.getFeeRate() ) {
+			mapHist2.remove("histCode");
+			mapHist2.remove("histCn");
+			mapHist2.put("histCode" , "MH_FEE_RATE");
+			mapHist2.put("histCn" , param.getFeeRate());	
+		}
+		return map;
 	}
 }

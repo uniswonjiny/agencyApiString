@@ -39,4 +39,12 @@ public interface AgencyManageMapper {
 	public List<HashMap<String, Object>> agencySettingList2(HashMap< String, Object> map) throws Exception;
 	// 판매자등록
 	public int insertSellerList(List<SellerInsertParam> param) throws Exception;
+	// 판매자 수정1 - mber_basis
+	public int updateSelerMberBasis(SellerInsertParam param) throws Exception;
+	// 판매자 수정2 - mber
+	public int updateMber(SellerInsertParam param) throws Exception;
+	// 판매자 수정3 
+	public int insertMberHist2(HashMap<String, Object> map) throws Exception;
+	// 기존 수수료율 확인
+	public double selectFeeRate(String mberCode )throws Exception;
 }

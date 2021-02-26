@@ -12,6 +12,7 @@
 		    aa.password,
 		    aa.use_at,
 		    aa.idntfc_nm,
+		    bb.cmpnm,
 		    aa.author_code,
 		    aa.recommend_biz_code,
             case bb.dealer_kind 
@@ -169,6 +170,25 @@
 		nvl( (SELECT MAX(sn)+1 FROM mber_hist2 WHERE mber_code= #{mberCode} ) , 1) ,
 		'MH_USE_AT',
 		#{useAt} 
+	)
+	</insert>
+	<!-- 사용자 변경 이력  -->
+	<insert id="insertMberHist2" parameterType="HashMap">
+	insert into 
+	mber_hist2(
+		mber_code,
+		sn,
+		hist_code,
+		hist_cn,
+		CREAT_MBER_CODE
+	)
+	values
+	(
+		#{mberCode},<!--  수정당하는 대상 -->
+		nvl( (SELECT MAX(sn)+1 FROM mber_hist2 WHERE mber_code= #{mberCode} ) , 1) ,
+		#{histCode}',
+		#{histCn} ,
+		#{creatMberCode}
 	)
 	</insert>
 	

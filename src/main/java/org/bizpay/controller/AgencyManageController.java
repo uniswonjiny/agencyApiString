@@ -83,6 +83,12 @@ public class AgencyManageController {
 //		return new ResponseEntity<>("ok",   HttpStatus.OK);
 		if(serve.insertSellerList(param) > 0)return new ResponseEntity<>("ok",   HttpStatus.OK);
 		else return new ResponseEntity<>("fail",   HttpStatus.OK);
-		
 	}
+	
+	// 판매자 수정
+	@RequestMapping(value = "updateSeller", method = RequestMethod.POST)
+	public ResponseEntity<HashMap< String, Object>> updateList(@RequestBody SellerInsertParam param) throws Exception{
+		log.info("대리점입력");
+		return new ResponseEntity<>(serve.updateSeller(param),   HttpStatus.OK);
+	}	
 }

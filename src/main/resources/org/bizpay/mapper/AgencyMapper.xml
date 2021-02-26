@@ -248,12 +248,14 @@
 																    <if test="bizNum!=null and !bizNum.equals('') " >
 															  			AND d.biz_num like '%'||#{bizNum}||'%'
 															  		</if>
-															  		<if test="mberId!=null and !mberId.equals('') " >
-															  			AND d.induty_id like '%'||#{usid}||'%' 
-															  		</if>
+															  		
 															  		<if test="mberId!=null and !mberId.equals('') " >
 															  			AND d.induty_id like '%'||#{mberId}||'%' 
 															  		</if>
+															  		<if test="companyName!=null and !companyName.equals('') " >
+															  			AND a.cmpnm like '%'||#{companyName}||'%' 
+															  		</if>
+															  		
                                                                 GROUP BY a.cmpnm,a.biz_type,a.dealer_kind,b.usid,a.biz_code,a.pymnt_rate,d.mber_name,
                                                                     d.company_name,d.biz_num,d.fee_rate,d.fee_distributor,d.fee_agency,d.fee_dealer
                                                                 HAVING

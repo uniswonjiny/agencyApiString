@@ -13,6 +13,8 @@ public class MemberInfo {
     private String usid;
     private String password;
     private String idntfcNm;
+    private String cmpnm;
+    
     private String authorCode;
     private String recommendBizCode;
     private String useAt;

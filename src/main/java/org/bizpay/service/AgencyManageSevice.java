@@ -24,5 +24,6 @@ public interface AgencyManageSevice {
 	public List<HashMap< String, Object>> settingAgencyList2(String memberCode , String agencyCode) throws Exception;
 	// 판매자 등록
 	public int insertSellerList(List<SellerInsertParam> list) throws Exception;
-	
+	// 판매자 수정
+	public HashMap<String, Object> updateSeller(SellerInsertParam param) throws Exception;
 }

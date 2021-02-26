@@ -11,10 +11,11 @@ public class SellerInsertParam {
 	private String usid;
 	private String memberBizeCode;// 로그인한 비즈코드
 	private String memberMberCode;//로그인한 사용자코드
+	private String mberCode;//입력 변경대상의 사용자코드
 	private String indutyId; 
 	private String adres;
 	private String mberMobile;
-	private String bizCode;
+	private String bizCode; // 입력 변경대상의 비즈코드
 	private float feeRate;
 	private String mberName;
 	private String bankName;
@@ -26,7 +27,7 @@ public class SellerInsertParam {
 	private double feeDistributor;
 	private double feeAgency;
 	private double feeDealer;
-	private double feeBank;
+	private String feeBank;
 	private double limitOne;
 	private double limitDay;
 	private double limitMonth;
@@ -65,4 +66,11 @@ public class SellerInsertParam {
 	private float lv3Rate;
 	private String documentReg; // 서류제출
 	private String setDevice2; // 장비설정2
+	private String calculateType;
+	private String useAt; // 사용여부
+	private String atmStop; // 출금정지
+	private String author;//AUTHOR_MNGR  권한 추후 세션 확인 인터셉터 기능개발후 삭제함!
+	private String grade; // HEADOFFICE ㅍ급 추후 세션 확인 인터셉터 기능개발후 삭제함!
+	
+
 }

@@ -38,7 +38,7 @@ public class TransactionServiceImpl implements TransactionService {
 			dto.setCardNo( util.decrypt(dto.getCardNo()) );
 			dto.setMberMobile( util.decrypt(dto.getMberMobile()) );
 			dto.setMberPhone( util.decrypt(dto.getMberPhone()) );
-			
+			dto.setBizTelno( util.decrypt(dto.getBizTelno()) );
 		}
 		return list;
 	}
