@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+//매출취소사유
 @Getter
 @Setter
 @ToString
@@ -20,5 +21,6 @@ public class DelngCancelParam {
 	private String payType;
 	private String confmDt;
 	private String delngSeCode;
+	private String grade; // 세션 인증 권한기능 개발후 삭제한다. 
 	
 }   

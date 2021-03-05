@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
 import org.bizpay.common.domain.DelngCancelParam;
+import org.bizpay.common.domain.DelngInsertParam;
 import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
@@ -28,4 +29,6 @@ public interface AgencyService {
 	public HashMap<String, Object> delngCancel(DelngCancelParam param) throws Exception;
 	// 거래취소기능
 	public Hashtable<String, Object> ksPayCancel(String pgRciptNo , String tId) throws Exception;
+	// 매출 일괄 입력
+	public HashMap<String, Object> delngListInsert(List<DelngInsertParam> list) throws Exception;
 }

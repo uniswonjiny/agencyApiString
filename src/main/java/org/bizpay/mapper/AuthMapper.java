@@ -23,4 +23,5 @@ public interface AuthMapper {
 	public int updateRecommendBizCode(HashMap<String, Object> map) throws Exception;
 	public int selectMemberUsidChk(String usId) throws Exception;
 	public int selectBizrno(String bizrno) throws Exception;
+
 }

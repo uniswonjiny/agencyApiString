@@ -1,12 +1,14 @@
 package org.bizpay.service;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
 import org.bizpay.common.domain.DelngCancelParam;
+import org.bizpay.common.domain.DelngInsertParam;
 import org.bizpay.common.domain.SellerParam;
 import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.common.util.StringUtils;
@@ -14,11 +16,14 @@ import org.bizpay.common.util.TaxCalculator;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
 import org.bizpay.domain.AgencySales3;
+import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.SalesAdjustment;
 import org.bizpay.domain.SellerSummary;
 import org.bizpay.mapper.AgencyMapper;
+import org.bizpay.mapper.AuthMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.java.Log;
 @Log
@@ -26,6 +31,9 @@ import lombok.extern.java.Log;
 public class AgencyServiceImpl implements AgencyService {
 	@Autowired
 	AgencyMapper mapper;
+	
+	@Autowired
+	AuthMapper aMapper;
 	
 	@Autowired
 	StringUtils stringUtil;
@@ -192,6 +200,7 @@ public class AgencyServiceImpl implements AgencyService {
 	}
 
 	@Override
+	@Transactional
 	public HashMap<String, Object> delngCancel(DelngCancelParam param) throws Exception {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("flag", true);
@@ -228,11 +237,14 @@ public class AgencyServiceImpl implements AgencyService {
 			param.setPgRciptNo(p3.getPgRciptNo() );
 			param.setTId(p3.getTId());
 			// 관리자인 경우 모든경우 취소가능  -- 세션관리 기능 개발이후 처리한다.
-			
+			if("HEADOFFICE".equals( param.getGrade()  )) {
+				// 일단 안전을 위해 주석처리함
+				//ksPayCancel(p3.getPgRciptNo() ,  p3.getTId() );
+			}
 			
 			
 			// 관리자가 아닌경우 가능한 경우만 취소
-			if( (p3.getPgRciptNo() != null && !"".equals(p3.getPgRciptNo() ) )  && ( p3.getTId()!=null && !"".equals( p3.getTId() ))) {
+			else if( (p3.getPgRciptNo() != null && !"".equals(p3.getPgRciptNo() ) )  && ( p3.getTId()!=null && !"".equals( p3.getTId() ))) {
 				String payType = mapper.getPayType(param.getMberCode()  );
 				int gapDate = stringUtil.getGapDay( param.getConfmDt().substring(0,8));
 				//익일인경우. 당일취소만.
@@ -299,6 +311,201 @@ public class AgencyServiceImpl implements AgencyService {
 		
 		
 		return null;
+	}
+
+	@Override
+	@Transactional
+	public HashMap<String, Object> delngListInsert(List<DelngInsertParam> list) throws Exception {
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("flag", true);
+		map.put("message", "");
+		
+		// 승인일자
+		String confmDay = "";
+		// 승인시간
+		String confmHour = "";
+		int rciptNo = -1;
+		for (DelngInsertParam param : list) {
+			confmDay = param.getConfmDt().substring(0,8);
+			if( param.getConfmDt().length() < 15 ) {
+				confmHour =param.getConfmDt().substring(8, 12) + "00";
+			}else {
+				confmHour =param.getConfmDt().substring(9, 15);
+			}
+			
+			//3. 카드처리
+			if("card".equals( param.getDelngType())){
+				if( param.getUsid() == null  || param.getUsid().length() ==0 ) {
+					map.put("flag",  false);
+					map.put("message", "사용자 아이디가 없는 경우입니다.");
+					return map;
+				}
+				if( param.getConfmNo() == null  || param.getConfmNo().length() ==0 ) {
+					map.put("flag",  false);
+					map.put("message", "승인번호가 없는 경우입니다.");
+					return map;
+				}
+				if( param.getSplpc() ==0 ) {
+					map.put("flag",  false);
+					map.put("message", "금액이 없는 경우입니다.");
+					return map;
+				}
+				
+			
+				// 사용자 mber_code 가져오기
+				MemberInfo info = aMapper.userInfo(  param.getUsid()  );
+				if(info == null) {
+					map.put("flag",  false);
+					map.put("message", "사용자가 없는 경우입니다.");
+					return map;
+				}
+				String mberCode = info.getMberCode();
+				int mberCodeSn = mapper.selectMaxMberCodeSn( mberCode ) ;
+				if(mberCodeSn == 0) {
+					map.put("flag",  false);
+					map.put("message", "사용자정보생성에 문제가 있는 경우입니다.");
+					return map;
+				}
+				HashMap<String, Object> map1 = mapper.tbMberBasis(param.getUsid());
+				if(map1.isEmpty()) {
+					map.put("flag",  false);
+					map.put("message", "사용자순번이 존재하지 않습니다.");
+					return map;
+				}
+				String bizCode = (String) map1.get("biz_code") ;
+				String payType = (String) map1.get("pay_type");
+				String feeRate = (String) map1.get("fee_rate");
+				String adiCn = (String) map1.get("mber_mobile");
+				// 중복 검사
+				HashMap<String, Object> map2 = new HashMap<String, Object>();
+		
+				map2.put("mberCode",mberCode );
+				map2.put("confmDt", confmDay);
+				map2.put("confmTime", confmHour);
+				map2.put("confmNo", param.getConfmNo());
+				// 중복 오류처리
+				if(mapper.newtbDelng(map2  ) > 0 ) {
+					map.put("flag",  false);
+					map.put("message", "중복결제건입니다.");
+					return map;
+				}
+				// 영수증번호 확인
+				rciptNo = mapper.selectMaxRciptNo(map2) ;
+				if(rciptNo <1) {
+					map.put("flag",  false);
+					map.put("message", "영수증 번호 미존재.");
+					return map;
+				}
+				
+				// 영수증 번호 비교처리 strMax
+				String strMax =  confmDay.subSequence(2, confmDay.length())+"9999";
+				if(Integer.parseInt(strMax) < rciptNo ){
+					rciptNo = Integer.parseInt( confmDay + "0000");
+				}
+				// 무한루프 조심!
+				while(true) {
+					rciptNo++;
+					map2.clear();
+					
+					map2.put("mberCode", mberCode);
+					map2.put("rciptNo", rciptNo);
+					
+					if(mapper.selectRciptNoCount(map2 ) > 0 ) break;
+				}
+				map2.clear();
+				map2.put("mberCode", mberCode );
+				map2.put("mberCodeSn", mberCodeSn );
+				map2.put("rciptNo",rciptNo );
+				map2.put("vanType",  "VAN_KSNET" );
+				map2.put("payCode", "CARD_ISSUE" );
+				map2.put("confmNo", param.getConfmNo() );
+				map2.put("confmDt", confmDay );
+				map2.put("confmTime", confmHour );
+				map2.put("splpc", param.getSplpc()  );
+				
+				if( mapper.insertDelngCard(map2 ) <0   ) {
+					map.put("flag",  false);
+					map.put("message", "매출등록에 실패하였습니다");
+					return map;
+				}
+				
+				map2.clear();
+				map2.put("mberCode", mberCode);
+				map2.put("mberCodeSn", mberCodeSn);
+				map2.put("rciptNo", rciptNo);
+				map2.put("cardNo", param.getCardNo());
+				map2.put("instlmtMonth", param.getInstlmtMonth());
+				map2.put("issueCmpnyNm", param.getIssueCmpnyNm());
+				
+				if(mapper.insertDelngCredt(map2)<0   ) {
+					map.put("flag",  false);
+					map.put("message", "매출등록에 실패하였습니다");
+					return map;
+				}
+				
+				//수수료 금액 계산
+				String pattern = "##0";
+				DecimalFormat df = new DecimalFormat(pattern);
+				double 수수료금액 = param.getSplpc() * Float.parseFloat(feeRate) / 100;
+				
+				double 정산금액 = param.getSplpc() - 수수료금액;
+		
+				// 출금처리
+				// 현재 잔액 계산
+				double balance = mapper.selectBalance(mberCode);
+				balance =   balance + 정산금액;
+				// 입출금번호 
+				double InoutNo = mapper.selectInoutNo(mberCode);
+				
+				map2.clear();
+				map2.put("mberCode", mberCode);
+				map2.put("inoutNo", InoutNo);
+				map2.put("inoutCode", "IN_SM");
+				map2.put("reqAmt", 정산금액);
+				map2.put("balance", balance);
+
+				map2.put("charge", 0);
+				map2.put("reqResult", "OK" );
+				map2.put("bank", null);
+				map2.put("account", null);
+				map2.put("depositor", null);
+				map2.put("bigo", null);
+				map2.put("bizCode", bizCode  );
+				map2.put("salesTotAmt", param.getSplpc() );
+				map2.put("salesFeePer", feeRate );
+				map2.put("salesFeeAmt", 수수료금액);
+				map2.put("salesRciptNo", rciptNo);
+				
+				mapper.pushAtmInfo(map2);
+				
+				map2.clear();
+				map2.put("mberCode", mberCode);
+				map2.put("mberCodeSn", mberCodeSn);
+				map2.put("rciptNo", rciptNo);
+				map2.put("adiCode", "PURCHSR_MBTLNUM");
+				map2.put("adiCode", adiCn );
+				
+				mapper.insertDelngAdi(map2);
+			}
+			
+			if("cash".equals( param.getDelngType())  ){
+				
+			}
+			
+			
+		}
+	 
+	
+		// 2. 공통처리 정보 추출 기존소스와 다른점 엑셀파일 데이터 파싱은 화면에서 처리된다. 화면에서 처리하는게 더 간단함
+
+		
+		
+		
+		
+		
+		return map;     
+		
+		
 	}
 
 }

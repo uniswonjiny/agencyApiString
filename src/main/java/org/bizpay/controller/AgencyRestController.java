@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bizpay.common.domain.AgencySalesParam;
 import org.bizpay.common.domain.DelngCancelParam;
+import org.bizpay.common.domain.DelngInsertParam;
 import org.bizpay.common.domain.SellerParam;
 import org.bizpay.domain.AgencySales;
 import org.bizpay.domain.AgencySales2;
@@ -75,6 +76,29 @@ public class AgencyRestController {
 		log.info("매출취소");
 		return new ResponseEntity<>( service.delngCancel(param), HttpStatus.OK);
 	}
+	// 매출 일괄입력
+	@RequestMapping(value = "salesListInsert", method = RequestMethod.POST)
+	public ResponseEntity<HashMap<String, Object>> salesListInsert(@RequestBody List<DelngInsertParam> list) throws Exception{
+		log.info("매출 일괄입력");
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("flag", true);
+		map.put("message", "");
+		// 권한검사 -- 인증세션기능개발후 바꾼다.
+		if(list.size() <1) {
+			map.put("flag", false);
+			map.put("message", "입력데이터 없음");
+			return new ResponseEntity<>( map, HttpStatus.ACCEPTED);
+		}
+		
+		if(!("AUTHOR_DEALER".equals( list.get(0).getGrade()) || "AUTHOR_MNGR".equals(list.get(0).getGrade()))) {
+			map.put("flag", false);
+			map.put("message", "권한없음");
+			return new ResponseEntity<>( map, HttpStatus.ACCEPTED);
+		}
+		
+		return new ResponseEntity<>( null, HttpStatus.OK);
+	}
+	
 	// 대리점 전체 목록
 	@RequestMapping(value = "dealerList", method = RequestMethod.POST)
 	public ResponseEntity<List<DealerInfo>> dealerList() throws Exception{

@@ -579,5 +579,221 @@
 	<select id="getPayType" resultType="String">
 		select pay_type from MBER_BASIS where mber_code = #{val}
 	</select>
+	
+	<!-- 중복검사 delng newtbDelng - 이전 쿼리문이름  -->
+	<select id="newtbDelng" resultType="int" parameterType="HashMap">
+	SELECT count(1) FROM delng 
+	WHERE mber_code = #{mberCode}
+		and CONFM_DT=#{confmDt}
+		and CONFM_TIME=#{confmTime}
+		and CONFM_NO=#{confmNo}
+	</select>
+	
+	<!-- mber_code_sn 최대값확인 -->
+	<select id="selectMaxMberCodeSn" resultType="int">
+		SELECT MAX(mber_code_sn) AS mber_code_sn FROM mber_detail WHERE mber_code=#{val}
+	</select>
+	
+	<!-- mber_code_sn 최대값확인 -->
+	<select id="tbMberBasis" resultType="HashMap">
+		SELECT biz_code , pay_type, fee_rate , mber_mobile
+		FROM mber_basis WHERE induty_id= #{val}
+	</select>
+	
+	<!-- 최대 rcipt_no -->
+	<select id="selectMaxRciptNo" parameterType="HashMap" resultType="int">
+		SELECT MAX(rcipt_no)+1 FROM delng 
+		WHERE mber_code= #{mberCode}
+			AND mber_code_sn=#{mberCodeSn} 
+			AND rcipt_no LIKE #{confrmDt}||'%'
+			AND rcipt_no &gt; #{confrmDt}||'5'
+	</select>
+	
+	<!--  영수증번호존재 rcipt_no 존재 확인 -->
+	<select id="selectRciptNoCount" parameterType="HashMap" resultType="int">
+		SELECT count(1) FROM delng 
+		WHERE mber_code=#{mberCode}
+		and rcipt_no=#{rciptNo}
+	</select>
 
+	<!-- 매출정보 입력 카드 -->
+	<insert id="insertDelngCard" parameterType="HashMap">
+	INSERT INTO delng (
+		mber_code 
+		,mber_code_sn 
+		,rcipt_no 
+		,van_code 
+		,app_code 
+		,delng_se_code 
+		,confm_no 
+		,confm_dt 
+		,confm_time 
+		,splpc 
+		,vat 
+		,delng_pay_type 
+		,trget_mber_code 
+		,trget_mber_code_sn 
+		,trget_rcipt_no 
+		,creat_dt 
+		,card_delete_yn 
+		,cancel_mber 
+		,cancel_dt 
+		,bigo
+		)VALUES 
+		#{mberCode} 
+		,#{mberCodeSn} 
+		,#{rciptNo} 
+		,#{vanType} 
+		,'BIZPAY' 
+		,#{payCode}
+		,#{confmNo} 
+		,#{confmDt} 
+		,#{confmTime} 
+		,#{splpc}
+		,'0' 
+		, pay_type  
+		,#{mberCode} 
+		,#{mberCodeSn} 
+		,#{rciptNo} 
+		,SYSDATE 
+		,'N' 
+		,'' 
+		,'' 
+		,#{message} -- '매출일괄등록건' 
+	)
+	</insert>
+	
+	
+	<!-- delng_credt 입력 -->
+	<insert id="insertDelngCredt" parameterType="HashMap">
+		INSERT INTO delng_credt (
+			mber_code 
+			,mber_code_sn 
+			,rcipt_no 
+			,card_no 
+			,instlmt_month 
+			,issue_cmpny_code 
+			,issue_cmpny_nm 
+			,puchas_cmpny_code 
+			,puchas_cmpny_nm 
+			,cdrsr_no 
+			,card_type
+		) 
+			VALUES(
+			#{mberCode} 
+			,#{mberCodeSn} 
+			,#{rciptNo} 
+			,#{cardNo}
+			,#{instlmtMonth}
+			,'' 
+			,#{issueCmpnyNm}
+			,'' 
+			,'' 
+			,'' 
+			,'N'
+		)
+	</insert>
+	
+	<!-- pushAtmInfo 기존소스 메소드명 -->
+	<insert id="pushAtmInfo" parameterType="HashMap">
+	INSERT INTO tbl_atm (
+	    mber_code,
+	    inout_no,
+	    inout_code,
+	    req_amt,
+	    balance,
+	    req_dt,
+	    req_time,
+	    charge,
+	    req_result,
+	    bank,
+	    account,
+	    depositor,
+	    bigo,
+	    biz_code,
+	    sales_tot_amt,
+	    sales_fee_per,
+	    sales_fee_amt,
+	    sales_dt,
+	    sales_time,
+	    sales_rcipt_no
+	) VALUES (
+	   	#{mberCode},
+	    #{inoutNo},
+	    #{inoutCode},
+	    #{reqAmt},
+	    #{balance},
+	    select to_char( sysdate , 'YYYYMMDD' ) from dual,
+	   	select to_char( sysdate , 'HH24MISS' ) from dual,
+	    #{charge},
+	    #{reqResult},
+	    #{bank},
+	    #{account},
+	    #{depositor},
+	    #{bigo},
+	    #{bizCode},
+	    #{salesTotAmt},
+	    #{salesFeePer},
+	    #{salesFeeAmt},
+	    select to_char( sysdate , 'YYYYMMDD' ) from dual,
+	    select to_char( sysdate , 'HH24MISS' ) from dual,
+	    #{salesRciptNo}
+	)
+	</insert>
+	
+	<!-- delng_adi 입력 -->
+	<insert id="insertDelngAdi" parameterType="HashMap">
+		INSERT INTO delng_adi (
+		    mber_code,
+		    mber_code_sn,
+		    rcipt_no,
+		    adi_code,
+		    adi_cn
+		) VALUES (
+		    #{mberCode},
+		    #{mberCodeSn},
+		    #{rciptNo},
+		    #{adiCode},
+		    #{adiCn}
+		)
+	</insert>
+	
+	<!-- delng_cash 입력 -->
+	<insert id="insertDelngCash"  parameterType="HashMap">
+	INSERT 
+		INTO delng_cash (
+			mber_code
+			,mber_code_sn 
+			,rcipt_no
+			,idntfc_no
+			,isu_se_code
+		) VALUES
+		(
+			#{mberCode},
+			#{mberCodeSn},
+			#{rciptNo},
+			,'00000000000'
+			,'NO DIVISION' 
+		) 
+	</insert>
+	
+	<!-- 잔액구하기  -->
+	<select id="selectBalance" resultType="double">
+		SELECT balance  FROM 
+			(SELECT * FROM tbl_atm 
+				WHERE mber_code = #{val} 
+					AND req_result = 'OK' 
+				ORDER BY inout_no DESC) 
+			WHERE ROWNUM &lt; 2 
+	</select>
+	
+	<!-- 입출금 번호 (결제 영수증번호와 동일) 구하기 -->
+	<select id="selectInoutNo" resultType="double">
+		SELECT inout_no FROM 
+			(SELECT * FROM tbl_atm 
+				WHERE mber_code=#{val} 
+				ORDER BY inout_no DESC) 
+			WHERE ROWNUM &lt; 2
+	</select>
+	
   </mapper>
