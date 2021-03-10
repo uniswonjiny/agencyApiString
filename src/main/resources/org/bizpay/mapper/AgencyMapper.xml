@@ -616,8 +616,8 @@
 		and rcipt_no=#{rciptNo}
 	</select>
 
-	<!-- 매출정보 입력 카드 -->
-	<insert id="insertDelngCard" parameterType="HashMap">
+	<!-- 매출정보  입력 카드 현금 -->
+	<insert id="insertDelng" parameterType="HashMap">
 	INSERT INTO delng (
 		mber_code 
 		,mber_code_sn 
@@ -644,7 +644,7 @@
 		,#{mberCodeSn} 
 		,#{rciptNo} 
 		,#{vanType} 
-		,'BIZPAY' 
+		,#{appCode}
 		,#{payCode}
 		,#{confmNo} 
 		,#{confmDt} 

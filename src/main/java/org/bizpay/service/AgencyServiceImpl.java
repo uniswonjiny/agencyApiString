@@ -301,13 +301,13 @@ public class AgencyServiceImpl implements AgencyService {
 		String KSNET_PG_IP = "210.181.28.116";	//-필수- ipaddr X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)
 		int KSNET_PG_PORT = 21001;	
 		String pKeyInType = "K";
-		final Hashtable xht = ksPay.sendCardCancelMsg(
-				KSNET_PG_IP, 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
-				KSNET_PG_PORT,			// -필수- port   9( 5)   *KSNET_PORT(21001)  
-				tId, 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
-				pKeyInType, 							// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
-				pgRciptNo							// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
-			);
+//		final Hashtable xht = ksPay.sendCardCancelMsg(
+//				KSNET_PG_IP, 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
+//				KSNET_PG_PORT,			// -필수- port   9( 5)   *KSNET_PORT(21001)  
+//				tId, 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
+//				pKeyInType, 							// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
+//				pgRciptNo							// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+//			);
 		
 		
 		return null;
@@ -316,7 +316,9 @@ public class AgencyServiceImpl implements AgencyService {
 	@Override
 	@Transactional
 	public HashMap<String, Object> delngListInsert(List<DelngInsertParam> list) throws Exception {
-		HashMap<String, Object> map = new HashMap<String, Object>();
+		HashMap<String, Object> map = new HashMap<String, Object>(); // 결과 리턴용
+		HashMap<String, Object> map2 = new HashMap<String, Object>(); // 파라미터용
+		
 		map.put("flag", true);
 		map.put("message", "");
 		
@@ -326,6 +328,7 @@ public class AgencyServiceImpl implements AgencyService {
 		String confmHour = "";
 		int rciptNo = -1;
 		for (DelngInsertParam param : list) {
+			// 카드 현금 공통으로 적용되는 부분
 			confmDay = param.getConfmDt().substring(0,8);
 			if( param.getConfmDt().length() < 15 ) {
 				confmHour =param.getConfmDt().substring(8, 12) + "00";
@@ -333,75 +336,68 @@ public class AgencyServiceImpl implements AgencyService {
 				confmHour =param.getConfmDt().substring(9, 15);
 			}
 			
-			//3. 카드처리
-			if("card".equals( param.getDelngType())){
-				if( param.getUsid() == null  || param.getUsid().length() ==0 ) {
-					map.put("flag",  false);
-					map.put("message", "사용자 아이디가 없는 경우입니다.");
-					return map;
-				}
-				if( param.getConfmNo() == null  || param.getConfmNo().length() ==0 ) {
-					map.put("flag",  false);
-					map.put("message", "승인번호가 없는 경우입니다.");
-					return map;
-				}
-				if( param.getSplpc() ==0 ) {
-					map.put("flag",  false);
-					map.put("message", "금액이 없는 경우입니다.");
-					return map;
-				}
-				
+			if( param.getUsid() == null  || param.getUsid().length() ==0 ) {
+				map.put("flag",  false);
+				map.put("message", "사용자 아이디가 없는 경우입니다.");
+				return map;
+			}
+			if( param.getConfmNo() == null  || param.getConfmNo().length() ==0 ) {
+				map.put("flag",  false);
+				map.put("message", "승인번호가 없는 경우입니다.");
+				return map;
+			}
+			if( param.getSplpc() ==0 ) {
+				map.put("flag",  false);
+				map.put("message", "금액이 없는 경우입니다.");
+				return map;
+			}
 			
-				// 사용자 mber_code 가져오기
-				MemberInfo info = aMapper.userInfo(  param.getUsid()  );
-				if(info == null) {
-					map.put("flag",  false);
-					map.put("message", "사용자가 없는 경우입니다.");
-					return map;
-				}
-				String mberCode = info.getMberCode();
-				int mberCodeSn = mapper.selectMaxMberCodeSn( mberCode ) ;
-				if(mberCodeSn == 0) {
-					map.put("flag",  false);
-					map.put("message", "사용자정보생성에 문제가 있는 경우입니다.");
-					return map;
-				}
-				HashMap<String, Object> map1 = mapper.tbMberBasis(param.getUsid());
-				if(map1.isEmpty()) {
-					map.put("flag",  false);
-					map.put("message", "사용자순번이 존재하지 않습니다.");
-					return map;
-				}
-				String bizCode = (String) map1.get("biz_code") ;
-				String payType = (String) map1.get("pay_type");
-				String feeRate = (String) map1.get("fee_rate");
-				String adiCn = (String) map1.get("mber_mobile");
-				// 중복 검사
-				HashMap<String, Object> map2 = new HashMap<String, Object>();
-		
-				map2.put("mberCode",mberCode );
-				map2.put("confmDt", confmDay);
-				map2.put("confmTime", confmHour);
-				map2.put("confmNo", param.getConfmNo());
-				// 중복 오류처리
-				if(mapper.newtbDelng(map2  ) > 0 ) {
-					map.put("flag",  false);
-					map.put("message", "중복결제건입니다.");
-					return map;
-				}
-				// 영수증번호 확인
-				rciptNo = mapper.selectMaxRciptNo(map2) ;
-				if(rciptNo <1) {
-					map.put("flag",  false);
-					map.put("message", "영수증 번호 미존재.");
-					return map;
-				}
-				
-				// 영수증 번호 비교처리 strMax
-				String strMax =  confmDay.subSequence(2, confmDay.length())+"9999";
-				if(Integer.parseInt(strMax) < rciptNo ){
-					rciptNo = Integer.parseInt( confmDay + "0000");
-				}
+			// 사용자 mber_code 가져오기
+			MemberInfo info = aMapper.userInfo(  param.getUsid()  );
+			if(info == null) {
+				map.put("flag",  false);
+				map.put("message", "사용자가 없는 경우입니다.");
+				return map;
+			}
+			
+			String mberCode = info.getMberCode();
+			int mberCodeSn = mapper.selectMaxMberCodeSn( mberCode ) ;
+			if(mberCodeSn == 0) {
+				map.put("flag",  false);
+				map.put("message", "사용자정보생성에 문제가 있는 경우입니다.");
+				return map;
+			}
+			// 중복 검사
+			map2.put("mberCodeSn", mberCodeSn );
+			map2.put("mberCode",mberCode );
+			map2.put("confmDt", confmDay);
+			map2.put("confmTime", confmHour);
+			map2.put("confmNo", param.getConfmNo());
+			// 중복 오류처리
+			if(mapper.newtbDelng(map2  ) > 0 ) {
+				map.put("flag",  false);
+				map.put("message", "중복결제건입니다.");
+				return map;
+			}
+			
+			// 영수증번호 확인
+			rciptNo = mapper.selectMaxRciptNo(map2) ;
+			if(rciptNo <1) {
+				map.put("flag",  false);
+				map.put("message", "영수증 번호 미존재.");
+				return map;
+			}
+			
+			// 영수증 번호 비교처리 strMax
+			String strMax =  confmDay.subSequence(2, confmDay.length())+"9999";
+			if(Integer.parseInt(strMax) < rciptNo ){
+				rciptNo = Integer.parseInt( confmDay + "0001");
+			}
+			map2.clear();
+			
+			map2.put("mberCode", mberCode);
+			map2.put("rciptNo", rciptNo);
+			if(mapper.selectRciptNoCount(map2 ) > 0 ) {
 				// 무한루프 조심!
 				while(true) {
 					rciptNo++;
@@ -412,6 +408,21 @@ public class AgencyServiceImpl implements AgencyService {
 					
 					if(mapper.selectRciptNoCount(map2 ) > 0 ) break;
 				}
+			}
+			
+			//3. 카드처리
+			if("card".equals( param.getDelngType())){
+				HashMap<String, Object> map1 = mapper.tbMberBasis(param.getUsid());
+				if(map1.isEmpty()) {
+					map.put("flag",  false);
+					map.put("message", "사용자순번이 존재하지 않습니다.");
+					return map;
+				}
+				String bizCode = (String) map1.get("biz_code") ;
+				String payType = (String) map1.get("pay_type");
+				String feeRate = (String) map1.get("fee_rate");
+				String adiCn = (String) map1.get("mber_mobile");
+
 				map2.clear();
 				map2.put("mberCode", mberCode );
 				map2.put("mberCodeSn", mberCodeSn );
@@ -422,8 +433,10 @@ public class AgencyServiceImpl implements AgencyService {
 				map2.put("confmDt", confmDay );
 				map2.put("confmTime", confmHour );
 				map2.put("splpc", param.getSplpc()  );
+				map2.put("appCode", "BIZPAY" );
+				map2.put("message", "매출일괄등록건" );
 				
-				if( mapper.insertDelngCard(map2 ) <0   ) {
+				if( mapper.insertDelng(map2 ) <0   ) {
 					map.put("flag",  false);
 					map.put("message", "매출등록에 실패하였습니다");
 					return map;
@@ -489,19 +502,34 @@ public class AgencyServiceImpl implements AgencyService {
 			}
 			
 			if("cash".equals( param.getDelngType())  ){
+				map2.clear();
+				map2.put("mberCode", mberCode );
+				map2.put("mberCodeSn", mberCodeSn );
+				map2.put("rciptNo",rciptNo );
+				map2.put("vanType",  "KSNET" );
+				map2.put("payCode", "CASH_RCIPT_ISSUE" );
+				map2.put("confmNo", param.getConfmNo() );
+				map2.put("confmDt", confmDay );
+				map2.put("confmTime", confmHour );
+				map2.put("splpc", param.getSplpc()  );
+				map2.put("appCode", "BIZPAY" );
+				map2.put("message", "매출일괄등록건" );
 				
+				if( mapper.insertDelng(map2 ) <0   ) {
+					map.put("flag",  false);
+					map.put("message", "매출등록에 실패하였습니다");
+					return map;
+				}
+				if(mapper.insertDelngCash(map2) < 0) {
+					map.put("flag",  false);
+					map.put("message", "현금내역 등록에 실패했습니다");
+					return map;
+				}
 			}
 			
 			
 		}
-	 
-	
-		// 2. 공통처리 정보 추출 기존소스와 다른점 엑셀파일 데이터 파싱은 화면에서 처리된다. 화면에서 처리하는게 더 간단함
-
-		
-		
-		
-		
+	 		
 		
 		return map;     
 		

@@ -50,7 +50,7 @@ public interface AgencyMapper {
 	// 영수증번호존재 rcipt_no 존재 확인
 	public int selectRciptNoCount(HashMap<String, Object> map) throws Exception;
 	// 매출정보 입력1
-	public int insertDelngCard(HashMap<String, Object> map) throws Exception;
+	public int insertDelng(HashMap<String, Object> map) throws Exception;
 	// 매출정보 입력2
 	public int insertDelngCredt(HashMap<String, Object> map) throws Exception;
 	// 매출정보 입력3
@@ -63,5 +63,7 @@ public interface AgencyMapper {
 	public double selectBalance(String mbrCode) throws Exception;
 	// 입출금 번호
 	public double selectInoutNo(String mbrCode) throws Exception;
+	// 현금결제 중복확인
+	public int selectCashCount(HashMap<String, Object> map) throws Exception;
 	
 }
