@@ -154,26 +154,26 @@ public class AgencyServiceImpl implements AgencyService {
 
 	@Override
 	public List<AgencySales3> agencySalesList3(AgencySalesParam param) throws Exception {
-		List<String> list1 = mapper.summaryInfo3in0(param);
+		//List<String> list1 = mapper.summaryInfo3in0(param);
 		List<AgencySales3> list2 = mapper.summaryInfo3in1(param);
 		List<AgencySales3> list3 = mapper.summaryInfo3in2(param);
-		for (String bizCode : list1) {
-			loop1 : for (AgencySales3 dto : list2) {
-				if(dto.getTrgetBizCode().equals( bizCode) ) {
-					dto.setTot(330000);// 원래 소스에 하드코딩되어있음 -- 디비에서 가져오도록은 해놓음
-					continue loop1;
-				}
-			}
-			loop2: for (AgencySales3 dto : list3) {
-				if(dto.getRecommendBizCode().equals(bizCode )) {
-					dto.setTot(1100000);// 원래 소스에 하드코딩되어있음 -- 디비에서 가져오도록은 해놓음
-					continue loop2;
-				}
-			}
-		}
+//		for (String bizCode : list1) {
+//			loop1 : for (AgencySales3 dto : list2) {
+//				if(dto.getTrgetBizCode().equals( bizCode) ) {
+//					dto.setTot(330000);// 원래 소스에 하드코딩되어있음 -- 디비에서 가져오도록은 해놓음
+//					continue loop1;
+//				}
+//			}
+//			loop2: for (AgencySales3 dto : list3) {
+//				if(dto.getRecommendBizCode().equals(bizCode )) {
+//					dto.setTot(1100000);// 원래 소스에 하드코딩되어있음 -- 디비에서 가져오도록은 해놓음
+//					continue loop2;
+//				}
+//			}
+//		}
 		
 		list2.addAll(list3);
-		System.out.println(list2.toString());
+
 		return list2;
 	}
 

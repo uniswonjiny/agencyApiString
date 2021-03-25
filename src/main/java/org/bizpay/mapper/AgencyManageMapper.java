@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
+import org.bizpay.common.domain.AgencyMbrParam;
 import org.bizpay.common.domain.SellerInsertParam;
 import org.bizpay.common.domain.SellerManageParam;
 import org.bizpay.domain.AgencyManage;
@@ -47,4 +48,10 @@ public interface AgencyManageMapper {
 	public int insertMberHist2(HashMap<String, Object> map) throws Exception;
 	// 기존 수수료율 확인
 	public double selectFeeRate(String mberCode )throws Exception;
+	// mber테이블에 Insert
+	public int insertMber(AgencyMbrParam param) throws Exception;
+	// mber_detail 테이블에 입력
+	public int insertMberDetail(AgencyMbrParam param) throws Exception;
+	// mber_hist2 테이블 입력
+	public int insertMberHist(AgencyMbrParam param) throws Exception;
 }

@@ -63,6 +63,7 @@ public class AgencyManageController {
 	@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
 	public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 입력");
+		//////// 중요 리턴 부분은 에러 핸들러에서 에러 생겼을 때 응답 하도록 바꿀예정임 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		HashMap< String, Object> map =  serve.insertAgency(param);
 		if( (boolean) map.get("flag") ) {
 			return new ResponseEntity<>("",   HttpStatus.OK);

@@ -69,6 +69,7 @@ public class AgencyManageParam {
 	public String distributor;
 	public int mberCnt;
 	public String creatDt;
+	public String password;// 패스워드
 	
 	public String prevTarget;
 	public String prevDealerKind;

@@ -37,6 +37,15 @@
 			AND b.splpc+b.vat= #{sellPrice}
 	     </if>
 	     
+	      <if test="tid!=null and !tid.equals('')" >
+	    	<if test="tid.equals('SP01')">
+	    		AND (a.trmnlno = '2002307047' OR a.trmnlno = 'DPT0A17745' OR a.trmnlno = '2002307048' OR a.trmnlno = 'DPT0A17746')
+	    	</if>
+	    	<if test="tid.equals('SP02')">
+	    		AND (a.trmnlno = '2041700459' OR a.trmnlno = 'DPT0A17747' OR a.trmnlno = '2041700460' OR a.trmnlno = 'DPT0A17748')
+	    	</if>
+	    </if>
+	     
 	     
 		<if test='badCardSearch=="Y"' >
 			AND	e.card_no IN 

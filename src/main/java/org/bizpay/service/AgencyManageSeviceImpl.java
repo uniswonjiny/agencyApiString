@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bizpay.common.domain.AgencyManageParam;
+import org.bizpay.common.domain.AgencyMbrParam;
 import org.bizpay.common.domain.SellerInsertParam;
 import org.bizpay.common.domain.SellerManageParam;
 import org.bizpay.common.util.CertUtil;
@@ -42,7 +43,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		List<AgencyManage> list = mapper.agencyList(param);
 		for (AgencyManage dto : list) {
 			dto.setBizrno( util.decrypt( dto.getBizrno()) );
-	 
+
 			if( dto.getBplc()!=null && dto.getBplc().length() > 50 )dto.setBplc( util.decrypt( dto.getBplc()));
 			if( dto.getBizTelno()!=null && dto.getBizTelno().length() > 20 )dto.setBizTelno( util.decrypt(dto.getBizTelno() ) );
 			dto.setEmail( util.decrypt( dto.getEmail() ));
@@ -263,6 +264,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			return map;
 		}
 		
+		
 		// 히스토리 입력 biz_hist
 		if(mapper.insertBizHist(params) <1 ) {
 			map.put("flag", false);
@@ -270,6 +272,38 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			return map;
 		}
 		
+		// mber 입력
+		// biz 입력 mber 쪽 입력파라미터가 너무 상이해서 별도로 dto 분리함
+		AgencyMbrParam mbrParam = new AgencyMbrParam();
+		mbrParam.setBizCode(  params.getBizCode()  );
+		mbrParam.setUsid(params.getUsid());
+		mbrParam.setPassword(util.encrypt(params.getPassword()));
+		mbrParam.setUseAt( "Y"  );
+		mbrParam.setMberCodeSn(0);
+		mbrParam.setAuthorCode("AUTHOR_DEALER");
+
+		if(mapper.insertMber(mbrParam) <1 ) {
+			map.put("flag", false);
+			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
+			return map;
+		}
+		
+		
+		// mber_detail 입력
+		if(mapper.insertMberDetail(mbrParam) <1 ) {
+			map.put("flag", false);
+			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
+			return map;
+		}
+		mbrParam.setSn(1);
+		mbrParam.setHistCode("MH_USE_AT" );
+		mbrParam.setHistCn("Y");
+		// mber_hist2
+		if(mapper.insertMberHist(mbrParam) <1 ) {
+			map.put("flag", false);
+			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
+			return map;
+		}
 		
 		return map;
 	}
@@ -391,6 +425,13 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		
 		log.info("판매자 수정2- mber");
 		param.setMbtlnum(util.encrypt( param.getMbtlnum()));
+		if(param.getMberCode()== null || param.getMberCode().length() <1) {
+			map.clear();
+			map.put("flag", false);
+			map.put("message", "사용자정보에 문제가 있습니다.");
+			return map;
+		}
+		
 		if(mapper.updateMber(param) <1 ) {
 			map.clear();
 			map.put("flag", false);

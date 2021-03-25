@@ -20,4 +20,5 @@ public class AgencySales3 {
 	public String trgetBizCode;
 	public String recommendBizCode;
 	public double tot; // 가맹비수익
+	public String bizType;
 }

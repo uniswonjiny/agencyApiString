@@ -45,6 +45,9 @@
 		    and a.mber_code = d.mber_code
 		    and b.req_result = 'OK' -- 하드코딩
 		    and b.req_dt between #{dateStart} and #{dateEnd}
+		    <if test="bizCode!=null and !bizCode.equals('')"> 
+				AND A.biz_code= #{bizCode}
+			</if>
 		    <if test='mberName!=null and !mberName.equals("")' >
 	        	AND d.mber_name LIKE '%'||#{mberName}||'%'
 	       	</if>	
@@ -178,18 +181,11 @@
 		            )
 		        )
 		    ) / 100) seler_pymntamt,
-		    b.splpc - trunc(decode(a.card_type, 'N', (b.splpc * 1.5) / 100, 'C', b.splpc / 100, (b.splpc * 1.5) / 100)) - trunc((
-		        b.splpc * (
-		            100 - (
-		                select
-		                    fee_rate
-		                from
-		                    mber_basis
-		                where
-		                    mber_code = c.mber_code
-		            )
-		        )
-		    ) / 100) fee_ern,
+		    
+		   b.splpc 
+								-trunc(decode(a.card_type,'N',(b.splpc*1.5)/100,'C',b.splpc/100,(b.splpc*1.5)/100)) 
+								-trunc((b.splpc*(100-(SELECT fee_rate FROM mber_basis WHERE mber_code = c.mber_code)))/100) fee_ern,
+		      
 		    trunc((
 		        b.splpc * (
 		            select
@@ -369,7 +365,7 @@
 				AND a.mber_code = c.mber_code 
 				AND a.card_delete_yn != 'Y' 
 				AND b.pay_type IN('N', 'T')  -- 바로정산 제외... 결과적으로 위에 필요없는 코드가 있음.
-				AND a.delng_se_code = ('CARD_ISSUE') 
+				AND a.delng_se_code = 'CARD_ISSUE' -- 화면상 선택하는 부분이 없는데 널인경우 카드를 삽입함
 				AND a.confm_dt BETWEEN #{dateStart} and #{dateEnd} 
 				AND b.calculate_type='U'
 			   	AND b.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
@@ -431,6 +427,8 @@
         	AND c.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
 			AND e.pay_type IN ('N','T') 
 			AND e.calculate_type='U'
+			AND b.delng_se_code='CARD_ISSUE' 
+				AND b.pymnt_yn='N' 
 			<choose>
 				<when test='dateType.equals("confirm")'>
 					AND b.confm_dt BETWEEN #{dateStart} and #{dateEnd} 

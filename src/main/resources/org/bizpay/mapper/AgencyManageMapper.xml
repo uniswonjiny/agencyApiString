@@ -44,7 +44,7 @@
   	<update id="updateBiz">
   	UPDATE BIZ
 		SET 
-			<if test='bizrno!=null !bizrno.equals( "") '> 
+			<if test='bizrno!=null and !bizrno.equals( "") '> 
 		    BIZRNO                 = #{bizrno}, <!-- 필수 :  암호화후저장  --> 
 			</if>
 		    CMPNM                  = #{cmpnm}, 
@@ -279,7 +279,7 @@
 			#{bizTelno},
 			#{trmnlNo},
 			#{pymntRate},
-			#{usid},
+			GET_DEALER_ID(),
 			#{trgetBizCode},
 			#{recommendBizCode},
 
@@ -734,4 +734,56 @@
 	<select id="selectFeeRate" resultType="double">
 		SELECT  distinct max(fee_rate) over(order by CREAT_DT desc ) FROM mber_basis WHERE mber_code= #{mberCode}  
 	</select>
+	
+	<!-- 대리점 관리 - 대리점등록시 mber 등록 -->
+	<insert id="insertMber" parameterType="AgencyMbrParam" >
+		<selectKey resultType="int" keyProperty="mberCode" order="BEFORE">
+			select GET_MBER_CODE() from dual
+		</selectKey>
+		INSERT INTO mber (
+		    mber_code,
+		    biz_code,
+		    usid,
+		    password,
+		    use_at,
+		    author_code
+		) VALUES (
+		    #{mberCode},
+		    #{bizCode},
+		    #{usid},
+		    #{password},
+		    #{useAt},
+		    #{authorCode}   
+		)
+	</insert>
+	
+	<!--  대리점관리 - 대리점등록 mber_detail  -->
+	<insert id="insertMberDetail" parameterType="AgencyMbrParam">
+	INSERT INTO mber_detail (
+	    mber_code,
+	    mber_code_sn,
+	    creat_dt
+	) VALUES (
+	    #{mberCode},
+	    #{mberCodeSn},
+	    sysdate
+	)
+	</insert>
+	
+		<!--대리점 관리 - mber 이력저장 -  mber_hist2  -->
+	<insert id="insertMberHist" parameterType="AgencyMbrParam" >
+		INSERT INTO mber_hist2 (
+		    mber_code,
+		    sn,
+		    hist_code,
+		    hist_cn,
+		    creat_mber_code
+		) VALUES (
+		    #{mberCode},
+		    #{sn},
+		    #{histCode},
+		    #{histCn},
+		    #{creatMberCode}
+		)
+	</insert>
   </mapper>

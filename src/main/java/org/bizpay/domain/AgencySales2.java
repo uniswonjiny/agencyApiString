@@ -50,4 +50,6 @@ public class AgencySales2 {
 	public double recommendRate; // 추천 수수료율
 	
 	
+	
+	
 }

@@ -230,7 +230,7 @@
                                                                         a.biz_code = b.biz_code
                                                                     AND a.biz_code IN (
                                                                         SELECT biz_code FROM biz
-                                                                        START WITH biz_code = #{memberBizeCode}
+                                                                        START WITH biz_code = #{bizCode}
                                                                         CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code
                                                                     )
                                                                     AND b.mber_code = c.mber_code
@@ -239,7 +239,7 @@
                                                                     AND c.confm_dt between #{dateStart} and #{dateEnd}
                                                                     AND c.delng_se_code = 'CARD_ISSUE'
    
-                                                                    <if test="bizCode.equals('') and widthMber==2"> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
+                                                                    <if test="!bizCode.equals('') and widthMber==2"> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
                                                                     	AND A.biz_code= #{bizCode}
                                                                     </if>
                                                                     <if test="mberName!=null and !mberName.equals('')" >
@@ -284,6 +284,7 @@
 	            , (select cmpnm from biz where biz_code = t3_biz_code) as t3_cmpnm  
 	            , (select biz_type from biz where biz_code = t3_biz_code) as t3_biz_type  
 	            , (select dealer_kind from biz where biz_code = t3_biz_code) as t3_dealer_kind  
+	            
 	            from 
 	            ( 
 	                select result_3.* 
@@ -334,7 +335,7 @@
 										AND d.RECOMMEND_BIZ_CODE != '0000002'  
 		                                AND  c.confm_dt between #{dateStart} and #{dateEnd}
 										<if test="bizCode!=null and !bizCode.equals('')"> 
-											AND A.biz_code= #{bizCode}
+											AND A.recommend_biz_code= #{bizCode}
 										</if>
 										<if test="mberName!=null and !mberName.equals('')" >
 											AND d.mber_name like '%'||#{mberName}||'%'
@@ -380,14 +381,20 @@
 	</select>
 	
 	<select id="summaryInfo3in1" resultType="AgencySales3" >
-     SELECT  
+	select  
+	TRGET_BIZ_CODE, trget_cmpnm,biz_type,biz_code,dealer_cmpnm,dealer_join_amt,bprprr,create_dt
+	 , (CASE WHEN biz_type = 'N' THEN (in_amt / 1.1) - (in_amt / 1.1 * 0.033)  ELSE in_amt END) AS tot
+	from
+     (SELECT  
      	a.TRGET_BIZ_CODE
      	, (SELECT dest.cmpnm FROM biz dest WHERE dest.biz_code = a.TRGET_BIZ_CODE) AS trget_cmpnm  
+     	, (SELECT dest.biz_type FROM biz dest WHERE dest.biz_code = a.TRGET_BIZ_CODE) AS biz_type  
      	, a.biz_code  
      	, a.cmpnm as dealer_cmpnm 
      	, a.join_amt as dealer_join_amt 
      	, a.bprprr  
-     	, a.create_dt  
+     	, a.create_dt 
+     	, (CASE WHEN a.join_amt IS NULL OR a.join_amt = 0 THEN 0 ELSE  a.join_amt * 6 / 10 END) AS in_amt
  	FROM biz a  
  	WHERE  
     	trget_biz_code != '0000002'       
@@ -407,21 +414,28 @@
 		<if test="companyName!=null and !companyName.equals('') " >
 			AND a.company_name like '%'||#{companyName}||'%' 
 		</if>
+		)
  		ORDER BY TRGET_BIZ_CODE
 	</select>
 	
 	<select id="summaryInfo3in2" resultType="AgencySales3" >
-     SELECT  
+     select recommend_biz_code , trget_cmpnm , biz_type , biz_code , agent_cmpnm , agent_join_amt , bprprr , create_dt
+     , (CASE WHEN biz_type = 'N' THEN (in_amt / 1.1) - (in_amt / 1.1 * 0.033)  ELSE in_amt END) AS tot
+     	
+     from 
+     (SELECT  
     	a.recommend_biz_code  
      	, (SELECT dest.cmpnm FROM biz dest WHERE dest.biz_code = a.recommend_biz_code) AS trget_cmpnm  
+     	, (SELECT dest.biz_type FROM biz dest WHERE dest.biz_code = a.recommend_biz_code) AS biz_type  
      	, a.biz_code  
      	, a.cmpnm as agent_cmpnm  
      	, a.join_amt as agent_join_amt 
+     	, (CASE WHEN a.join_amt IS NULL OR a.join_amt = 0 THEN 0 ELSE a.join_amt / 2 END) AS in_amt
      	, a.bprprr  
      	, a.create_dt  
  	FROM biz a  
  	WHERE  
-    	a.recommend_biz_code != '0000002'       
+    	a.recommend_biz_code != '0000002'
     	AND a.dealer_kind = '33'   
     	AND a.CREATE_DT between #{dateStart} and #{dateEnd}    
 		AND a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
@@ -438,6 +452,7 @@
 		<if test="companyName!=null and !companyName.equals('') " >
 			AND a.company_name like '%'||#{companyName}||'%' 
 		</if>
+	)
  	ORDER BY recommend_biz_code  
 	</select>
 	
