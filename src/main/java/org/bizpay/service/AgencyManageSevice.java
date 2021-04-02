@@ -13,9 +13,9 @@ public interface AgencyManageSevice {
 	// 대리점목록
 	public List<AgencyManage> agencyList(AgencyManageParam params ) throws Exception;
 	// 대리점 정보 수정
-	public HashMap<String, Object> upatgeAgency(AgencyManageParam params ) throws Exception;
+	public void upatgeAgency(AgencyManageParam params ) throws Exception;
 	// 대리점 정보 입력
-	public HashMap<String, Object> insertAgency(AgencyManageParam params ) throws Exception;
+	public void insertAgency(AgencyManageParam params ) throws Exception;
 	// 판매자 목록
 	public List<SellerList> selectSellerList(SellerManageParam param) throws Exception;
 	// 대리점구분 정보 가져오기
@@ -23,7 +23,7 @@ public interface AgencyManageSevice {
 	// 기준대리점 정보 가져오기
 	public List<HashMap< String, Object>> settingAgencyList2(String memberCode , String agencyCode) throws Exception;
 	// 판매자 등록
-	public int insertSellerList(List<SellerInsertParam> list) throws Exception;
+	public void insertSellerList(List<SellerInsertParam> list);
 	// 판매자 수정
-	public HashMap<String, Object> updateSeller(SellerInsertParam param) throws Exception;
+	public void updateSeller(SellerInsertParam param) throws Exception;
 }

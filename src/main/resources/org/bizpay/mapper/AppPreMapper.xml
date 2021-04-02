@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.AppPreMapper">
+  <select id="selectAppCodeCount" resultType="int">
+  	SELECT count(1) FROM code WHERE group_nm='앱' AND code=#{val}
+  </select>
+  
+  <select id="selectMber" resultType="HashMap">
+  	SELECT
+  		use_at , password
+  	FROM mber WHERE usid=#{val}
+  </select>
+  
+  <select id="selectInstallment" resultType="Integer">
+  select nvl(INSTALLMENT_MONTHS,0) from mber_basis where mber_code =#{val}
+  </select>
+  
+  <select id="trUnicore" resultType="HashMap">
+  	SELECT 
+  		trmnl_no,
+  		nvl(pg_van , 'VAN') as pg_van,
+  		nvl(van_gb , 'KSNET') as van_gb,
+  		pg_trmnl_no,
+  		pg_gb
+  	FROM biz WHERE biz_code='0000002'
+  </select>
+  
+  <select id="getBizCode" resultType="String">
+  SELECT biz_code FROM mber WHERE mber_code=#{val}
+  </select>
+  
+  <select id="selectMberBasis"  resultType="HashMap">
+  	SELECT 
+  		trmnl_no 
+        , case  
+            when pg_van is null then 
+                case when pg_trmnl_no is not null then 'PG'
+                else 'VAN' end
+            else pg_van 
+            end  as pg_van
+  		, nvl(van_gb , 'KSNET') as van_gb
+  		, nvl(pg_gb , 'KSNET') as pg_gb
+  		, nvl(pg_trmnl_no , '') as pg_trmnl_no
+  		, nvl(pg_sugi_trmnl_no , '') as pg_sugi_trmnl_no
+  		, nvl(sugi , 'N') as sugi
+  		, nvl(sugi_certification , 'N') as sugi_certification
+  		, nvl(cash_trmnl_no , '') as cash_trmnl_no
+  		, nvl(set_device  , '') as set_device
+  		, nvl(sms_autosend  , 'N') as sms_autosend
+  		, nvl(set_sms_auth  , 'N') as set_sms_auth
+  		, nvl(sms_auth_money  , '') as sms_auth_money
+  		, nvl(pay_type  , '') as pay_type
+  		, nvl(calculate_type , 'U') as calculate_type  
+  		, nvl(account_no ,'') as account_no
+  		, nvl(bank_name  ,'') as bank_name
+  		, nvl(bank_code  ,'') as bank_code
+  		, nvl(depositor  ,'') as depositor
+  		, nvl(limit_one ,0) as limit_one
+  		, nvl(limit_day ,0) as limit_day
+  		, nvl(limit_month ,0) as limit_month
+  		, nvl(limit_year,0) as limit_year   
+  	 FROM mber_basis 
+  	 WHERE mber_code=#{val}
+  </select>
+  
+  <select id="selectTbBiz" resultType="HashMap">
+  	SELECT 
+  		trmnl_no 
+  		, nvl(pg_van , 'VAN') as pg_van
+  		, nvl(van_gb , 'KSNET') as van_gb
+  		, nvl(pg_trmnl_no , '') as pg_trmnl_no
+  		, nvl(pg_gb , '') as pg_gb
+  	
+  	FROM biz WHERE biz_code=#{val}
+  </select>
+  
+  </mapper>

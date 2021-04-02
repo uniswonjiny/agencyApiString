@@ -13,6 +13,7 @@ import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.AgencyManage;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.SellerList;
+import org.bizpay.exception.SqlErrorException;
 import org.bizpay.mapper.AgencyManageMapper;
 import org.bizpay.mapper.AuthMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,19 +57,15 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		}
 		return list;
 	}
+	
+	// 강제 Exception 발생 전체 롤백으로 처리
 	@Override
-	@Transactional
-	public HashMap<String, Object> upatgeAgency(AgencyManageParam params) throws Exception {
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("flag", true);
-		map.put("message", "");
-		
+	@Transactional(rollbackFor = {SqlErrorException.class , Exception.class })
+	public void upatgeAgency(AgencyManageParam params) throws SqlErrorException , Exception {
 		// 1. 수정하려는 대리점이 존재하는지 검사
 		int tempCount = mapper.bizCount(params.getBizCode() );
 		if(tempCount <1 ) {
-			map.put("flag", false);
-			map.put("message", "수정하려는 대리점 정보가 존재하지 않습니다");
-			return map;
+			throw new SqlErrorException("수정하려는 대리점 정보가 존재하지 않습니다.");
 		}
 		
 		// 내부 조건부분
@@ -88,17 +85,13 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		
 		if(dirtyTarget || dirtyKind ) {
 			if( params.getPrevTarget()==null || params.getPrevTarget().length() ==0  ) {
-				map.put("flag", false);
-				map.put("message", "본사는 대리점구분 정보를 수정 할 수 없습니다.");
-				return map;
+				throw new SqlErrorException("본사는 대리점구분 정보를 수정 할 수 없습니다.");
 			}else if(dirtyKind) {
 				
 				if(params.getCDealerKind() > params.getPDearlerKind()) {
 					iDealerKind = mapper.agencyConfirm1(params.getMemberBizeCode()) ; // params.getBizCode()
 					if(iDealerKind !=0 &&   iDealerKind <= params.getCDealerKind() ) {
-						map.put("flag", false);
-						map.put("message", "소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다.");
-						return map;
+						throw new SqlErrorException("소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다.");
 					}
 					
 				} else {
@@ -108,14 +101,11 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 						iDealerKind = mapper.agencyConfirm3(params.getMemberBizeCode());
 					}
 					if(iDealerKind >0 && iDealerKind >=params.getCDealerKind() ) {
-						map.put("flag", false);
-						map.put("message", "상위 기준 대리점과 같거나 상위로 대리점 구분을 수정 할 수 없습니다.");
-						return map;
+						throw new SqlErrorException("상위 기준 대리점과 같거나 상위로 대리점 구분을 수정 할 수 없습니다.");
 					}	
 				}	
 				if(iDealerKind >0 &&  iDealerKind <= Integer.parseInt( params.getDealerKind() )  ) {
-					map.put("flag", false);
-					map.put("message", "소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다.");
+					throw new SqlErrorException("소속 대리점과 같거나 하위 대리점으로 대리점 구분을 수정 할 수 없습니다.");
 				}
 			}
 		} // end (dirtyTarget || dirtyKind )
@@ -181,50 +171,36 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		inputParam.setJoinAmt(params.getJoinAmt() );
 		inputParam.setBizCode( params.getBizCode()  );
 		inputParam.setCreatMberCode(params.getCreatMberCode() );
-		// 향후 트랜젝션을 위해 sql 에러를 발생시키고 에러를 처리하는 인터셉터를 개발해야 한다. -- 일단 진도를 뺀다.
+		
 		if(mapper.updateBiz(inputParam)  == 0) {
-			map.put("flag", false);
-			map.put("message", " 대리점 수정 할 수 없습니다.");
-			return map;
+			throw new SqlErrorException("대리점 수정 할 수 없습니다.");
 		}
 		
 		if(mapper.insertBizHist(inputParam) == 0) {
-			map.put("code", "error");
-			map.put("message", " 대리점 이력 입력 할 수 없습니다.");
-			return map;
+			throw new SqlErrorException("대리점 이력 입력 할 수 없습니다.");
 		}
 		HashMap<String, Object> map1 = new HashMap<String, Object>();
 		map1.put("mberCode", params.getMberCode());
 		map1.put("useAt", params.getUseAt());
 		map1.put("updatedMberCode", params.getMemberMberCode());
 		if(authMapper.updateMberUseAt( map1)==0 ) {
-			map.put("flag", false);
-			map.put("message", " 사용자 사용여부를 수정할수 없습니다.");
-			return map;
+			throw new SqlErrorException("사용자 사용여부를 수정할수 없습니다.");
 		}
 		
 		if(authMapper.insertMberHistUserAt(map1) == 0 ) {
-			map.put("flag", false);
-			map.put("message", " 사용자 변경이력을 입력할 수 없습니다.");
-			return map;
+			throw new SqlErrorException("사용자 변경이력을 입력할 수 없습니다.");
 		}
 		// 추천사용자변경
 		map1.clear();
 		map1.put("recommendBizCode", params.getRecommendBizCode()  );
 		map1.put("bizCode" , params.getBizCode()); 
 		if(authMapper.updateRecommendBizCode(map1) <0) {
-			map.put("flag", false);
-			map.put("message", " 추천사용자 정보를 변경할수 없습니다.");
-			return map;
+			throw new SqlErrorException("추천사용자 정보를 변경할수 없습니다.");
 		}
-		return map;
 	}
 	@Override
-	public HashMap<String, Object> insertAgency(AgencyManageParam params) throws Exception {
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("flag", true);
-		map.put("message", "");
-		
+	@Transactional(rollbackFor = {SqlErrorException.class , Exception.class })
+	public void insertAgency(AgencyManageParam params) throws Exception , SqlErrorException {
 		log.info("대리점 신규 입력");
 		// 1. biz 입력
 		// 1-1 biz 입력 변환 데이터
@@ -232,9 +208,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		params.setBizrno( util.encrypt( params.getBizrno().trim().replace("-","")  ) );
 		// Bizrno 가 존재하는 지 검사한다.
 		if(  mapper.selectBizCount( params.getBizrno() )  >0   ) {
-			map.put("flag", false);
-			map.put("message", "이미 등록된 사업자번호 입니다.");
-			return map;
+			throw new SqlErrorException("이미 등록된 사업자번호 입니다.");
 		}
 		params.setPgVan( strUtil.getString(params.getPgVan().toLowerCase().trim() , "VAN" )  );
 		if(params.getVanGb()!=null) params.setVanGb( strUtil.getString(params.getVanGb().toLowerCase().trim() , "" )  );
@@ -259,17 +233,12 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		params.setBizCode(bizCodeString);
 		// 신규 사업자 등록 biz
 		if( mapper.insertBiz(params) < 1 ) {
-			map.put("flag", false);
-			map.put("message", "신규사용자 등록에 실패했습니다.");
-			return map;
+			throw new SqlErrorException("신규사용자 등록에 실패했습니다.");
 		}
-		
 		
 		// 히스토리 입력 biz_hist
 		if(mapper.insertBizHist(params) <1 ) {
-			map.put("flag", false);
-			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
-			return map;
+			throw new SqlErrorException("신규사용자 등록 절차에 실패했습니다.");
 		}
 		
 		// mber 입력
@@ -282,30 +251,22 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		mbrParam.setMberCodeSn(0);
 		mbrParam.setAuthorCode("AUTHOR_DEALER");
 
-		if(mapper.insertMber(mbrParam) <1 ) {
-			map.put("flag", false);
-			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
-			return map;
+		if(mapper.insertMber(mbrParam) <1 ) {			
+			throw new SqlErrorException("신규사용자 등록 절차에 실패했습니다.");
 		}
-		
 		
 		// mber_detail 입력
 		if(mapper.insertMberDetail(mbrParam) <1 ) {
-			map.put("flag", false);
-			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
-			return map;
+			throw new SqlErrorException("신규사용자 등록 절차에 실패했습니다.");
 		}
 		mbrParam.setSn(1);
 		mbrParam.setHistCode("MH_USE_AT" );
 		mbrParam.setHistCn("Y");
 		// mber_hist2
 		if(mapper.insertMberHist(mbrParam) <1 ) {
-			map.put("flag", false);
-			map.put("message", "신규사용자 등록 절차에 실패했습니다.");
-			return map;
+			throw new SqlErrorException("신규사용자 등록 절차에 실패했습니다.");
 		}
 		
-		return map;
 	}
 	@Override
 	public List<SellerList> selectSellerList(SellerManageParam param) throws Exception {
@@ -348,63 +309,54 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		return list;
 	}
 	@Override
-	@Transactional
-	public int insertSellerList(List<SellerInsertParam> list) throws Exception {
+	@Transactional(rollbackFor = {SqlErrorException.class })
+	public void insertSellerList(List<SellerInsertParam> list) {
 		log.info("판매자 등록1  : " + list.toString());
-		for (SellerInsertParam dto: list) {
-			if(dto.getMbtlnum()==null || dto.getMbtlnum().length() <3) {
-				if(dto.getMberMobile()!=null && dto.getMberMobile().length() >4 ) {
-					dto.setMbtlnum(   dto.getMberMobile().substring( dto.getMberMobile().length()-4  ,dto.getMberMobile().length() )  );
+		try {
+			for (SellerInsertParam dto: list) {
+				if(dto.getMbtlnum()==null || dto.getMbtlnum().length() <3) {
+					if(dto.getMberMobile()!=null && dto.getMberMobile().length() >4 ) {
+						dto.setMbtlnum(   dto.getMberMobile().substring( dto.getMberMobile().length()-4  ,dto.getMberMobile().length() )  );
+					}
 				}
+				dto.setAdres(util.encrypt(   dto.getAdres()  ));
+				dto.setAccountNo(util.encrypt( dto.getAccountNo()));
+				dto.setMberMobile( util.encrypt(dto.getMberMobile()));
+				dto.setMberJumi( util.encrypt( dto.getMberJumi()));
+				dto.setEmail( util.encrypt(dto.getEmail()));
+				dto.setMberPhone( util.encrypt(dto.getMberPhone() ));
+				
 			}
-			dto.setAdres(util.encrypt(   dto.getAdres()  ));
-			dto.setAccountNo(util.encrypt( dto.getAccountNo()));
-			dto.setMberMobile( util.encrypt(dto.getMberMobile()));
-			dto.setMberJumi( util.encrypt( dto.getMberJumi()));
-			dto.setEmail( util.encrypt(dto.getEmail()));
-			dto.setMberPhone( util.encrypt(dto.getMberPhone() ));
-			
+			log.info("판매자 등록2  : " + list.toString());
+			if(mapper.insertSellerList(list)<1 ) {
+				throw new SqlErrorException("판매자 등록에 문제발생했습니다.");
+			}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			throw new SqlErrorException("판매자 등록에 문제발생했습니다.");
 		}
-		log.info("판매자 등록2  : " + list.toString());
-		return mapper.insertSellerList(list);
+		
 	}
 	
 	@Override
-	@Transactional
-	public HashMap<String, Object> updateSeller(SellerInsertParam param) throws Exception {
+	@Transactional(rollbackFor = {SqlErrorException.class , Exception.class })
+	public void updateSeller(SellerInsertParam param) throws Exception {
 		log.info("판매자 수정 - 사전검사");
-		HashMap< String, Object> map = new HashMap<String, Object>();
-		map.put("flag", true);
-		map.put("message", "");
 		if( param.getMbtlnum() == null  ) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "휴대폰번호 뒷자리를 입력");
-			return map;
+			throw new SqlErrorException("휴대폰번호 뒷자리를 입력");
 		} 
 		if( param.getMbtlnum().length()!=4  ) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "휴대폰 뒷자리수 오류");
-			return map;
+			throw new SqlErrorException("휴대폰 뒷자리수 오류");
 		}
 		if( param.getFeeRate() >100 || param.getFeeRate() <0) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "수수료율입력 오류");
-			return map;
+			throw new SqlErrorException("수수료율입력 오류");
 		}
 		// 수정권한 체크 -- 권한관련 인터셉터 개발예정
 		if( "AUTHOR_MNGR".equals(param.getGrade() ) ||  "HEADOFFICE".equals(param.getGrade() )  || param.getBizCode().equals(  param.getMemberBizeCode()  ) ) {
-			System.out.println("mybatis 에서 처리한다.");
-			
+			log.info("mybatis 에서 처리한다.");
 		}else {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "권한부족");
-			return map;
+			throw new SqlErrorException("권한부족");
 		}
-		
 		
 		log.info("판매자 수정1 - mber_basis");
 		// 필요한 항목 암호화처리
@@ -416,27 +368,17 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		param.setEmail( util.encrypt( param.getEmail()  )  );
 		
 		if(mapper.updateSelerMberBasis(param) <1) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "판매자정보수정오류");
-			return map;
-			//throw new Exception(); // 강제 에러발생 트랜잭션을 위해 -- 향후 에러핸들러 개발후 에러핸들러로 교체!!!!!!!!!!
+			throw new SqlErrorException("판매자정보수정오류");
 		}
 		
 		log.info("판매자 수정2- mber");
 		param.setMbtlnum(util.encrypt( param.getMbtlnum()));
 		if(param.getMberCode()== null || param.getMberCode().length() <1) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "사용자정보에 문제가 있습니다.");
-			return map;
+			throw new SqlErrorException("사용자정보에 문제가 있습니다");
 		}
 		
 		if(mapper.updateMber(param) <1 ) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "판매자정보수정오류2");
-			return map;
+			throw new SqlErrorException("판매자정보수정오류2");
 		}
 		
 		log.info("판매자 수정3- mber_hist2");
@@ -446,10 +388,7 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 		mapHist2.put("histCn" , param.getUseAt());
 		mapHist2.put("memberMberCode" , param.getMemberMberCode());
 		if(mapper.insertMberHist2(mapHist2) < 1) {
-			map.clear();
-			map.put("flag", false);
-			map.put("message", "판매자이력정보수정오류");
-			return map;
+			throw new SqlErrorException("판매자이력정보수정오류1");
 		}
 		
 		log.info("판매자 수정4- mber_hist2 -- 수수료율이 변경된 경우 기록");
@@ -459,7 +398,8 @@ public class AgencyManageSeviceImpl implements AgencyManageSevice {
 			mapHist2.remove("histCn");
 			mapHist2.put("histCode" , "MH_FEE_RATE");
 			mapHist2.put("histCn" , param.getFeeRate());	
+			if(mapper.insertMberHist2(mapHist2)<1 )throw new SqlErrorException("판매자이력정보수정오류2");
 		}
-		return map;
+				
 	}
 }

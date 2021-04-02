@@ -38,12 +38,10 @@ public class AgencyManageController {
 	}
 	// 대리점 정보 수정
 	@RequestMapping(value = "updateAgency", method = RequestMethod.POST)
-	public ResponseEntity<String> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
+	public ResponseEntity<Void> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 수정");
-		HashMap< String, Object> map =  serve.upatgeAgency(param);
-		if( (boolean) map.get("flag") ) {
-			return new ResponseEntity<>("",   HttpStatus.OK);
-		}else 	return new ResponseEntity<>(map.get("message").toString() ,   HttpStatus.BAD_GATEWAY);
+		serve.upatgeAgency(param); // 에러처리는 핸들러에서 하므로 실행만 하면된다.
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 	// 기준대리점정보획득
@@ -61,13 +59,9 @@ public class AgencyManageController {
 	
 	// 대리점 정보 입력
 	@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
-	public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
+	public ResponseEntity<Void> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 입력");
-		//////// 중요 리턴 부분은 에러 핸들러에서 에러 생겼을 때 응답 하도록 바꿀예정임 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		HashMap< String, Object> map =  serve.insertAgency(param);
-		if( (boolean) map.get("flag") ) {
-			return new ResponseEntity<>("",   HttpStatus.OK);
-		}else 	return new ResponseEntity<>(map.get("message").toString() ,   HttpStatus.BAD_GATEWAY);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 	// 판매자관리목록
@@ -80,16 +74,14 @@ public class AgencyManageController {
 	@RequestMapping(value = "insertSeller", method = RequestMethod.POST)
 	public ResponseEntity<String> sellerList(@RequestBody List<SellerInsertParam> param) throws Exception{
 		log.info("대리점입력");
-		System.out.println(param.toString());
-//		return new ResponseEntity<>("ok",   HttpStatus.OK);
-		if(serve.insertSellerList(param) > 0)return new ResponseEntity<>("ok",   HttpStatus.OK);
-		else return new ResponseEntity<>("fail",   HttpStatus.OK);
+		return new ResponseEntity<>("ok",   HttpStatus.OK);
 	}
 	
 	// 판매자 수정
 	@RequestMapping(value = "updateSeller", method = RequestMethod.POST)
 	public ResponseEntity<HashMap< String, Object>> updateList(@RequestBody SellerInsertParam param) throws Exception{
 		log.info("대리점입력");
-		return new ResponseEntity<>(serve.updateSeller(param),   HttpStatus.OK);
+		serve.updateSeller(param);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}	
 }
