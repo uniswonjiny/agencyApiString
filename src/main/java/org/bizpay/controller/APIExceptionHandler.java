@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import io.swagger.annotations.Api;
+
 @ControllerAdvice
+@Api(tags = "에러처리 ")
 public class APIExceptionHandler {
 	// exception.class 처리
 	@ExceptionHandler({SQLException.class,DataAccessException.class ,Exception.class })

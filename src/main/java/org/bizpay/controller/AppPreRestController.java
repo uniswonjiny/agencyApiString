@@ -12,16 +12,20 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 
 @Log
 @RestController
 @RequestMapping("/bizpay")
 @CrossOrigin(origins={"*"})
+@Api(tags = "이전API - Command ")
 public class AppPreRestController {
 	@Autowired
 	AppPreService apServe;
-	
+	@ApiOperation(value=" 앱통신부분" , notes = "앱통신부분 - 여러호출이 Command 구분후 서비스로 연결됨")
 	@RequestMapping(value = "Command", method = RequestMethod.POST)
 	public ResponseEntity<HashMap<String, Object>> Command(HttpServletRequest req) throws Exception{
 		log.info("앱통신부분");

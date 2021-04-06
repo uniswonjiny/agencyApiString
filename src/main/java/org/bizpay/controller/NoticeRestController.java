@@ -15,20 +15,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
-
-// !!!!!!!!!!!!!!! exception handler 작성후 ResponseEntity 리턴 부분 모두 수정해야한다.!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 @Log
 @RestController
 @RequestMapping("/notice")
 @CrossOrigin(origins={"*"})
+@Api(tags = "공지사항 ")
 public class NoticeRestController {
 	@Autowired
 	NoticeService nService;
 	
-	// 공지사항 목록
+	@ApiOperation(value="공지사항 목록" , notes = "공지사항 목록")
 	@RequestMapping(value = "noticeList", method = RequestMethod.GET)
 	public ResponseEntity<List<Notice>> agencyList() throws Exception{
 		log.info("공지사항 목록");
@@ -36,6 +36,7 @@ public class NoticeRestController {
 	}
 
 	// 공지사항목록 삭제 http://localhost:8080/deleteNotice/1,2,3,4
+	@ApiOperation(value="공지사항 삭제" , notes = "공지사항 삭제")
 	@RequestMapping(value = "deleteNotice/{idxList}", method = RequestMethod.DELETE)
 	public ResponseEntity<String> deleteNotice(@PathVariable List<Integer> idxList) throws Exception{
 		log.info("공지사항 삭제");
@@ -45,14 +46,16 @@ public class NoticeRestController {
 		//if(true )return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
 		else return new ResponseEntity<>( HttpStatus.OK);
 	}
-	// 공지사항저장 
+
+	@ApiOperation(value="공지사항신규" , notes = "공지사항저장")
 	@RequestMapping(value = "saveNotice", method = RequestMethod.POST)
 	public ResponseEntity<String> saveNotice(@RequestBody Notice notice) throws Exception{
 		log.info("공지사항 저장");
 		if(nService.saveNotice(notice) <1 )return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
 		else return new ResponseEntity<>( HttpStatus.OK);
 	}
-	// 공지사항수정 
+
+	@ApiOperation(value="공지사항수정 " , notes = "공지사항수정 ")
 	@RequestMapping(value = "updateNotice", method = RequestMethod.POST)
 	public ResponseEntity<String> updateNotice(@RequestBody Notice notice) throws Exception{
 		log.info("공지사항 수정");
@@ -60,21 +63,22 @@ public class NoticeRestController {
 		else return new ResponseEntity<>( HttpStatus.OK);
 	}
 	
-	// 수수료율 목록
+	@ApiOperation(value="수수료율 목록 " , notes = "수수료율 목록 ")
 	@RequestMapping(value = "pgFeeList", method = RequestMethod.GET)
 	public ResponseEntity<List<PgFee>> pgFeeList() throws Exception{
 		log.info("pg 수수료율 목록");
 		return new ResponseEntity<>(nService.pgFeeList(), HttpStatus.OK);
 	}
-	
-	// 수수료율 저장 
+	 
+	@ApiOperation(value="수수료율 저장" , notes = "수수료율 저장")
 	@RequestMapping(value = "savePgFee", method = RequestMethod.POST)
 	public ResponseEntity<String> savePgFee(@RequestBody PgFee pgFee) throws Exception{
 		log.info("공지사항 저장");
 		if(nService.savePgFee(pgFee) <1 )return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
 		else return new ResponseEntity<>( HttpStatus.OK);
 	}
-	// 수수료율 수정 
+
+	@ApiOperation(value="수수료율 수정 " , notes = "수수료율 수정 ")
 	@RequestMapping(value = "updatePgFee", method = RequestMethod.POST)
 	public ResponseEntity<String> updatePgFee(@RequestBody PgFee pgFee) throws Exception{
 		log.info("공지사항 수정");
@@ -83,6 +87,7 @@ public class NoticeRestController {
 	}
 	
 	// 수수료율삭제 http://localhost:8080/deleteNotice/1,2,3,4
+	@ApiOperation(value="수수료율삭제 " , notes = "수수료율삭제")
 	@RequestMapping(value = "deletePgFee/{idxList}", method = RequestMethod.DELETE)
 	public ResponseEntity<String> deletePgFee(@PathVariable List<Integer> idxList) throws Exception{
 		log.info("수수료율 삭제");

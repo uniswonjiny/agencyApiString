@@ -24,18 +24,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 
 @Log
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins="*")
+@Api(tags = "로그인인증")
 public class AuthRestController {
 	@Autowired
 	AuthService aService;
 	@Autowired
 	JwtUtil jwt;
-	
+	@ApiOperation(value="로그인" , notes = "로그인")
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public ResponseEntity<Map<String , Object>>  login(@RequestBody LoginParam param) throws Exception {
 		log.info("로그인시도 ID : " + param.getUserId());
@@ -55,6 +58,7 @@ public class AuthRestController {
 		return new ResponseEntity<>(map, HttpStatus.OK);	
 	}
 	// 인증키 + 갱신키 관련 일체 개발후 에 이용되어야 한다.. 
+	@ApiOperation(value="재로그인" , notes = "인증토큰을 이용한 재로그인")
 	@RequestMapping(value = "/relogin", method = RequestMethod.POST)
 	public ResponseEntity<Map<String , Object>>  reLogin(
 			@RequestHeader(value="userId") String userId,
@@ -77,12 +81,13 @@ public class AuthRestController {
 			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);	
 		}	
 	}
+	@ApiOperation(value="ID 존재확인" , notes = "아이디 존재확인")
 	@RequestMapping(value = "/idChk/{id}", method = RequestMethod.GET)
 	public ResponseEntity<Integer>  idChk(@PathVariable String id) 
 			throws Exception {
 		return new ResponseEntity<>(aService.memberIdChk(id), HttpStatus.OK);	
 	}
-	
+	@ApiOperation(value="사업자번호 존재확인" , notes = "사업자번호 확인")
 	@RequestMapping(value = "/biznoChk/{bizno}", method =  RequestMethod.GET)
 	public ResponseEntity<Integer>  biznoChk(@PathVariable String bizno) 
 			throws Exception {
