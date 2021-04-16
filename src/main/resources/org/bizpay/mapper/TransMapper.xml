@@ -13,7 +13,7 @@
 			AND a.confm_no= #{confmNo}
 	     </if>
   		<if test="mberId!=null and !mberId.equals('') " >
-  			AND b.induty_id like '%'||#{usid}||'%' 
+  			AND b.induty_id like '%'||#{mberId}||'%' 
   		</if>
   		<if test="bizNum!=null and !bizNum.equals('') " >
   			AND b.biz_num like '%'||#{bizNum}||'%'
@@ -34,7 +34,7 @@
   		</if>
   		
   		<if test="sellPrice!=0" >
-			AND b.splpc+b.vat= #{sellPrice}
+			AND a.splpc+a.vat= #{sellPrice}
 	     </if>
 	     
 	      <if test="tid!=null and !tid.equals('')" >
