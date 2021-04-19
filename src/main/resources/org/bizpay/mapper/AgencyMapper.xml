@@ -253,7 +253,7 @@
 															  			AND d.induty_id like '%'||#{mberId}||'%' 
 															  		</if>
 															  		<if test="companyName!=null and !companyName.equals('') " >
-															  			AND a.cmpnm like '%'||#{companyName}||'%' 
+															  			AND d.company_name like '%'||#{companyName}||'%' 
 															  		</if>
 															  		
                                                                 GROUP BY a.cmpnm,a.biz_type,a.dealer_kind,b.usid,a.biz_code,a.pymnt_rate,d.mber_name,
@@ -369,7 +369,7 @@
 			AND A.biz_code= #{bizCode}
 		</if>
 		<if test="bizNum!=null and !bizNum.equals('') " >
-			AND a.biz_num like '%'||#{bizNum}||'%'
+			AND a.BIZRNO like '%'||#{bizNum}||'%'
 		</if>
 		<if test="mberId!=null and !mberId.equals('') " >
 			AND a.induty_id like '%'||#{mberId}||'%' 
@@ -406,7 +406,7 @@
 			AND A.biz_code= #{bizCode}
 		</if>
 		<if test="bizNum!=null and !bizNum.equals('') " >
-			AND a.biz_num like '%'||#{bizNum}||'%'
+			AND a.BIZRNO like '%'||#{bizNum}||'%'
 		</if>
 		<if test="mberId!=null and !mberId.equals('') " >
 			AND a.induty_id like '%'||#{mberId}||'%' 
@@ -444,7 +444,7 @@
 			AND A.biz_code= #{bizCode}
 		</if>
 		<if test="bizNum!=null and !bizNum.equals('') " >
-			AND a.biz_num like '%'||#{bizNum}||'%'
+			AND a.BIZRNO like '%'||#{bizNum}||'%'
 		</if>
 		<if test="mberId!=null and !mberId.equals('') " >
 			AND a.induty_id like '%'||#{mberId}||'%' 
@@ -483,13 +483,13 @@
 		AND A.biz_code= #{bizCode}
 	</if>
 	<if test="bizNum!=null and !bizNum.equals('') " >
-		AND a.biz_num like '%'||#{bizNum}||'%'
+		AND b.biz_num like '%'||#{bizNum}||'%' <!-- BIZRNO 와 구별이 .... 값이 안나오면 변경  -->
 	</if>
 	<if test="mberId!=null and !mberId.equals('') " >
 		AND b.induty_id like '%'||#{mberId}||'%' 
 	</if>
 	<if test="companyName!=null and !companyName.equals('') " >
-		AND a.company_name like '%'||#{companyName}||'%' 
+		AND b.company_name like '%'||#{companyName}||'%' 
 	</if>
 	<if test="mberName!=null and !mberName.equals('') " >
 		AND b.mber_name like '%'||#{mberName}||'%' 
