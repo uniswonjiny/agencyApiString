@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="org.bizpay.mapper.ExternalMapper">
+  	<insert id="insertExOrder" >
+  		<selectKey resultType="long" keyProperty="seq" order="BEFORE">
+  			select QR_ORDER_SEQUENCE1.nextval from dual
+  		</selectKey>
+  		INSERT INTO tb_ex_order (
+		    seq,
+		    type,
+		    name,
+		    price
+		) VALUES (
+		    #{seq},
+		    #{orderType},
+		    #{orderName},
+		    #{orderPrice}
+		)
+  	</insert>
+  </mapper>

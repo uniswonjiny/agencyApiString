@@ -38,7 +38,10 @@ public class AuthRestController {
 	AuthService aService;
 	@Autowired
 	JwtUtil jwt;
-	@ApiOperation(value="로그인" , notes = "로그인")
+	@ApiOperation(
+			value="로그인" , notes = "로그인"
+			,response = Map.class
+		)
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public ResponseEntity<Map<String , Object>>  login(@RequestBody LoginParam param) throws Exception {
 		log.info("로그인시도 ID : " + param.getUserId());

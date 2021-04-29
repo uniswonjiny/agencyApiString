@@ -9,10 +9,17 @@ import org.springframework.web.servlet.ModelAndView;
 public class HomeController {
 	@RequestMapping(value="/", method=RequestMethod.GET)
 	public ModelAndView home() {
-		System.out.println("영기~~~~~~~~~");
 		ModelAndView mav = new ModelAndView();
 		mav.addObject("message", "Home...");
 		mav.setViewName("index");
+		return mav;
+	}
+	
+	@RequestMapping(value="/", method=RequestMethod.POST)
+	public ModelAndView qrpay() {
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("message", "rq페이입니다");
+		mav.setViewName("qrpay");
 		return mav;
 	}
 }
