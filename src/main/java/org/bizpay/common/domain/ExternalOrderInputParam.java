@@ -10,6 +10,6 @@ import lombok.ToString;
 public class ExternalOrderInputParam {
 	private String orderName;
 	private int orderPrice;
-	private String orderType;
 	private long seq;
+	private String mberId;
 }

@@ -3,20 +3,189 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
   <mapper namespace="org.bizpay.mapper.ExternalMapper">
+  
+
   	<insert id="insertExOrder" >
   		<selectKey resultType="long" keyProperty="seq" order="BEFORE">
-  			select QR_ORDER_SEQUENCE1.nextval from dual
+  			select  SEQ_EX_ORDER.NEXTVAL from dual
   		</selectKey>
   		INSERT INTO tb_ex_order (
 		    seq,
-		    type,
 		    name,
-		    price
+		    price,
+		    mber_Id
+		    
 		) VALUES (
 		    #{seq},
-		    #{orderType},
 		    #{orderName},
-		    #{orderPrice}
+		    #{orderPrice},
+		    #{mberId}
 		)
   	</insert>
+  	
+  	<select id="selectMberCnt" resultType="int">
+  	SELECT count(1) FROM mber 
+  	where  usid = #{val} and  use_at = 'Y'
+  	</select>
+  	  	
+  	<select id="selectOrderInfo" resultType="ExternalOrderInfo">
+  		SELECT
+		    seq,
+		    (select 
+				    (select CMPNM from biz where biz_code = mber.biz_code)
+				from mber where usid = tb_ex_order.mber_id  )	as MBER_NAME,
+		    mber_id,
+		    name,
+		    price,
+		    status,
+		    create_dt,
+		    update_dt
+		FROM
+		    tb_ex_order
+		where 
+		        seq = #{val}
+  	</select>
+  	
+  	<!-- 영수증처리 
+  	!!!!!주의!!!!!
+  		프로시저 실행 리턴값을 받기위해서 공식문서에는 프로시저 실행에 관련된부분이 사실상 없고
+  		구글 네이버 검색되는 내용또한 모두 틀린내용이다. 
+  		select 가 아닌 insert update 로 실행해야 하고 out 부분을 정확하게 아래 처럼 기술해야 하고 
+  		input 파라미터에 값이 자동으로 주입된다.
+  	 -->
+  	<insert id="propRciptNO" parameterType="hashmap" statementType="CALLABLE">
+  			{call PROC_RCIPT_CAL(
+  				#{mber_code},
+  				#{rcipt_no , mode=OUT,jdbcType=VARCHAR, javaType=string}
+  			)}
+  	</insert>
+  		
+  	<!-- 영수증번호 획득  -->
+  	<select id="getRciptNo" resultType="int">
+
+   		
+  		select GET_RCIPT_NO(#{val})  from dual
+  	</select>
+  	  	
+  	<!--   tbMber 사용가능유무 확인-->
+  	<select id="selectTbBberIdCheck" resultType="HashMap" >
+  	SELECT USE_AT as useAt , mber_code as mberCode  FROM mber WHERE usid = #{val}
+  	</select>
+  	
+  	<!--tbMberDetail  mber_code_sn 확인 -->
+  	<select id="selectTbMberDetailSn" resultType="String">
+  	SELECT max(mber_code_sn) FROM mber_detail
+  	where mber_code = #{val}
+  	</select>
+  	<!--tbMberBasis 필요정보만 추출  -->
+  	<select id="selectTbMberBasis1" resultType="HashMap" >
+  	SELECT
+		    induty_id as indutyId,
+		    pay_type as payType,
+		    mber_name as mberName,   
+		    company_name as companyName,
+		    fee_rate as feeRate 
+		FROM
+		    mber_basis
+		 where MBER_CODE = #{val}
+  	</select>
+
+	<insert id="insertDelng" >
+	INSERT INTO delng (
+	    mber_code,
+	    mber_code_sn,
+	    rcipt_no,
+	    app_code,
+	    confm_no,   
+	    confm_dt,
+	    confm_time,
+	    splpc,
+	    vat,
+	    trget_mber_code,
+	    trget_mber_code_sn,
+	    trget_rcipt_no,
+	    approval_confirm,
+	    device_seq_no,
+	    van_code,  
+	    delng_se_code,
+	    good_nm,
+	    delng_pay_type,
+	    bigo
+	) VALUES (
+		#{mberCode},
+	    #{mberCodeSn},
+	    #{rciptNo},
+	    #{appCode},
+	    #{confmNo},   
+	    #{confmDt},
+	    #{confmTime},
+	    #{splpc},
+	    #{vat},
+	    #{trgetMberCode},
+	    #{trgetMberCodeSn},
+	    #{trgetRciptNo},
+	    #{approvalConfirm},
+	    #{deviceSeqNo},
+	    #{vanCode},  
+	    #{delngSeCode},
+	    #{goodNm},
+	    #{delngPayType},
+	    #{bigo}
+	)
+	</insert>
+	
+	<insert id="insertDelngCredt">
+	INSERT INTO delng_credt (
+		    mber_code,
+		    mber_code_sn,
+		    rcipt_no,
+		    card_no,
+		    instlmt_month,
+		    issue_cmpny_code,
+		    issue_cmpny_nm,
+		    puchas_cmpny_code,
+		    puchas_cmpny_nm,
+		    cdrsr_no,
+		    card_type,
+		    pg_van_gb,
+		    t_id,
+		    pg_rcipt_no,
+		    gb_info,
+		    van_pg_comp
+		) VALUES (
+		    #{mberCode},
+		    #{mberCodeSn},
+		    #{rciptNo},
+		    #{cardNo},
+		    #{instlmtMonth},
+		    #{issueCmpnyCode},
+		    #{issueCmpnyNm},
+		    #{puchasCmpnyCode},
+		    #{puchasCmpnyNm},
+		    #{cdrsrNo},
+		    #{cardType},
+		    #{pgVanGb},
+		    #{tId},
+		    #{pgRciptNo},
+		    #{gbInfo},
+		    #{vanPgComp}
+		)
+	</insert>
+	
+	<insert id="insertDelngAdi">
+	INSERT INTO delng_adi (
+	    mber_code,
+	    mber_code_sn,
+	    rcipt_no,
+	    adi_code,
+	    adi_cn
+	) VALUES (
+	    #{mberCode},
+		#{mberCodeSn},
+		#{rciptNo},
+	    #{adiCode},
+	    #{adiCn}
+	)
+	</insert>
+  	
   </mapper>
