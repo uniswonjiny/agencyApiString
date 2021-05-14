@@ -60,7 +60,7 @@ public class PTest {
 		ppp.setPhoneNumber("01039977736");
 		ppp.setExpiration("2507");
 		ppp.setPasswd("99");
-		ppp.setPIdNum("810204");// 주민번호
+		ppp.setPidNum("810204");// 주민번호
 		exSever.payRequest(ppp);
 	}
 }
