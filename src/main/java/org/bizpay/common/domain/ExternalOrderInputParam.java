@@ -8,8 +8,13 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ExternalOrderInputParam {
+	private String nextUrl;
+	private String notiUrl;
+	private String pkHash;
+	private String status;
 	private String orderName;
 	private int orderPrice;
 	private long seq;
+	private String exOrderNo;
 	private String mberId;
 }

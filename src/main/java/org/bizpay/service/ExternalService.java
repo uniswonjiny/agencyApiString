@@ -5,7 +5,7 @@ import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.domain.ExternalOrderInfo;
 
 public interface ExternalService {
-	public int insertExOrder(ExternalOrderInputParam param) throws Exception;
+	public long insertExOrder(ExternalOrderInputParam param) throws Exception;
 	public ExternalOrderInfo selectOrderInfo(long orderNo) throws Exception;
 	public boolean payRequest(PaymentReqParam param)throws Exception;
 }

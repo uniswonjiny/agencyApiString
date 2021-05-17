@@ -33,4 +33,6 @@ public interface ExternalMapper {
 	public int insertDelngCredt(DelngCredtParam param)throws Exception;
 	// delng_adi 입력
 	public int insertDelngAdi(DelngAdiParam param)throws Exception;
+	// 이전 주문 정보 확인
+	public ExternalOrderInputParam selectExOrderNo(ExternalOrderInputParam param) throws Exception;
 }

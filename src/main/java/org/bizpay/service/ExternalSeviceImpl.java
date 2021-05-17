@@ -39,8 +39,20 @@ public class ExternalSeviceImpl implements ExternalService {
 	
 	@Override
 	@Transactional
-	public int insertExOrder(ExternalOrderInputParam param) throws Exception {
+	public long insertExOrder(ExternalOrderInputParam param) throws Exception {
 		log.info("외부결제연동 결제정보 입력");
+		// 이전 주문이 정보가 있는지 확인
+		ExternalOrderInputParam reP = exMapper.selectExOrderNo(param);
+		if(reP != null) {
+			if("0000".equals(reP.getStatus() ) ) {
+				log.info("이전 주문만 완료후 후속 결제가 안된 경우");
+				return reP.getSeq();
+			}else {
+				log.info("이전 주문관련 결제등이 발생해버린 경우");
+				return -1;
+			}
+		}
+		
 		// 사용가능한 사용자인지 확인
 		if( exMapper.selectMberCnt(param.getMberId())  <1 ) {
 			throw new SqlErrorException("서비스 이용제한 사용자입니다.");

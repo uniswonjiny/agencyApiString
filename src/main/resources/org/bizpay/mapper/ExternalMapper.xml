@@ -13,15 +13,35 @@
 		    seq,
 		    name,
 		    price,
-		    mber_Id
-		    
+		    mber_Id,
+		    exorder_no
 		) VALUES (
 		    #{seq},
 		    #{orderName},
 		    #{orderPrice},
-		    #{mberId}
+		    #{mberId},
+		    #{exOrderNo}
 		)
   	</insert>
+  	
+  	<select id="selectExOrderNo" resultType="ExternalOrderInputParam">
+  	SELECT
+    seq,
+    mber_id,
+    name,
+    price,
+    status,
+    create_dt,
+    update_dt,
+    exorder_no
+FROM
+    tb_ex_order
+where
+    mber_id =  #{mberId}
+    and exorder_no = #{exOrderNo}
+  	
+  	</select>
+  	
   	
   	<select id="selectMberCnt" resultType="int">
   	SELECT count(1) FROM mber 
