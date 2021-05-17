@@ -20,7 +20,7 @@
 		    #{orderName},
 		    #{orderPrice},
 		    #{mberId},
-		    #{exOrderNo}
+		    #{exorderNo}
 		)
   	</insert>
   	
@@ -38,7 +38,7 @@ FROM
     tb_ex_order
 where
     mber_id =  #{mberId}
-    and exorder_no = #{exOrderNo}
+    and exorder_no = #{exorderNo}
   	
   	</select>
   	
@@ -53,17 +53,21 @@ where
 		    seq,
 		    (select 
 				    (select CMPNM from biz where biz_code = mber.biz_code)
-				from mber where usid = tb_ex_order.mber_id  )	as MBER_NAME,
+				from mber where usid = aa.mber_id  )	as MBER_NAME,
 		    mber_id,
 		    name,
 		    price,
 		    status,
+		    aa.exorder_no,
+            bb.sugi_certification,
 		    create_dt,
 		    update_dt
 		FROM
-		    tb_ex_order
+		    tb_ex_order aa
+            inner join mber_basis bb
+            on aa.mber_id = bb.INDUTY_ID
 		where 
-		        seq = #{val}
+		        aa.seq = #{val}
   	</select>
   	
   	<!-- 영수증처리 
@@ -207,5 +211,16 @@ where
 	    #{adiCn}
 	)
 	</insert>
+	
+	<update id="updateExOrder">
+		UPDATE tb_ex_order
+		SET
+		   update_dt = sysdate,
+		   status = #{status}
+		WHERE
+		     mber_id = #{mberId}
+		    AND exorder_no = #{exorderNo}
+	
+	</update>
   	
   </mapper>

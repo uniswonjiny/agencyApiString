@@ -13,6 +13,7 @@ public class PaymentReqParam {
 	private String expiration; // 카드유호기간
 	private String installment ;// -필수- pInstallment  X( 2)   *할부개월수(00:일시불, 03:3개월할부, ...)
 	private long amount; // 결제금액
+	private String exOrderNo; // 외부결제정보
 	
 	private String passwd; // pPasswd  9( 9)   비밀번호앞2자리  
 	private String cardPNo; //주민번호 뒸자리 pLastIdNum  X(10)  주민번호앞6자리 또는 사업자번호10자리 

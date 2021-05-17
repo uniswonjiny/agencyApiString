@@ -32,6 +32,8 @@ public class HomeController {
 	public RedirectView qrpay(ExternalOrderInputParam param) {
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 		try {
+			// 사전검사
+			
 			long seq = service.insertExOrder(param);
 			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
 		} catch (Exception e) {

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.RciptMember;
+import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.JwtUtil;
 import org.bizpay.domain.ExternalOrderInfo;
 import org.bizpay.mapper.ExternalMapper;
@@ -30,6 +31,9 @@ public class PTest {
 	@Autowired
 	ExternalService exSever;
 	
+	@Autowired
+	EncryptUtil eUtil;
+	
 	@Test
 	void mainTest() throws Exception {
 		// 시전 주문 입력
@@ -50,17 +54,21 @@ public class PTest {
 		
 		// 수기결제 요청
 		
-		PaymentReqParam ppp = new PaymentReqParam();
-		ppp.setAmount(500);
-		ppp.setCardNo("6243760025280317");
-		ppp.setGoodsName("큐알테스트4쫄면");
-		ppp.setInstallment("00");
-		ppp.setMemberId("B0002A1777"); // 유니코아 송원진
-		ppp.setEmail("aaa@bbb.com");
-		ppp.setPhoneNumber("01039977736");
-		ppp.setExpiration("2507");
-		ppp.setPasswd("99");
-		ppp.setPidNum("810204");// 주민번호
-		exSever.payRequest(ppp);
+//		PaymentReqParam ppp = new PaymentReqParam();
+//		ppp.setAmount(500);
+//		ppp.setCardNo("6243760025280317");
+//		ppp.setGoodsName("큐알테스트4쫄면");
+//		ppp.setInstallment("00");
+//		ppp.setMemberId("B0002A1777"); // 유니코아 송원진
+//		ppp.setEmail("aaa@bbb.com");
+//		ppp.setPhoneNumber("01039977736");
+//		ppp.setExpiration("2507");
+//		ppp.setPasswd("99");
+//		ppp.setPidNum("810204");// 주민번호
+//		exSever.payRequest(ppp);
+		
+		String aaaa = eUtil.encryptSHA256("상품테스트5000");
+		System.out.println(aaaa);
+		
 	}
 }

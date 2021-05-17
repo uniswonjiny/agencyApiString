@@ -9,6 +9,7 @@ import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.util.CertUtil;
+import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.ExternalOrderInfo;
@@ -17,6 +18,7 @@ import org.bizpay.mapper.ExternalMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.view.RedirectView;
 
 import lombok.extern.java.Log;
 @Log
@@ -37,10 +39,44 @@ public class ExternalSeviceImpl implements ExternalService {
 	@Autowired
 	CertUtil cUtil;
 	
+	@Autowired
+	EncryptUtil eUtil;
+	
+	
 	@Override
 	@Transactional
 	public long insertExOrder(ExternalOrderInputParam param) throws Exception {
 		log.info("외부결제연동 결제정보 입력");
+		// 필수 값확인
+		if("".equals(param.getNextUrl())) {
+			return -1;
+		}
+		if("".equals(param.getNotiUrl())) {
+			return -1;
+		}
+		if("".equals(param.getExorderNo())) {
+			return -1;
+		}
+		if("".equals(param.getMberId())) {
+			return -1;
+		}
+		if("".equals(param.getOrderName()   ) ) {
+			return -1;
+		}
+		if(param.getOrderPrice() <100 ) {
+			return -1;
+		}
+		if("".equals(param.getPkHash() ) ) {
+			return -1;
+		}
+		
+		// 해시 키값 확인
+		String temp = param.getMberId()+param.getOrderName()+param.getOrderPrice()+param.getExorderNo();
+		temp = eUtil.encryptSHA256(temp);
+		if(!temp.equals(  param.getPkHash()  )  ) {
+			return -2;
+		}
+		
 		// 이전 주문이 정보가 있는지 확인
 		ExternalOrderInputParam reP = exMapper.selectExOrderNo(param);
 		if(reP != null) {
@@ -52,6 +88,9 @@ public class ExternalSeviceImpl implements ExternalService {
 				return -1;
 			}
 		}
+		
+	
+		
 		
 		// 사용가능한 사용자인지 확인
 		if( exMapper.selectMberCnt(param.getMberId())  <1 ) {
@@ -219,6 +258,13 @@ public class ExternalSeviceImpl implements ExternalService {
 			if(exMapper.insertDelngAdi(delngAdiParam) <1) {
 				throw new SqlErrorException("매출 정보등록 실패. 관리자에게 문의바랍니다.");
 			}
+			
+			// 결제정보 업데이트
+			ExternalOrderInputParam exParam = new ExternalOrderInputParam();
+			exParam.setStatus("AAAA");
+			exParam.setMberId(param.getMemberId());
+			exParam.setExorderNo( param.getExOrderNo() );
+			exMapper.updateExOrder(exParam);
 			
 		}else {
 			throw new SqlErrorException("결제승인 실패. 관리자에게 문의바랍니다.");

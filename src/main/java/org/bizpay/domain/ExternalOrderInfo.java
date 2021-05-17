@@ -16,4 +16,6 @@ public class ExternalOrderInfo {
 	private String createDt; // 요청일자
 	private String updateDt; // 수정일자
 	private String status; // 주문상태
+	private String exorderNo; // 외부 요청자 주문번호
+	private String sugiCertification;// 수기결제 추가 인증필요유무
 }

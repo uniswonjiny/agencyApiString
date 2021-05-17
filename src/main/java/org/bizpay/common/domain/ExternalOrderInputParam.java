@@ -15,6 +15,6 @@ public class ExternalOrderInputParam {
 	private String orderName;
 	private int orderPrice;
 	private long seq;
-	private String exOrderNo;
+	private String exorderNo;
 	private String mberId;
 }

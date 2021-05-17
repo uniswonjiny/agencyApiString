@@ -35,7 +35,7 @@ public class ExternalController {
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 
 		if(service.insertExOrder(param) >0) {
-			return new ResponseEntity<>( " http://dm1586000202893.fun25.co.kr/external/qrpa/"+param.getSeq(), HttpStatus.OK);
+			return new ResponseEntity<>( param.getSeq() + "", HttpStatus.OK);
 		}else {
 			return new ResponseEntity<>( "주문정보 생성에 문제가 발생했습니다.", HttpStatus.UNAUTHORIZED);
 		}	
