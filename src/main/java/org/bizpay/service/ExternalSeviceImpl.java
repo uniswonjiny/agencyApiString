@@ -62,7 +62,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		if(exMapper.insertExOrder(param) <1) {
 			throw new SqlErrorException("결제주문서버에 문제가 있습니다.");
 		}
-		return 1;
+		return param.getSeq();
 	}
 
 	@Override
