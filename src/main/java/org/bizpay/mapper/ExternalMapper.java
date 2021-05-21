@@ -2,17 +2,18 @@ package org.bizpay.mapper;
 
 import java.util.HashMap;
 
-import org.apache.ibatis.annotations.Param;
 import org.bizpay.common.domain.DelngAdiParam;
 import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
-import org.bizpay.common.domain.RciptMember;
-import org.bizpay.domain.ExternalOrderInfo;
 
 public interface ExternalMapper {
 	public int insertExOrder(ExternalOrderInputParam param) throws Exception;
-	public ExternalOrderInfo selectOrderInfo(long orderNo) throws Exception;
+	// 외부 결제정보 확인
+	public ExternalOrderInputParam selectOrderInfo(long orderNo) throws Exception;
+	// 외부결제 정보 확인 2 외부제공주문번호 로 확인
+	public ExternalOrderInputParam selectOrderInfo2(ExternalOrderInputParam param) throws Exception;
+	
 	// 사용자 이용가능유무 확인
 	public int selectMberCnt(String mberId) throws Exception;
 	// 영수증번호 획득
@@ -37,4 +38,18 @@ public interface ExternalMapper {
 	public ExternalOrderInputParam selectExOrderNo(ExternalOrderInputParam param) throws Exception;
 	// 외부 결제정보 수정
 	public int updateExOrder(ExternalOrderInputParam param) throws Exception;
+	// 결제정보확인 delng
+	public DelngParam selectDelngInfo(DelngParam param) throws Exception;
+	// 신용카드 결제정보확인
+	public DelngCredtParam selectDelngCredt(HashMap<String, Object> map) throws Exception;
+	// 부가정보 확인
+	public DelngAdiParam selectDelngAdi(DelngAdiParam param)throws Exception;
+	//거래부가정보수정
+	// 카드결제수정
+	// 현금결제수정
+	
+	
+	// 결제정보 수정
+	public int updateDelng(DelngParam param) throws Exception;
+	
 }

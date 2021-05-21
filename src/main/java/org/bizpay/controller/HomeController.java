@@ -5,6 +5,7 @@ import org.bizpay.service.ExternalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
@@ -32,14 +33,17 @@ public class HomeController {
 	public RedirectView qrpay(ExternalOrderInputParam param) {
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 		try {
-			// 사전검사
-			
-			long seq = service.insertExOrder(param);
-			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
+			String seq = service.insertExOrder(param);
+			System.out.println("------------------------------------------------------------------------------------------------------");
+			System.out.println(seq);
+			System.out.println("------------------------------------------------------------------------------------------------------");
+			//return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
+			return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/0");
+			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/-1");
+			//return new RedirectView("http://localhost:8081/external/qrpa/0");
 		}
 	}
 }

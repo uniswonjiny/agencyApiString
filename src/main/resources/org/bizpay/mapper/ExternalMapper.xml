@@ -3,8 +3,6 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
   <mapper namespace="org.bizpay.mapper.ExternalMapper">
-  
-
   	<insert id="insertExOrder" >
   		<selectKey resultType="long" keyProperty="seq" order="BEFORE">
   			select  SEQ_EX_ORDER.NEXTVAL from dual
@@ -14,32 +12,36 @@
 		    name,
 		    price,
 		    mber_Id,
-		    exorder_no
+		    exorder_no,
+		    NEXT_URL,
+		    NOTI_URL
 		) VALUES (
 		    #{seq},
 		    #{orderName},
 		    #{orderPrice},
 		    #{mberId},
-		    #{exorderNo}
+		    #{exorderNo},
+		    #{nextUrl},
+		    #{notiUrl}
 		)
   	</insert>
   	
   	<select id="selectExOrderNo" resultType="ExternalOrderInputParam">
   	SELECT
-    seq,
-    mber_id,
-    name,
-    price,
-    status,
-    create_dt,
-    update_dt,
-    exorder_no
-FROM
-    tb_ex_order
-where
-    mber_id =  #{mberId}
-    and exorder_no = #{exorderNo}
-  	
+	    seq,
+	    mber_id,
+	    name,
+	    price,
+	    status,
+	    
+	    create_dt,
+	    update_dt,
+	    exorder_no
+	FROM
+	    tb_ex_order
+	where
+	    mber_id =  #{mberId}
+	    and exorder_no = #{exorderNo}
   	</select>
   	
   	
@@ -48,18 +50,21 @@ where
   	where  usid = #{val} and  use_at = 'Y'
   	</select>
   	  	
-  	<select id="selectOrderInfo" resultType="ExternalOrderInfo">
+  	<select id="selectOrderInfo" resultType="ExternalOrderInputParam">
   		SELECT
 		    seq,
 		    (select 
 				    (select CMPNM from biz where biz_code = mber.biz_code)
 				from mber where usid = aa.mber_id  )	as MBER_NAME,
 		    mber_id,
-		    name,
-		    price,
+		    name as order_name,
+		    price as order_price,
 		    status,
 		    aa.exorder_no,
             bb.sugi_certification,
+            bb.mber_code,
+            aa.next_url,
+            aa.noti_url,
 		    create_dt,
 		    update_dt
 		FROM
@@ -68,6 +73,32 @@ where
             on aa.mber_id = bb.INDUTY_ID
 		where 
 		        aa.seq = #{val}
+  	</select>
+  	<!-- 이전 부문 정보 확인  -->
+  	<select id="selectOrderInfo2" resultType="ExternalOrderInputParam">
+  		SELECT
+		    seq,
+		    (select 
+				    (select CMPNM from biz where biz_code = mber.biz_code)
+				from mber where usid = aa.mber_id  )	as MBER_NAME,
+		    mber_id,
+		    bb.mber_code,
+		    name,
+		    price,
+		    status,
+		    aa.exorder_no,
+            bb.sugi_certification,
+		    create_dt,
+		    update_dt,
+		    RCIPT_NO , 
+		    CONFM_NO
+		FROM
+		    tb_ex_order aa
+            inner join mber_basis bb
+            on aa.mber_id = bb.INDUTY_ID
+		where 
+		        aa.mber_id = #{mberId}
+		 AND aa.EXORDER_NO = #{exorderNo}
   	</select>
   	
   	<!-- 영수증처리 
@@ -86,8 +117,6 @@ where
   		
   	<!-- 영수증번호 획득  -->
   	<select id="getRciptNo" resultType="int">
-
-   		
   		select GET_RCIPT_NO(#{val})  from dual
   	</select>
   	  	
@@ -114,7 +143,7 @@ where
 		 where MBER_CODE = #{val}
   	</select>
 
-	<insert id="insertDelng" >
+	<insert id="insertDelng" parameterType="DelngParam">
 	INSERT INTO delng (
 	    mber_code,
 	    mber_code_sn,
@@ -196,7 +225,7 @@ where
 		)
 	</insert>
 	
-	<insert id="insertDelngAdi">
+	<insert id="insertDelngAdi" parameterType="DelngAdiParam">
 	INSERT INTO delng_adi (
 	    mber_code,
 	    mber_code_sn,
@@ -212,15 +241,91 @@ where
 	)
 	</insert>
 	
-	<update id="updateExOrder">
+	<select id="selectDelngAdi" resultType="DelngAdiParam">
+	select mber_code,
+	    mber_code_sn,
+	    rcipt_no,
+	    adi_code,
+	    adi_cn
+	from delng_adi 
+	where 
+	mber_code =  #{mberCode}
+	and mber_code_sn =	#{mberCodeSn}
+	and rcipt_no =	#{rciptNo}
+	</select>
+	
+	<update id="updateExOrder" parameterType="ExternalOrderInputParam">
 		UPDATE tb_ex_order
 		SET
 		   update_dt = sysdate,
-		   status = #{status}
+		   status = #{status},
+		   confm_no = #{confmNo},
+		   rcipt_no = #{rciptNo}
 		WHERE
 		     mber_id = #{mberId}
 		    AND exorder_no = #{exorderNo}
 	
+	</update>
+	
+	<select id="selectDelngInfo" resultType="DelngParam" parameterType="DelngParam">
+		SELECT
+		    mber_code,
+		    mber_code_sn,
+		    rcipt_no,
+		    delng_se_code,
+		    confm_no,
+		    splpc,
+		    van_code,
+		    app_code,
+		    TRGET_MBER_CODE_SN,
+		    TRGET_RCIPT_NO,
+		    trget_mber_code,
+		    vat
+		FROM
+		    delng
+		where 
+		mber_code = #{mberCode}
+		and rcipt_no = #{rciptNo}
+		and confm_no = #{confmNo}
+		and DELNG_SE_CODE = #{delngSeCode}
+	</select>
+	
+	<select id="selectDelngCredt" resultType="DelngCredtParam" parameterType="HashMap">
+	SELECT
+		    mber_code,
+		    mber_code_sn,
+		    rcipt_no,
+		    card_no,
+		    instlmt_month,
+		    issue_cmpny_code,
+		    issue_cmpny_nm,
+		    puchas_cmpny_code,
+		    puchas_cmpny_nm,
+		    cdrsr_no,
+		    card_type,
+		    pg_van_gb,
+		    t_id,
+		    pg_rcipt_no,
+		    gb_info,
+		    van_pg_comp
+		FROM
+		    delng_credt
+		where
+		 	  mber_code = #{mberCode}
+		and rcipt_no = #{rciptNo}
+		    
+	</select>
+	
+	<update id="updateDelng" >
+		UPDATE delng
+			SET card_delete_yn = #{cardDeleteYn}
+			,cancel_mber =  #{mberId}
+			,cancel_dt = #{cancelDt}
+			
+			,bigo = #{bigo}
+		WHERE mber_code=#{mberCode}
+		AND mber_code_sn=#{mberCodeSn}
+		AND rcipt_no=#{rciptNo}
 	</update>
   	
   </mapper>

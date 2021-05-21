@@ -48,5 +48,6 @@ public class InqireDelng {
 	private String gubun;
 	private String delngsecodestring;
 	private String bizTelno;
+	private int mberCode; 
 	
 }

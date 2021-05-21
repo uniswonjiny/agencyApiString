@@ -33,4 +33,7 @@ public class DelngParam {
     private String approvalConfirm;
     private int deviceSeqNo;
     private String delngPayType;
+    private String mberId;
+    private String cancelDt;
+    private String cardDeleteYn;
 }

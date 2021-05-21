@@ -9,7 +9,7 @@ import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.RciptMember;
 import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.JwtUtil;
-import org.bizpay.domain.ExternalOrderInfo;
+
 import org.bizpay.mapper.ExternalMapper;
 import org.bizpay.service.AuthService;
 import org.bizpay.service.ExternalService;
@@ -67,8 +67,11 @@ public class PTest {
 //		ppp.setPidNum("810204");// 주민번호
 //		exSever.payRequest(ppp);
 		
-		String aaaa = eUtil.encryptSHA256("상품테스트5000");
-		System.out.println(aaaa);
+//		String aaaa = eUtil.encryptSHA256("상품테스트5000");
+//		System.out.println(aaaa);
+		ExternalOrderInputParam param = new ExternalOrderInputParam();
+		
+		exSever.payCancel(param);
 		
 	}
 }
