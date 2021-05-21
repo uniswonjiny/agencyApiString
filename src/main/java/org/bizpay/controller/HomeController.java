@@ -37,8 +37,8 @@ public class HomeController {
 			System.out.println("------------------------------------------------------------------------------------------------------");
 			System.out.println(seq);
 			System.out.println("------------------------------------------------------------------------------------------------------");
-			//return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
-			return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
+			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
+			//return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
