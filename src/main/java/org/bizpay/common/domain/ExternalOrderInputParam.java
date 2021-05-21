@@ -27,5 +27,7 @@ public class ExternalOrderInputParam {
 	private String createDt; // 요청일자
 	private String updateDt; // 수정일자
 	private String bigo; // 사유등의 내용추가
+	private String email;
+	private String mobileNum;
 	
 }

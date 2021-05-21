@@ -34,9 +34,6 @@ public class HomeController {
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 		try {
 			String seq = service.insertExOrder(param);
-			System.out.println("------------------------------------------------------------------------------------------------------");
-			System.out.println(seq);
-			System.out.println("------------------------------------------------------------------------------------------------------");
 			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
 			//return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
 		} catch (Exception e) {

@@ -248,7 +248,7 @@ public class ExternalSeviceImpl implements ExternalService {
 			delngCredtParam.setMberCode(mberCode);
 			delngCredtParam.setMberCodeSn(mberCodeSn);
 			delngCredtParam.setRciptNo(param.getRciptNo());
-			delngCredtParam.setCardNo( cUtil.encrypt(param.getCardNo()) );
+			delngCredtParam.setCardNo(cUtil.encrypt(sUtil.MarkForCreditCard(param.getCardNo())));
 			delngCredtParam.setInstlmtMonth(param.getInstallment());
 			delngCredtParam.setIssueCmpnyCode(sUtil.getString(ht.get("IssCode")).trim());
 			delngCredtParam.setIssueCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
@@ -288,6 +288,8 @@ public class ExternalSeviceImpl implements ExternalService {
 			exParam.setExorderNo( param.getExorderNo() );
 			exParam.setConfmNo(delngParam.getConfmNo());
 			exParam.setRciptNo(param.getRciptNo());
+			exParam.setEmail( param.getEmail() );
+			exParam.setMobileNum(  param.getPhoneNumber());
 			exMapper.updateExOrder(exParam);
 			
 		}else {

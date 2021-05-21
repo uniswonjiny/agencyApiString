@@ -260,9 +260,10 @@
 		   update_dt = sysdate,
 		   status = #{status},
 		   confm_no = #{confmNo},
-		   rcipt_no = #{rciptNo}
-		WHERE
-		     mber_id = #{mberId}
+		   rcipt_no = #{rciptNo},
+		   email = #{email},
+		   mobile_num = #{mobileNum}
+		WHERE mber_id = #{mberId}
 		    AND exorder_no = #{exorderNo}
 	
 	</update>
