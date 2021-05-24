@@ -276,7 +276,7 @@
 		   update_dt = sysdate
 		WHERE mber_id = #{mberId}
 		    AND exorder_no = #{exorderNo}
-		    and confm_no = #{confmNo}
+
 	
 	</update>
 	
