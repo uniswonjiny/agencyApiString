@@ -112,7 +112,7 @@ public class ExternalSeviceImpl implements ExternalService {
 
 	@Override
 	@Transactional
-	public boolean payRequest(PaymentReqParam param) throws Exception {
+	public ExternalOrderInputParam payRequest(PaymentReqParam param) throws Exception {
 		log.info("외부 수기결제 요청");
 		
 		// 이미 결제된 정보 인지 확인
@@ -178,6 +178,8 @@ public class ExternalSeviceImpl implements ExternalService {
 		tempMap.put("rcipt_no","" );
 		exMapper.propRciptNO(tempMap);
 		param.setRciptNo(tempMap.get("rcipt_no").toString());
+		tparam1.setRciptNo( tempMap.get("rcipt_no").toString() );
+		
 		tempMap.clear();
 		param.setKsnetRcipt(param.getMemberId()+"_"+param.getRciptNo());
 		
@@ -238,7 +240,7 @@ public class ExternalSeviceImpl implements ExternalService {
 			delngParam.setDelngSeCode("CARD_ISSUE");
 			delngParam.setGoodNm(param.getGoodsName() );
 			delngParam.setDelngPayType( tbMberBasis.get("PAYTYPE").toString() );
-			
+			tparam1.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
 			if(exMapper.insertDelng(delngParam) <1) {
 				throw new SqlErrorException("매출처리 실패. 관리자에게 문의바랍니다.");
 			}
@@ -262,6 +264,8 @@ public class ExternalSeviceImpl implements ExternalService {
 			delngCredtParam.setGbInfo("U"); // 유니코아
 			delngCredtParam.setVanPgComp("PG_KSNET");
 			
+			tparam1.setOrderType("C");
+			tparam1.setOrderDetail(sUtil.getString(ht.get("Message1")).trim());
 			if(exMapper.insertDelngCredt(delngCredtParam) < 1) {
 				throw new SqlErrorException("카드매출 실패. 관리자에게 문의바랍니다.");
 			}
@@ -290,12 +294,19 @@ public class ExternalSeviceImpl implements ExternalService {
 			exParam.setRciptNo(param.getRciptNo());
 			exParam.setEmail( param.getEmail() );
 			exParam.setMobileNum(  param.getPhoneNumber());
+			
+			tparam1.setMberId( param.getMemberId() );
+			tparam1.setOrderPrice( param.getAmount() );
+			tparam1.setExorderNo( param.getExorderNo()   );
+			tparam1.setConfmNo( delngParam.getConfmNo()    );
+			tparam1.setRciptNo( param.getRciptNo()  );
+			tparam1.setOrderName( param.getGoodsName()   );
 			exMapper.updateExOrder(exParam);
 			
 		}else {
 			throw new SqlErrorException("결제승인 실패. 관리자에게 문의바랍니다.");
 		}
-		return true;
+		return tparam1;
 	}
 
 	@Override
@@ -304,7 +315,6 @@ public class ExternalSeviceImpl implements ExternalService {
 		HashMap<String, Object> map1 = new HashMap<String, Object>();
 		// 1. 외부 입력 결제 내역확인
 		ExternalOrderInputParam exInfo = exMapper.selectOrderInfo2(param);
-
 		if(exInfo == null) {
 			throw new ExorderException("A001");
 		}
@@ -377,17 +387,16 @@ public class ExternalSeviceImpl implements ExternalService {
 			delngInfo.setCardDeleteYn("Y");
 			delngInfo.setBigo("연동결제취소");
 			delngInfo.setMberId( param.getMberId());
-			SimpleDateFormat format1 = new SimpleDateFormat ( "yyyyMMdd");
-			String cancelDt = format1.format (System.currentTimeMillis());
-			dParam.setCancelDt(cancelDt);
+
+			dParam.setCancelDt( sUtil.getString(xht.get("TradeDate")).trim() );
 			delngInfo.setDelngSeCode("CARD_CNCL");
-			delngInfo.setConfmDt(cancelDt);
-			delngInfo.setConfmTime("000000");
-			delngInfo.setCancelDt(cancelDt);
-			delngInfo.setConfmTime("000000");
+			delngInfo.setConfmDt(sUtil.getString(xht.get("TradeDate")).trim());
+			delngInfo.setConfmTime(sUtil.getString(xht.get("TradeTime")).trim() );
+			delngInfo.setCancelDt(sUtil.getString(xht.get("TradeDate")).trim());
+			delngInfo.setConfmTime(sUtil.getString(xht.get("TradeTime")).trim());
 			delngInfo.setSplpc( delngInfo.getSplpc()*-1 );
 			delngInfo.setVat( delngInfo.getVat()*-1 );
-
+	
 				
 			if("".equals(param.getBigo() ) || param.getBigo()==null  ){
 				delngInfo.setBigo("결제취소요청");

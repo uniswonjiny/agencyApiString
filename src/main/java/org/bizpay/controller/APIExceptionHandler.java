@@ -35,27 +35,36 @@ public class APIExceptionHandler {
 		String  type= e.getMessage();
 		dto.setType(type);
 		if( "C001".equals(type) ) {
+			dto.setType("2011");
 			dto.setMessage("이미 취소 처리된 주문");
 		}else 	if( "C002".equals(type) ) {
+			dto.setType("2014");
 			dto.setMessage("결제연동정보오류");
 		}else 	if( "A001".equals(type) ) {
+			dto.setType("2010");
 			dto.setMessage("주문정보가 없음");
 		}else 	if( "C001".equals(type) ) {
+			dto.setType("2011");
 			dto.setMessage("이미 취소된 주문");
 		}else 	if( "0000".equals(type) ) {
+			dto.setType("2010");
 			dto.setMessage("결제완료전 주문");
 		}else 	if( "A010".equals(type) ) {
+			dto.setType("2010");
 			dto.setMessage("주문정보가 없음");
 		}else 	if( "A011".equals(type) ) {
+			dto.setType("2014");
 			dto.setMessage("주문정보가 없음");
 		}else 	if( "C007".equals(type) ) {
+			dto.setType("2014");
 			dto.setMessage("카드시스템처리 오류");
 		}else 	if( "C007".equals(type) ) {
+			dto.setType("2014");
 			dto.setMessage("결제취소오류");
 		}
 		
 		else {
-			dto.setType("9999");
+			dto.setType("2014");
 			dto.setMessage("시스템오류. 담당자에게 연락해 주세요");
 		}
 		

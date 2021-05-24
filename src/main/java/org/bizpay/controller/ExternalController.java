@@ -42,11 +42,12 @@ public class ExternalController {
 //	}
 	@ApiOperation(value="QR연동결제요청" , notes = "QR연동결제 요청")
 	@RequestMapping(value = "qrPayRequest", method = RequestMethod.POST)
-	public ResponseEntity<String> qrPayRequest(
+	public ResponseEntity<ExternalOrderInputParam> qrPayRequest(
 			@RequestBody PaymentReqParam param) throws Exception{
 		log.info("qr코드 결제요청");
-		service.payRequest(param);
-		return new ResponseEntity<>(HttpStatus.OK);
+		ExternalOrderInputParam info = service.payRequest(param);
+		
+		return new ResponseEntity<>(info,HttpStatus.OK);
 	}
 	
 	@ApiOperation(value="QR결제정보확인" , notes = "QR연동결제정보")
@@ -66,7 +67,7 @@ public class ExternalController {
 	public ResponseEntity<ReturnMsg> qrOrderCancel(@RequestBody ExternalOrderInputParam param) throws Exception{
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 		ReturnMsg rm = new ReturnMsg();
-		rm.setType("1000");
+		rm.setType("2000");
 		rm.setMessage("승인완료");
 		service.payCancel(param);
 		return new ResponseEntity<>(rm , HttpStatus.OK); // 에러 발생하면 서비스에서 핸들러 호출하도록 되어 있음 

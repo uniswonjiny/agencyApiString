@@ -14,7 +14,8 @@
 		    mber_Id,
 		    exorder_no,
 		    NEXT_URL,
-		    NOTI_URL
+		    NOTI_URL,
+		    bigo
 		) VALUES (
 		    #{seq},
 		    #{orderName},
@@ -22,7 +23,8 @@
 		    #{mberId},
 		    #{exorderNo},
 		    #{nextUrl},
-		    #{notiUrl}
+		    #{notiUrl},
+		    #{bigo}
 		)
   	</insert>
   	
@@ -99,6 +101,7 @@
 		where 
 		        aa.mber_id = #{mberId}
 		 AND aa.EXORDER_NO = #{exorderNo}
+		 and aa.CONFM_NO = #{confmNo}
   	</select>
   	
   	<!-- 영수증처리 
@@ -257,14 +260,23 @@
 	<update id="updateExOrder" parameterType="ExternalOrderInputParam">
 		UPDATE tb_ex_order
 		SET
-		   update_dt = sysdate,
 		   status = #{status},
+		   <if test=" confmNo!=null and !confmNo.equals('') ">
 		   confm_no = #{confmNo},
+		   </if>
+		   <if test=" rciptNo!=null and   !rciptNo.equals('')"> 
 		   rcipt_no = #{rciptNo},
+		   </if>
+		    <if test=" email!=null and  !email.equals('')"> 
 		   email = #{email},
-		   mobile_num = #{mobileNum}
+		   </if>
+		   <if test="mobileNum!=null and !mobileNum.equals('')">  
+		   mobile_num = #{mobileNum},
+		   </if>
+		   update_dt = sysdate
 		WHERE mber_id = #{mberId}
 		    AND exorder_no = #{exorderNo}
+		    and confm_no = #{confmNo}
 	
 	</update>
 	
