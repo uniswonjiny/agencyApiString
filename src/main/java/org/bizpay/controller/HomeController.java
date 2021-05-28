@@ -34,13 +34,13 @@ public class HomeController {
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 		try {
 			String seq = service.insertExOrder(param);
-			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
-			//return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
+			//return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
+			return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/-1");
-			//return new RedirectView("http://localhost:8081/external/qrpa/0");
+			//return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/-1");
+			return new RedirectView("http://localhost:8081/external/qrpa/0");
 		}
 	}
 }

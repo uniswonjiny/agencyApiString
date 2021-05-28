@@ -1,8 +1,26 @@
 package org.bizpay.service;
 
-import java.text.SimpleDateFormat;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
+
+import javax.net.ssl.HttpsURLConnection;
+
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
 
 import org.bizpay.common.domain.DelngAdiParam;
 import org.bizpay.common.domain.DelngCredtParam;
@@ -13,12 +31,18 @@ import org.bizpay.common.util.CertUtil;
 import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.common.util.StringUtils;
+import org.bizpay.domain.LimitInfo;
+import org.bizpay.domain.MemberInfo;
 import org.bizpay.exception.ExorderException;
 import org.bizpay.exception.SqlErrorException;
+import org.bizpay.mapper.AccountMapper;
+import org.bizpay.mapper.AuthMapper;
 import org.bizpay.mapper.ExternalMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.Gson;
 
 import lombok.extern.java.Log;
 @Log
@@ -32,6 +56,12 @@ public class ExternalSeviceImpl implements ExternalService {
 	
 	@Autowired
 	ExternalMapper exMapper;
+	
+	@Autowired
+	AccountMapper acMapper;
+	
+	@Autowired
+	AuthMapper auMapper;
 	
 	@Autowired
 	StringUtils sUtil;
@@ -71,11 +101,14 @@ public class ExternalSeviceImpl implements ExternalService {
 		}
 		
 		// 해시 키값 확인 -- 운영배포시 주석 해제
-	//	String temp = param.getMberId()+param.getOrderName()+param.getOrderPrice()+param.getExorderNo();
-	//	temp = eUtil.encryptSHA256(temp);
-	//	if(!temp.equals(  param.getPkHash()  )  ) {
-	//		return -2;
-	//	}
+		if(param.getPkHash()==null || param.getPkHash().length()<1) {
+			return "A008";
+		}
+		String temp = param.getMberId()+param.getOrderName()+param.getOrderPrice()+param.getExorderNo()+"unicore";
+		temp = eUtil.encryptSHA256(temp);
+		if(!temp.equals(  param.getPkHash()  )  ) {
+			return "A009";
+		}
 				
 		// 2. 이전 호출한 외부 주문상태 확인 - biz 의 내용아님
 		ExternalOrderInputParam reP = exMapper.selectExOrderNo(param);
@@ -90,12 +123,33 @@ public class ExternalSeviceImpl implements ExternalService {
 		}
 		
 		// 3. 정상적인 사용자인지 확인
-		if( exMapper.selectMberCnt(param.getMberId())  <1 ) {
+		MemberInfo mberInfo = auMapper.userInfo(param.getMberId());
+		if(mberInfo == null ) {
 			return "A014";
-			//throw new SqlErrorException("서비스 이용제한 사용자입니다.");
+		}
+		if(!"Y".equals( mberInfo.getUseAt())) {
+			return "A014";
 		}
 		
-		// 4. 결제 내용입력
+		// 4. 사용자의 결제 금액등을 확인한다.
+		LimitInfo limiInfo = acMapper.limitInfo(mberInfo.getMberCode() );
+		// 4-1 1회 제한 금액오류
+		if(limiInfo.getLimitOne() < param.getOrderPrice()) {
+			return "L001";// 1회 결제금액 제한
+		}
+		// 4-2 1일 제한 금액
+		if(limiInfo.getLimitDay() < (param.getOrderPrice() + limiInfo.getSumDay() ) ) {
+			return "L002";// 1일 결제금액 제한
+		}
+		// 4-2 1달 제한 금액
+		if(limiInfo.getLimitMonth() < (param.getOrderPrice() + limiInfo.getSumMonth() ) ) {
+			return "L003";// 1달 결제금액 제한
+		}
+		// 4-3 1년 제한 금액
+		if(limiInfo.getLimitYear() < (param.getOrderPrice() + limiInfo.getSumYear() ) ) {
+			return "L004";// 1년 결제금액 제한
+		}
+		// 5. 결제 내용입력
 		if(exMapper.insertExOrder(param) <1) {
 			return "S001";
 			//throw new SqlErrorException("결제주문서버에 문제가 있습니다.");
@@ -114,13 +168,12 @@ public class ExternalSeviceImpl implements ExternalService {
 	@Transactional
 	public ExternalOrderInputParam payRequest(PaymentReqParam param) throws Exception {
 		log.info("외부 수기결제 요청");
-		
 		// 이미 결제된 정보 인지 확인
 		if(param.getExorderNo() == null) {
-			throw new SqlErrorException("결제정보 누락.");
+			throw new ExorderException("9002");
 		}
 		if( param.getExorderNo().trim().length() <1) {
-			throw new SqlErrorException("결제정보 누락.");
+			throw new ExorderException("9002");
 		}
 		
 		ExternalOrderInputParam tparam = new ExternalOrderInputParam();
@@ -128,13 +181,13 @@ public class ExternalSeviceImpl implements ExternalService {
 		tparam.setExorderNo( param.getExorderNo() );
 		ExternalOrderInputParam tparam1 = exMapper.selectExOrderNo(tparam);
 		if(tparam1== null ) {
-			throw new SqlErrorException("결제정보확인");
+			throw new ExorderException("9002");
 		}
 		if("AAAA".equals(tparam1.getStatus() )) {
-			throw new SqlErrorException("이미 결제완료된 주문입니다.");
+			throw new ExorderException("1010"); // 이미결제된주문
 		}
 		if("C001".equals(tparam1.getStatus() )) {
-			throw new SqlErrorException("이미 결제취소된 주문입니다.");
+			throw new ExorderException("1010"); // 이미 결제취소된 주문입니다
 		}
 		String storeId = "";
 		int mberCode = -1;
@@ -142,10 +195,10 @@ public class ExternalSeviceImpl implements ExternalService {
 		// 사용가능 유저인지 판단
 		HashMap<String, Object> mberChk =exMapper.selectTbBberIdCheck(param.getMemberId());  
 		if(mberChk == null) {
-			throw new SqlErrorException("결제처리 실패. 미등록 사업자 입니다.");
+			throw new ExorderException("1010"); // 결제처리 실패. 미등록 사업자 입니다
 		}else {
 			if( !"Y".equals(mberChk.get("USEAT"))  ) {
-				throw new SqlErrorException("결제처리 실패. 결제요청 불가능한 사업자 입니다.");
+				throw new ExorderException("1010"); // 결제처리 실패. 결제요청 불가능한 사업자 입니다
 			}
 			mberCode =  Integer.parseInt(mberChk.get("MBERCODE").toString());
 		}
@@ -153,13 +206,14 @@ public class ExternalSeviceImpl implements ExternalService {
 		//tbMberDetail mber_code_sn 테이터 추출
 		mberCodeSn = exMapper.selectTbMberDetailSn(mberCode);
 		if(mberCodeSn == null || "".equals(mberCodeSn)) {
-			throw new SqlErrorException("결제처리 실패. 결제 미처리 사업자 입니다.");
+			throw new ExorderException("1010"); // 결제처리 실패. 결제 미처리 사업자 입니다
 		}
+				
 		// tbMberBasis
 		HashMap<String, Object> tbMberBasis =  exMapper.selectTbMberBasis1(mberCode);
 					
 		if(tbMberBasis == null) {
-			throw new SqlErrorException("결제처리 실패. 결제 상점설정에 문제가 있습니다.");
+			throw new ExorderException("1010"); // 결제처리 실패. 결제 상점설정에 문제가 있습니다
 		}else{
 			if("T".equals(tbMberBasis.get("PAYTYPE")) ) {
 				storeId =  "2041700460";
@@ -168,7 +222,7 @@ public class ExternalSeviceImpl implements ExternalService {
 			}else if("N".equals(tbMberBasis.get("PAYTYPE")) ) {
 				storeId =  "2552500002";
 			}else {
-				throw new SqlErrorException("결제처리 실패. 결제 상점설정에 문제가 있습니다.");
+				throw new ExorderException("1010"); // 결제처리 실패. 결제 상점설정에 문제가 있습니다
 			}
 		}
 		
@@ -189,8 +243,6 @@ public class ExternalSeviceImpl implements ExternalService {
 		// 카드번호 세팅  *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM]) 
 		param.setPTrackII( param.getCardNo() + "=" + param.getExpiration() );
 		
-		// 
-		
 		// 카드결제 실행
 		Hashtable<String, Object> ht = new Hashtable<>();
 		ht = ksBean.sendCardMsg(
@@ -202,7 +254,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				"", 
 				param.getPidNum(), 
 				param.getEmail(), 
-				param.getGoodsName(), // 상품명 
+				param.getOrderName(), // 상품명 
 				param.getPhoneNumber(), // 핸드폰번호 
 				"K",						// pKeyInType X(12) KEY-IN유형(K:직접입력,S:리더기사용입력)  
 				"1",						// pInterestType   X( 1)   *일반/무이자구분 1:일반 2:무이자
@@ -214,7 +266,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		
 		// 카드결제 성공판단
 		if(ht == null) {
-			throw new SqlErrorException("결제처리 실패. 관리자에게 문의바랍니다.");
+			throw new ExorderException("9999"); // 결제처리 실패. 관리자에게 문의바랍니다
 		}
 		
 		// 성공이후 // 데이터 저장
@@ -238,11 +290,11 @@ public class ExternalSeviceImpl implements ExternalService {
 			delngParam.setDeviceSeqNo(1);
 			delngParam.setVanCode("VAN");
 			delngParam.setDelngSeCode("CARD_ISSUE");
-			delngParam.setGoodNm(param.getGoodsName() );
+			delngParam.setGoodNm(param.getOrderName() );
 			delngParam.setDelngPayType( tbMberBasis.get("PAYTYPE").toString() );
 			tparam1.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
 			if(exMapper.insertDelng(delngParam) <1) {
-				throw new SqlErrorException("매출처리 실패. 관리자에게 문의바랍니다.");
+				throw new ExorderException("9999"); // 매출처리 실패. 관리자에게 문의바랍니다
 			}
 			
 			// delngCredt
@@ -267,7 +319,7 @@ public class ExternalSeviceImpl implements ExternalService {
 			tparam1.setOrderType("C");
 			tparam1.setOrderDetail(sUtil.getString(ht.get("Message1")).trim());
 			if(exMapper.insertDelngCredt(delngCredtParam) < 1) {
-				throw new SqlErrorException("카드매출 실패. 관리자에게 문의바랍니다.");
+				throw new ExorderException("9999"); // 매출처리 실패. 관리자에게 문의바랍니다
 			}
 			
 			// delng_adi
@@ -282,7 +334,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				delngAdiParam.setAdiCn( "722211d65862dac6ab81668e0544b4e3" );				// 핸드폰번호 없으면 공백값이다.				
 			}
 			if(exMapper.insertDelngAdi(delngAdiParam) <1) {
-				throw new SqlErrorException("매출 정보등록 실패. 관리자에게 문의바랍니다.");
+				throw new ExorderException("9999"); // 매출 정보등록 실패. 관리자에게 문의바랍니다
 			}
 			
 			// 결제정보 업데이트
@@ -300,11 +352,11 @@ public class ExternalSeviceImpl implements ExternalService {
 			tparam1.setExorderNo( param.getExorderNo()   );
 			tparam1.setConfmNo( delngParam.getConfmNo()    );
 			tparam1.setRciptNo( param.getRciptNo()  );
-			tparam1.setOrderName( param.getGoodsName()   );
+			tparam1.setOrderName( param.getOrderName()   );
 			exMapper.updateExOrder(exParam);
 			
 		}else {
-			throw new SqlErrorException("결제승인 실패. 관리자에게 문의바랍니다.");
+			throw new ExorderException("9999"); //결제승인 실패. 관리자에게 문의바랍니다
 		}
 		return tparam1;
 	}
@@ -323,6 +375,11 @@ public class ExternalSeviceImpl implements ExternalService {
 		}
 		if("0000".equals(exInfo.getStatus() ) ) {
 			throw new ExorderException("0000");
+		}
+		
+		// 결제이후 1일 이상 지났는지 확인
+		if(exInfo.getCancelPeriod() >1 ) {
+			throw new ExorderException("C008");
 		}
 		
 		// 2. 유니코아 주문 정보 확인
@@ -346,6 +403,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		if(delngInfo == null) {
 			throw new ExorderException("A001");
 		}
+		
 		dParam.setMberCodeSn( delngInfo.getMberCodeSn() );
 		// 카드 결제 정보 추출
 		DelngCredtParam delngCredtInfo = new DelngCredtParam();
@@ -443,6 +501,129 @@ public class ExternalSeviceImpl implements ExternalService {
 		} else {
 			throw new ExorderException("9999");
 		}
+	}
+
+	@Override
+	public boolean notiCallParam(ExternalOrderInputParam param) throws Exception {
+		log.info("결제완료후 노티 ");
+		if(param.getNotiUrl()!=null && param.getNotiUrl().trim().length() > 5 ) {
+			URL url = new URL( param.getNotiUrl()  );
+			if(param.getNotiUrl().contains("https://")) {
+				HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+				conn.setConnectTimeout(3000);
+				conn.setReadTimeout(3000);
+				conn.setRequestMethod("post");
+				conn.setDoOutput(true);
+				OutputStream os = conn.getOutputStream();
+				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+				writer.write("orderName=" + param.getOrderName() + "&exorderNo=" + param.getExorderNo() + "&orderPrice="  + param.getOrderPrice()   
+				+  "&mberId="+param.getMberId() + "&orderStatus=" + param.getStatus() + "&orderMethod=" + param.getOrderType() + "&orderMethodDetail="+param.getOrderDetail() 
+				+ "&confmNo="+param.getConfmNo());
+				BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (sb.length() > 0) {
+						sb.append("\n");
+					}
+					sb.append(line);
+				}
+				if("100".equals(sb.toString())) {
+					return true;
+				}else return false;
+			}
+			
+			if(param.getNotiUrl().contains("http://")) {
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setConnectTimeout(3000);
+				conn.setReadTimeout(3000);
+				conn.setRequestMethod("post");
+				conn.setDoOutput(true);
+				OutputStream os = conn.getOutputStream();
+				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+				writer.write("orderName=" + param.getOrderName() + "&exorderNo=" + param.getExorderNo() + "&orderPrice="  + param.getOrderPrice()   
+				+ "&mberId="+param.getMberId() + "&orderStatus=" + param.getStatus() + "&orderMethod=" + param.getOrderType() 
+				+ "&orderMethodDetail="+param.getOrderDetail()+ "&confmNo="+param.getConfmNo());
+				BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (sb.length() > 0) {
+						sb.append("\n");
+					}
+					sb.append(line);
+				}
+				if("100".equals(sb.toString())) {
+					return true;
+				}else return false;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean notiCallHttp(ExternalOrderInputParam param) throws Exception {
+		HttpClient client = HttpClientBuilder.create().build(); // HttpClient 생성
+        HttpPost httpPost = new HttpPost(param.getNotiUrl()); //POST 메소드 URL 새성
+		try {
+			httpPost.setHeader("Accept", "application/json");
+            httpPost.setHeader("Connection", "keep-alive");
+            httpPost.setHeader("Content-Type", "application/json;charset=UTF-8");
+           
+            String paramString = "{\"orderName\": \"" + param.getOrderName() +"\""
+            		+ ", \"exorderNo\" : \""+ param.getExorderNo()+"\""
+            		+ ", \"orderPrice\" : \""+ param.getOrderPrice()+"\""
+            		+ ", \"mberId\" : \""+ param.getMberId()+"\""
+            		+ ", \"orderStatus\" : \""+ param.getStatus()+"\""
+            		+ ", \"orderMethod\" : \""+ param.getOrderType()+"\""
+            		+ ", \"orderMethodDetail\" : \""+ param.getOrderDetail()+"\""
+            		+ ", \"confmNo\" : \""+ param.getConfmNo()+"\""
+            		+ "}";
+            httpPost.setEntity(new StringEntity(paramString ,"UTF-8")); //json 메시지 입력
+            
+            HttpResponse response = client.execute(httpPost);
+            String result = "";
+            //Response 출력
+            HttpEntity entity = response.getEntity();
+            String bodyString = EntityUtils.toString(entity);
+            if (response.getStatusLine().getStatusCode() == 200 && "100".equals(bodyString)) {
+            	return true;
+//            	BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "utf-8"));
+//				String buffer = null;
+//				while((buffer = in.readLine())!=null){
+//					result += buffer;
+//				}
+//				in.close();
+//				Gson gson=new Gson();
+//				HashMap<String,Object> dataMap=gson.fromJson(result,HashMap.class);
+//				if("100".equals(dataMap.get("code"))) {
+//					return true;
+//				}else {
+//					return false;
+//				}
+            	
+//                ResponseHandler<String> handler = new BasicResponseHandler();
+//                String body = handler.handleResponse(response);
+//                System.out.println("[RESPONSE] requestHttpJson() : " + body);
+//                // 어떤형태로 보낼지 모르니 일단 그냥 100포함여부로 확인후 수정한다
+//                
+//                if("100".equals(body)) {
+//                	return true;
+//                }else return false;
+            } else {
+                return false;
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+	@Override
+	public void exOrderCancel(ExternalOrderInputParam param) throws Exception {
+		param.setStatus("C001");
+		exMapper.updateExOrder(param);
 	}
 
 }

@@ -19,7 +19,7 @@ public class ExternalOrderInputParam {
 	private String mberId;
 	private int mberCode;
 	private String mberCodeSn;
-	private String orderType;// 결제유형 -- card , naver , kakao m ,mobile
+	private String orderType;// 결제유형 -- C : card , naver , kakao m ,mobile
 	private String orderDetail;// 결제유형 상세 
 	private String confmNo; //승인번호
 	private String rciptNo; //영수증번호 -- 승인번호 + 영수증번호 + exorderNo + mberId 로 유니크한 구분값으로 사용한다.
@@ -30,5 +30,7 @@ public class ExternalOrderInputParam {
 	private String bigo; // 사유등의 내용추가
 	private String email;
 	private String mobileNum;
+	private float cancelPeriod;// 결제이후 시간 디비 기준으로 한다.
+	private int installment;// 할부가능개월
 	
 }

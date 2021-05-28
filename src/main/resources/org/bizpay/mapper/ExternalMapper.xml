@@ -46,18 +46,11 @@
 	    and exorder_no = #{exorderNo}
   	</select>
   	
-  	
-  	<select id="selectMberCnt" resultType="int">
-  	SELECT count(1) FROM mber 
-  	where  usid = #{val} and  use_at = 'Y'
-  	</select>
   	  	
   	<select id="selectOrderInfo" resultType="ExternalOrderInputParam">
   		SELECT
 		    seq,
-		    (select 
-				    (select CMPNM from biz where biz_code = mber.biz_code)
-				from mber where usid = aa.mber_id  )	as MBER_NAME,
+		    bb.COMPANY_NAME 	as MBER_NAME,
 		    mber_id,
 		    name as order_name,
 		    price as order_price,
@@ -68,7 +61,8 @@
             aa.next_url,
             aa.noti_url,
 		    create_dt,
-		    update_dt
+		    update_dt,
+		    bb.INSTALLMENT_MONTHS as installment
 		FROM
 		    tb_ex_order aa
             inner join mber_basis bb
@@ -80,9 +74,7 @@
   	<select id="selectOrderInfo2" resultType="ExternalOrderInputParam">
   		SELECT
 		    seq,
-		    (select 
-				    (select CMPNM from biz where biz_code = mber.biz_code)
-				from mber where usid = aa.mber_id  )	as MBER_NAME,
+		    bb.COMPANY_NAME 	as MBER_NAME,
 		    mber_id,
 		    bb.mber_code,
 		    name,
@@ -93,7 +85,8 @@
 		    create_dt,
 		    update_dt,
 		    RCIPT_NO , 
-		    CONFM_NO
+		    CONFM_NO,
+		    sysdate - UPDATE_DT as cancelPeriod
 		FROM
 		    tb_ex_order aa
             inner join mber_basis bb
@@ -277,7 +270,6 @@
 		WHERE mber_id = #{mberId}
 		    AND exorder_no = #{exorderNo}
 
-	
 	</update>
 	
 	<select id="selectDelngInfo" resultType="DelngParam" parameterType="DelngParam">
@@ -340,5 +332,23 @@
 		AND mber_code_sn=#{mberCodeSn}
 		AND rcipt_no=#{rciptNo}
 	</update>
+	
+	<select id="">
+		SELECT DISTINCT LIMIT_ONE,LIMIT_DAY ,INSTALLMENT_MONTHS , a.LIMIT_MONTH , b.LIMIT_YEAR  FROM MBER_BASIS aa ,
+		(SELECT  
+		sum(SPLPC) + sum( vat)  AS LIMIT_MONTH
+		FROM DELNG
+		WHERE MBER_CODE  = #{mberCode}
+		AND CONFM_DT BETWEEN to_char(add_months(sysdate,-1) , 'YYYYMMDD') AND  to_char(sysdate , 'YYYYMMDD')
+		) a,
+		(SELECT  
+		sum(SPLPC) + sum( vat)  AS LIMIT_YEAR
+		FROM DELNG
+		WHERE MBER_CODE  = #{mberCode}
+		AND CONFM_DT BETWEEN to_char(add_months(sysdate,-12) , 'YYYYMMDD') AND  to_char(sysdate , 'YYYYMMDD')) b
+		
+		WHERE aa.MBER_CODE  = #{mberCode}
+	
+	</select>
   	
   </mapper>

@@ -14,8 +14,6 @@ public interface ExternalMapper {
 	// 외부결제 정보 확인 2 외부제공주문번호 로 확인
 	public ExternalOrderInputParam selectOrderInfo2(ExternalOrderInputParam param) throws Exception;
 	
-	// 사용자 이용가능유무 확인
-	public int selectMberCnt(String mberId) throws Exception;
 	// 영수증번호 획득
 	public int getRciptNo(int mberCode ) throws Exception;
 

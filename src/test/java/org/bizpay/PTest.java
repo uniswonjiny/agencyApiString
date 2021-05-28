@@ -9,7 +9,7 @@ import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.RciptMember;
 import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.JwtUtil;
-
+import org.bizpay.common.util.SmsUtil;
 import org.bizpay.mapper.ExternalMapper;
 import org.bizpay.service.AuthService;
 import org.bizpay.service.ExternalService;
@@ -26,6 +26,9 @@ public class PTest {
 	JwtUtil service;
 	
 	@Autowired
+	SmsUtil smsUtil;
+	
+	@Autowired
 	ExternalMapper emap;
 	
 	@Autowired
@@ -36,6 +39,13 @@ public class PTest {
 	
 	@Test
 	void mainTest() throws Exception {
+		ExternalOrderInputParam param = new ExternalOrderInputParam();
+//		param.setConfmNo("00314439");
+//		param.setExorderNo("exS0007");
+//		param.setMberId("B0002A1777");
+//		exSever.payCancel(param);
+//		ExternalOrderInputParam exInfo = emap.selectOrderInfo2(param);
+//		System.out.println(exInfo.toString());
 		// 시전 주문 입력
 //		ExternalOrderInputParam param = new ExternalOrderInputParam();
 //		param.setMberId("unicore");
@@ -69,9 +79,12 @@ public class PTest {
 		
 //		String aaaa = eUtil.encryptSHA256("상품테스트5000");
 //		System.out.println(aaaa);
-		ExternalOrderInputParam param = new ExternalOrderInputParam();
+		//ExternalOrderInputParam param = new ExternalOrderInputParam();
 		
-		exSever.payCancel(param);
+//		exSever.payCancel(param);
+//		boolean falf = smsUtil.sendShortSms("01039977736", "테스트중", "이름");
+//		System.out.println(falf);
 		
+		//smsUtil.mailSender();
 	}
 }

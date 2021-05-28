@@ -61,16 +61,28 @@ public class APIExceptionHandler {
 		}else 	if( "C007".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("결제취소오류");
-		}
-		
-		else {
+		}else 	if( "C008".equals(type) ) {
 			dto.setType("2014");
+			dto.setMessage("취소불가 주문");
+		}
+		else 	if( "9999".equals(type) ) {
+			dto.setType("9999");
+			dto.setMessage("시스템 오류");
+		}
+		else 	if( "1010".equals(type) ) {
+			dto.setType("1010");
+			dto.setMessage("가맹점 거래불가");
+		}
+		else 	if( "9002".equals(type) ) {
+			dto.setType("9002");
+			dto.setMessage("요청항목 누락");
+		}
+		else {
+			dto.setType("9999");
 			dto.setMessage("시스템오류. 담당자에게 연락해 주세요");
 		}
-		
 		 return new ResponseEntity<ReturnMsg> (dto,HttpStatus.NOT_EXTENDED);  // 510
 	}
-	
 	
 	@ExceptionHandler({SqlErrorException.class})
 	public  ResponseEntity<String> conflict(SqlErrorException e) {

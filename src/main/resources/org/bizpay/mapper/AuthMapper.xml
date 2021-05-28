@@ -26,7 +26,7 @@
 		inner join biz bb
         on aa.biz_code = bb.biz_code
 		where aa.usid = #{val}
-		and aa.AUTHOR_CODE != 'AUTHOR_USER'
+<!-- 		and aa.AUTHOR_CODE != 'AUTHOR_USER' -->
 	</select>
 	
 		<select id="userInfo2" resultType="MemberInfo">

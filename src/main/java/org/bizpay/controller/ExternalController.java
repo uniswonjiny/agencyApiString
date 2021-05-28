@@ -1,7 +1,17 @@
 package org.bizpay.controller;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
+
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
+import org.bizpay.common.util.SmsUtil;
 import org.bizpay.domain.ReturnMsg;
 import org.bizpay.service.ExternalService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +36,9 @@ import lombok.extern.java.Log;
 public class ExternalController {
 	
 	@Autowired
+	SmsUtil smsUtil;
+	
+	@Autowired
 	ExternalService service;
 	// 내부 서버에서 처리하는 것이므로 코드처리 하지 않는다. 중계페이지에서 팝업 알람 화면 구성해야한다.
 //	@ApiOperation(value="QR연동결제정보 입력" , notes = "QR연동결제 사전 결제 정보입력")
@@ -45,6 +58,7 @@ public class ExternalController {
 	public ResponseEntity<ExternalOrderInputParam> qrPayRequest(
 			@RequestBody PaymentReqParam param) throws Exception{
 		log.info("qr코드 결제요청");
+		System.out.println(param.toString());
 		ExternalOrderInputParam info = service.payRequest(param);
 		
 		return new ResponseEntity<>(info,HttpStatus.OK);
@@ -53,7 +67,7 @@ public class ExternalController {
 	@ApiOperation(value="QR결제정보확인" , notes = "QR연동결제정보")
 	@RequestMapping(value = "qrOrder/{orderNo}", method = RequestMethod.GET)
 	public ResponseEntity<ExternalOrderInputParam> qrOrderInfo(@PathVariable("orderNo") long orderNo) throws Exception{
-		log.info("qr코드용 외부 연동결제주문정보 입력");
+		log.info("qr코드용 외부 연동결제주문정보");
 		ExternalOrderInputParam info = service.selectOrderInfo(orderNo);
 		if(info !=null  ) {
 			return new ResponseEntity<>( info, HttpStatus.OK);
@@ -68,9 +82,47 @@ public class ExternalController {
 		log.info("qr코드용 외부 연동결제주문정보 입력");
 		ReturnMsg rm = new ReturnMsg();
 		rm.setType("2000");
-		rm.setMessage("승인완료");
+		rm.setMessage("환불완료");
 		service.payCancel(param);
 		return new ResponseEntity<>(rm , HttpStatus.OK); // 에러 발생하면 서비스에서 핸들러 호출하도록 되어 있음 
-	
 	}
+	
+	@ApiOperation(value="QR결제노티" , notes = "QR결제노티")
+	@RequestMapping(value = "notiSend", method = RequestMethod.POST)
+	public ResponseEntity<ReturnMsg> notiSend(@RequestBody ExternalOrderInputParam param) throws Exception{
+		log.info("결제완료나 결제전  노티 ");
+		ReturnMsg rm = new ReturnMsg();
+		rm.setType("100");
+		rm.setMessage("노티호출완료");
+		
+		if(param.getNotiUrl()==null || param.getNotiUrl().trim().length() <10) {
+			rm.setType("200");
+			rm.setMessage("요청항목 누락");
+			return new ResponseEntity<>(rm , HttpStatus.GATEWAY_TIMEOUT); 
+		}
+		boolean flag = true;
+		
+		// 유니코아 도 취소 처리해주어야 한다. 결제전 취소 요청일 경우 취소처리해야한다.
+		//연속 리프레시나 이미 결제취소 요청한 정보가 들어 왔을때 유니코아 외부결제 정보만 취소안된 상태일 경우 심각한 문제를 야기한다
+		if("9000".equals(  param.getStatus() )) {
+			service.exOrderCancel(param);			
+		}
+		for (int i = 0; i < 10; i++) {
+			flag = service.notiCallHttp(param);
+			if(flag) {
+				break;
+			}
+		}
+		if(!flag) {
+			rm.setType("200");
+			rm.setMessage("노티호출에러");
+		}
+		// 실패시 문자발송
+//		if(count==9) {
+//			smsUtil.sendShortSms("01039977736", "테스트중", "이름");
+//		}
+		return new ResponseEntity<>(rm , HttpStatus.OK); 
+	}
+	
+	// 
 }

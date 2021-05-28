@@ -490,4 +490,45 @@
 	    
 	    </foreach>
   	</update>
+  	
+  	<!-- 게좌 제한 금액 사항 확인  -->
+  	<select id="limitInfo" resultType="LimitInfo">
+  	SELECT
+		DISTINCT aa.LIMIT_ONE,
+		aa.LIMIT_DAY ,
+		aa.LIMIT_MONTH ,
+		aa.LIMIT_YEAR ,
+		aa.INSTALLMENT_MONTHS as installment ,
+		c.sum_day,
+		a.sum_month ,
+		b.sum_year
+	FROM
+		MBER_BASIS aa ,
+		(
+		SELECT
+			sum( nvl(SPLPC , 0)) + sum( nvl(vat , 0)) AS sum_month
+		FROM
+			DELNG
+		WHERE
+			MBER_CODE = #{val}
+			AND CONFM_DT BETWEEN to_char(add_months(sysdate,-1) , 'YYYYMMDD') AND to_char(sysdate , 'YYYYMMDD') ) a,
+		(
+		SELECT
+			sum( nvl(SPLPC , 0)) + sum( nvl(vat , 0)) AS sum_year
+		FROM
+			DELNG
+		WHERE
+			MBER_CODE = #{val}
+			AND CONFM_DT BETWEEN to_char(add_months(sysdate,-12) , 'YYYYMMDD') AND to_char(sysdate , 'YYYYMMDD')) b ,
+		(
+		SELECT
+			sum( nvl(SPLPC , 0)) + sum( nvl(vat , 0)) AS sum_day
+		FROM
+			DELNG
+		WHERE
+			MBER_CODE = #{val}
+			AND CONFM_DT = to_char(sysdate , 'YYYYMMDD') )c
+	WHERE
+		aa.MBER_CODE = #{val}
+  	</select>
   </mapper>

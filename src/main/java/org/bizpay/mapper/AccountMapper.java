@@ -12,6 +12,7 @@ import org.bizpay.domain.AccountExcel;
 import org.bizpay.domain.AccountInOut;
 import org.bizpay.domain.AccountTrans;
 import org.bizpay.domain.BankAcntTrans;
+import org.bizpay.domain.LimitInfo;
 
 // 계좌관련부분정리
 public interface AccountMapper {
@@ -29,4 +30,6 @@ public interface AccountMapper {
 	public HashMap<String, Object> inOutSettingInfo() throws Exception;
 	// 계좌이체조정 지급, 미지급처리
 	public int acnutTransfrYn(List<AcnutTransfrYnParam> param) throws Exception;
+	// 제한 금액 조회
+	public LimitInfo limitInfo(String mberCode) throws Exception;
 }
