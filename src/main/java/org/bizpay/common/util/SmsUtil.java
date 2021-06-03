@@ -28,10 +28,10 @@ import com.google.gson.Gson;
 @Component
 @PropertySource("classpath:sms.properties")
 public class SmsUtil {
-	@Value("$sms.id}")
+	@Value("${sms.id}")
 	private String smsId;
 	
-	@Value("$sms.key}")
+	@Value("${sms.key}")
 	private String key;
 	
 	@Value("${sms.url}")
@@ -49,12 +49,19 @@ public class SmsUtil {
 			final String boundary = "____boundary____";
 			Gson gson=new Gson();
 			HashMap<String, String> sms = new HashMap<String, String>();
+			System.out.println("smsIdsmsId : " + smsId);
 			sms.put("user_id", smsId); // SMS 아이디
+			//sms.put("user_id", "unicore2020"); // SMS 아이디
 			sms.put("key", key); //인증키
+			//sms.put("key", "4dwg8f36zlj7uyu2jio6o7jhz2b5pwei"); //인증키
 			sms.put("msg", msg); // 메세지 내용
 			sms.put("receiver", receiverNumber); // 수신번호
 			sms.put("destination", receiverNumber+"|"+receiverName); // 수신인 %고객명% 치환
+			sms.put("msg_type", "SMS");
+			//sms.put("destination", "01039977736|송원진"); // 수신인 %고객명% 치환
 			sms.put("sender", sender); // 발신번호
+			//sms.put("title", "16000174"); // 발신번호
+			//sms.put("sender", "16000174"); // 발신번호
 			//sms.put("rdate", ""); // 예약일자 - 20161004 : 2016-10-04일기준
 			//sms.put("rtime", ""); // 예약시간 - 1930 : 오후 7시30분
 			//sms.put("testmode_yn", "N"); // Y 인경우 실제문자 전송X , 자동취소(환불) 처리

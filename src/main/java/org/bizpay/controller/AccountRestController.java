@@ -118,7 +118,7 @@ public class AccountRestController {
 		@ApiImplicitParam(name = "msg" , value = "메세지" , required = false , dataType = "string" , paramType = "query" ),
 	})
 	@RequestMapping(value = "inOutSetting", method = RequestMethod.POST)
-	public ResponseEntity<Void> inOutSetting(@RequestParam String enableYn , @RequestParam String msg) throws Exception{
+	public ResponseEntity<String> inOutSetting(@RequestParam String enableYn , @RequestParam String msg) throws Exception{
 		log.info("출금정지설정");
 		HashMap<String, Object> map = new HashMap<>();
 		map.put("enableYn", enableYn);
@@ -126,7 +126,7 @@ public class AccountRestController {
 		if(aService.inOutSetting(map) <1) {
 			return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
 		}else {
-			return new ResponseEntity<>( HttpStatus.OK);
+			return new ResponseEntity<>( "",HttpStatus.OK);
 		}
 	}
 	
@@ -145,12 +145,12 @@ public class AccountRestController {
 		@ApiImplicitParam(name = "rciptNo" , value = "영수증번호" , required = false , dataType = "string" , paramType = "query" ),
 	})
 	@RequestMapping(value = "acnutTransfrYn", method = RequestMethod.POST)
-	public ResponseEntity<Void> acnutTransfrYn(@RequestBody List<AcnutTransfrYnParam> param) throws Exception{
+	public ResponseEntity<String> acnutTransfrYn(@RequestBody List<AcnutTransfrYnParam> param) throws Exception{
 		log.info("계좌이체조정 지급, 미지급처리 - param" + param.toString());			
 		//return new ResponseEntity<>(HttpStatus.OK);
 		if(aService.acnutTransfrYn(param)>0 ) {
-			return new ResponseEntity<>(HttpStatus.OK);
-		}else return new ResponseEntity<>(HttpStatus.OK);
+			return new ResponseEntity<>("",HttpStatus.OK);
+		}else return new ResponseEntity<>("",HttpStatus.OK);
 	}
 	
 }

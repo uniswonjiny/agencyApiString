@@ -36,4 +36,5 @@ public class DelngParam {
     private String mberId;
     private String cancelDt;
     private String cardDeleteYn;
+    private String storeId;
 }

@@ -12,5 +12,6 @@ public class BizPayApiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BizPayApiApplication.class, args);
 	}
+	
 
 }

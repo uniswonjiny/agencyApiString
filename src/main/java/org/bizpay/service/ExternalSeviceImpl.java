@@ -49,8 +49,7 @@ import lombok.extern.java.Log;
 @Service
 public class ExternalSeviceImpl implements ExternalService {
 	public static final String KSNET_PG_IP = "210.181.28.137";//"210.181.28.137";	//-필수- ipaddr X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)
-	public static final int KSNET_PG_PORT = 21001;				//-필수- port 9( 5)    	*KSNET_PORT(21001)
-	public static final String STORE_ID = "2999199999"; // 2999199999 -- 자동취소  상점아이디 // 익일은 스와이프 D+2를 2041700460   
+	public static final int KSNET_PG_PORT = 21001;				//-필수- port 9( 5)    	*KSNET_PORT(21001)   
 	@Autowired
 	KSPayMsgBean ksBean;
 	
@@ -77,6 +76,11 @@ public class ExternalSeviceImpl implements ExternalService {
 	@Transactional
 	public String insertExOrder(ExternalOrderInputParam param) throws Exception {
 		log.info("외부결제연동 결제정보 부분만 입력 delng 아니다");
+		// 금액이 숫자인지 확인
+		if(!param.getOrderPrice().matches("[+-]?\\d*(\\.\\d+)?")) {
+			return "A007";
+		}
+		
 		// 1. 요청한 값이 정상적인지 검사
 		if("".equals(param.getNextUrl())) {
 			return "A002";
@@ -93,7 +97,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		if("".equals(param.getOrderName()   ) ) {
 			return "A006";
 		}
-		if(param.getOrderPrice() <100 ) {
+		if( Long.valueOf(param.getOrderPrice()) <100 ) {
 			return "A007";
 		}
 		if("".equals(param.getPkHash() ) ) {
@@ -105,8 +109,10 @@ public class ExternalSeviceImpl implements ExternalService {
 			return "A008";
 		}
 		String temp = param.getMberId()+param.getOrderName()+param.getOrderPrice()+param.getExorderNo()+"unicore";
-		temp = eUtil.encryptSHA256(temp);
-		if(!temp.equals(  param.getPkHash()  )  ) {
+		String hashkey = eUtil.encryptSHA256(temp);
+		log.info(param.getPkHash());
+		log.info(hashkey);
+		if(!hashkey.equals(  param.getPkHash()  )  ) {
 			return "A009";
 		}
 				
@@ -134,19 +140,19 @@ public class ExternalSeviceImpl implements ExternalService {
 		// 4. 사용자의 결제 금액등을 확인한다.
 		LimitInfo limiInfo = acMapper.limitInfo(mberInfo.getMberCode() );
 		// 4-1 1회 제한 금액오류
-		if(limiInfo.getLimitOne() < param.getOrderPrice()) {
+		if(limiInfo.getLimitOne() < Long.valueOf(param.getOrderPrice())) {
 			return "L001";// 1회 결제금액 제한
 		}
 		// 4-2 1일 제한 금액
-		if(limiInfo.getLimitDay() < (param.getOrderPrice() + limiInfo.getSumDay() ) ) {
+		if(limiInfo.getLimitDay() < (Long.valueOf(param.getOrderPrice()) + limiInfo.getSumDay() ) ) {
 			return "L002";// 1일 결제금액 제한
 		}
 		// 4-2 1달 제한 금액
-		if(limiInfo.getLimitMonth() < (param.getOrderPrice() + limiInfo.getSumMonth() ) ) {
+		if(limiInfo.getLimitMonth() < (Long.valueOf(param.getOrderPrice()) + limiInfo.getSumMonth() ) ) {
 			return "L003";// 1달 결제금액 제한
 		}
 		// 4-3 1년 제한 금액
-		if(limiInfo.getLimitYear() < (param.getOrderPrice() + limiInfo.getSumYear() ) ) {
+		if(limiInfo.getLimitYear() < (Long.valueOf(param.getOrderPrice())+ limiInfo.getSumYear() ) ) {
 			return "L004";// 1년 결제금액 제한
 		}
 		// 5. 결제 내용입력
@@ -289,6 +295,7 @@ public class ExternalSeviceImpl implements ExternalService {
 			delngParam.setApprovalConfirm("O");
 			delngParam.setDeviceSeqNo(1);
 			delngParam.setVanCode("VAN");
+			delngParam.setStoreId(storeId);
 			delngParam.setDelngSeCode("CARD_ISSUE");
 			delngParam.setGoodNm(param.getOrderName() );
 			delngParam.setDelngPayType( tbMberBasis.get("PAYTYPE").toString() );
@@ -348,11 +355,13 @@ public class ExternalSeviceImpl implements ExternalService {
 			exParam.setMobileNum(  param.getPhoneNumber());
 			
 			tparam1.setMberId( param.getMemberId() );
-			tparam1.setOrderPrice( param.getAmount() );
+			tparam1.setOrderPrice( String.valueOf(param.getAmount()) );
 			tparam1.setExorderNo( param.getExorderNo()   );
 			tparam1.setConfmNo( delngParam.getConfmNo()    );
 			tparam1.setRciptNo( param.getRciptNo()  );
 			tparam1.setOrderName( param.getOrderName()   );
+//			tparam1.setOrderType(    );
+//			tparam1.setOrderDetail(delngCredtParam.getIssueCmpnyNm());
 			exMapper.updateExOrder(exParam);
 			
 		}else {
@@ -625,5 +634,24 @@ public class ExternalSeviceImpl implements ExternalService {
 		param.setStatus("C001");
 		exMapper.updateExOrder(param);
 	}
+
+	@Override
+	public HashMap<String, Object> exOrderInfo(HashMap<String, Object> param) throws Exception {
+		HashMap<String, Object> info = exMapper.selectExorderInfo(param);
+		// status 가 내부에서 사용하는것 대외용이 다르므로 변경해준다
+		if(info == null) {
+			info = new HashMap<String, Object>();
+			info.put("status", "3010");
+		}
+		if( "AAAA".equals(info.get("status"))) {
+			info.remove("status");
+			info.put("status", "1000");
+		}
+		if( "C001".equals(info.get("status"))) {
+			info.remove("status");
+			info.put("status", "2000");
+		}
+		return info;
+	}	
 
 }

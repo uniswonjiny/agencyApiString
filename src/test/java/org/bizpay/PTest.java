@@ -40,6 +40,15 @@ public class PTest {
 	@Test
 	void mainTest() throws Exception {
 		ExternalOrderInputParam param = new ExternalOrderInputParam();
+		
+		//smsUtil.sendShortSms("01039977736", "noti 서버오류"+"\n주문번호 : A4123875157845487\n주문영:피시방A세트포인트구매", "큐알거래");
+		
+		String temp= "B0002A1777필수옵션 1개50060b737bf0f3ec733b804c8f7unicore";
+		
+		String temm = eUtil.encryptSHA256(temp);
+		
+		System.out.println(temm);
+				
 //		param.setConfmNo("00314439");
 //		param.setExorderNo("exS0007");
 //		param.setMberId("B0002A1777");

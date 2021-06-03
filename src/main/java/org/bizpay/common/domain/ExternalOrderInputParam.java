@@ -13,7 +13,7 @@ public class ExternalOrderInputParam {
 	private String pkHash;
 	private String status;
 	private String orderName;
-	private long orderPrice;
+	private String orderPrice;
 	private long seq;
 	private String exorderNo;
 	private String mberId;

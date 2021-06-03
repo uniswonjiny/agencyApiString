@@ -42,12 +42,12 @@ public interface ExternalMapper {
 	public DelngCredtParam selectDelngCredt(HashMap<String, Object> map) throws Exception;
 	// 부가정보 확인
 	public DelngAdiParam selectDelngAdi(DelngAdiParam param)throws Exception;
-	//거래부가정보수정
-	// 카드결제수정
-	// 현금결제수정
 	
 	
 	// 결제정보 수정
 	public int updateDelng(DelngParam param) throws Exception;
+	// 외부 연동 결제정보 조회
+	public HashMap<String, Object>selectExorderInfo(HashMap<String, Object> param)throws Exception;
+
 	
 }

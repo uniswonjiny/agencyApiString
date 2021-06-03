@@ -22,8 +22,8 @@ public class PayRestController {
 	
 	@ApiOperation(value="대외연동결제" , notes = "대외연동결제처리")
 	@RequestMapping(value = "externalPayment", method = RequestMethod.POST)
-	public ResponseEntity<Void> externalPayment(PaymentReqParam param) throws Exception {
+	public ResponseEntity<String> externalPayment(PaymentReqParam param) throws Exception {
 		
-		return new ResponseEntity<>( HttpStatus.OK);
+		return new ResponseEntity<>( "",HttpStatus.OK);
 	}
 }

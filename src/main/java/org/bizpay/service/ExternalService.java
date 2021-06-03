@@ -1,5 +1,7 @@
 package org.bizpay.service;
 
+import java.util.HashMap;
+
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 
@@ -13,6 +15,8 @@ public interface ExternalService {
 	// 노티서버 서버 to 서버 http 통신방식
 	public boolean notiCallHttp(ExternalOrderInputParam param)throws Exception;
 	// 결제되지 않는 정보 취소 처리하기
-	public void exOrderCancel(ExternalOrderInputParam param)throws Exception;
+	public void exOrderCancel(ExternalOrderInputParam param) throws Exception;
+	// 외부결제 정보를 조회한다. 단건
+	public HashMap<String, Object> exOrderInfo(HashMap<String, Object> param )throws Exception;
 	
 }

@@ -51,10 +51,10 @@ public class AgencyManageController {
 
 	@ApiOperation(value=" 대리점 정보 수정" , notes = "대리점 정보 수정")
 	@RequestMapping(value = "updateAgency", method = RequestMethod.POST)
-	public ResponseEntity<Void> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
+	public ResponseEntity<String> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 수정");
 		serve.upatgeAgency(param); // 에러처리는 핸들러에서 하므로 실행만 하면된다.
-		return new ResponseEntity<>(HttpStatus.OK);
+		return new ResponseEntity<>("",HttpStatus.OK);
 	}
 	
 	@ApiOperation(value=" 기준대리점정보획득" , notes = "기준대리점정보획득")
@@ -72,9 +72,9 @@ public class AgencyManageController {
 	
 	@ApiOperation(value=" 대리점 정보 입력" , notes = "대리점 정보 입력")
 	@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
-	public ResponseEntity<Void> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
+	public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 입력");
-		return new ResponseEntity<>(HttpStatus.OK);
+		return new ResponseEntity<>("",HttpStatus.OK);
 	}
 	
 	// 판매자관리목록

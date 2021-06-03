@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.util.HashMap;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 
@@ -105,24 +108,56 @@ public class ExternalController {
 		// 유니코아 도 취소 처리해주어야 한다. 결제전 취소 요청일 경우 취소처리해야한다.
 		//연속 리프레시나 이미 결제취소 요청한 정보가 들어 왔을때 유니코아 외부결제 정보만 취소안된 상태일 경우 심각한 문제를 야기한다
 		if("9000".equals(  param.getStatus() )) {
-			service.exOrderCancel(param);			
+			service.exOrderCancel(param);		
+			// 내부 관리 코드문제로 다시설정
+			param.setStatus("9000");
+			
 		}
-		for (int i = 0; i < 10; i++) {
+		int count = 0;
+		while (count<4) {
 			flag = service.notiCallHttp(param);
 			if(flag) {
+				flag = true;
 				break;
 			}
+			else count++;
 		}
+	
 		if(!flag) {
 			rm.setType("200");
 			rm.setMessage("노티호출에러");
 		}
 		// 실패시 문자발송
-//		if(count==9) {
-//			smsUtil.sendShortSms("01039977736", "테스트중", "이름");
-//		}
+		if(count>3) {
+			// 사용자 정보 휴대폰 연락처 조회
+			String moblileNumber = "";
+			if(moblileNumber !=null && moblileNumber.length()>10) {
+				smsUtil.sendShortSms(moblileNumber, "noti서버에러\n주문번호 : " + param.getExorderNo() + "\n주문명:"+param.getOrderName(), param.getMberId());				
+			}
+		}
 		return new ResponseEntity<>(rm , HttpStatus.OK); 
 	}
 	
-	// 
+	// 결제정보 확인
+	@ApiOperation(value="결제정보확인" , notes = "결제정보확인")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="memberId" ,value = "유니코아판매자아이디", required=true , dataType="string"  ),
+		@ApiImplicitParam(name="orderNo" ,value = "상대방의 주문번호", required=true , dataType="string"  ),
+		@ApiImplicitParam(name="orderName" ,value = "주문이름", required=false , dataType="string"  )
+	})
+	@RequestMapping(value = "orderInfo", method = RequestMethod.POST)
+	public ResponseEntity<HashMap<String, Object>> orderInfo(@RequestBody HashMap<String, Object> param) throws Exception{
+		// 필수값 확인
+		if(param.get("memberId") ==null ||  param.get("orderNo")==null || "".equals(param.get("memberId"))  || "".equals(param.get("orderNo"))) {
+			return new ResponseEntity<>( HttpStatus.BAD_GATEWAY); 
+		}
+		HashMap<String, Object> remap = service.exOrderInfo(param);
+		//remap.put("orderName", ""); // 주문이름
+		//remap.put("orderPrice", ""); // 주문가격
+		//remap.put("orderNo", ""); // 상대방 주문번호 유니코아것 아님
+		//remap.put("memberId", ""); // 주문자 아이디 - 유니코아 판매자 아이디
+		//remap.put("confmNo", ""); // 유니코아 승인번호
+		//remap.put("status", ""); // 결제상태 0000 결제전 , 1000 - AAAA 결제완료 ,2000 - C001 결제후 취소
+		return new ResponseEntity<>(remap , HttpStatus.OK); 
+	}
 }

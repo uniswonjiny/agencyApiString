@@ -35,12 +35,15 @@ public class HomeController {
 		try {
 			String seq = service.insertExOrder(param);
 			//return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/"+seq);
-			return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
+			//return new RedirectView("http://localhost:8081/external/qrpa/"+seq);
+			////return new RedirectView("https://www.swonjiny.kr/external/qrpa/"+seq);
+			return new RedirectView("https://admin.uni-core.co.kr/external/qrpa/"+seq);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			//return new RedirectView("http://dm1586000202893.fun25.co.kr/external/qrpa/-1");
-			return new RedirectView("http://localhost:8081/external/qrpa/0");
+			//return new RedirectView("http://localhost:8081/external/qrpa/0");
+			return new RedirectView("https://admin.uni-core.co.kr/external/qrpa/0");
 		}
 	}
 }
