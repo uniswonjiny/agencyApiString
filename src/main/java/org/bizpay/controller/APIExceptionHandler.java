@@ -2,13 +2,16 @@ package org.bizpay.controller;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Hashtable;
 
+import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.domain.ReturnMsg;
 import org.bizpay.exception.AppPreException;
 import org.bizpay.exception.AuthErrorException;
 import org.bizpay.exception.ExorderException;
 import org.bizpay.exception.KeyErrorException;
 import org.bizpay.exception.SqlErrorException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,10 @@ import io.swagger.annotations.Api;
 @ControllerAdvice
 @Api(tags = "에러처리 ")
 public class APIExceptionHandler {
+	
+	@Autowired
+	KSPayMsgBean ksBean;
+	
 	// exception.class 처리
 	@ExceptionHandler({DataAccessException.class ,Exception.class })
 	public  ResponseEntity<String> sqlNormal(SQLException e) {
@@ -31,6 +38,22 @@ public class APIExceptionHandler {
 	// ExorderException
 	@ExceptionHandler({ExorderException.class})
 	public ResponseEntity<ReturnMsg> ExorderExceptionHandler(ExorderException e){
+		// 결제진행후 에러 였던 경우결제 취소 진행
+		try {
+			//여기서도 에러가 발생하면 방법이 없다.
+			Hashtable xht = ksBean.sendCardCancelMsg(
+					e.getOet().getKSNET_PG_IP(), 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
+				    e.getOet().getKSNET_PG_PORT(),			// -필수- port   9( 5)   *KSNET_PORT(21001)  
+					e.getOet().getPStoreId(), 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
+					e.getOet().getPKeyInType(),						// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
+					e.getOet().getPTransactionNo()						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+				);
+				
+		} catch (Exception e2) {
+			e2.fillInStackTrace();
+		}
+		
+		
 		ReturnMsg dto = new ReturnMsg();
 		String  type= e.getMessage();
 		dto.setType(type);

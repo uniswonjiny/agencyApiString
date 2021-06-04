@@ -3,12 +3,14 @@ package org.bizpay;
 
 
 import java.util.HashMap;
+import java.util.Hashtable;
 
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.RciptMember;
 import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.JwtUtil;
+import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.common.util.SmsUtil;
 import org.bizpay.mapper.ExternalMapper;
 import org.bizpay.service.AuthService;
@@ -37,17 +39,31 @@ public class PTest {
 	@Autowired
 	EncryptUtil eUtil;
 	
+	@Autowired
+	KSPayMsgBean ksBean;
+	public static final String KSNET_PG_IP = "210.181.28.137";//"210.181.28.137";	//-필수- ipaddr X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)
+	public static final int KSNET_PG_PORT = 21001;		
+	
 	@Test
 	void mainTest() throws Exception {
-		ExternalOrderInputParam param = new ExternalOrderInputParam();
+		Hashtable xht = ksBean.sendCardCancelMsg(
+				KSNET_PG_IP, 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
+				KSNET_PG_PORT,			// -필수- port   9( 5)   *KSNET_PORT(21001)  
+				"2552500002", 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
+				"K", 							// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
+				"178270066440"						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+			);
 		
-		//smsUtil.sendShortSms("01039977736", "noti 서버오류"+"\n주문번호 : A4123875157845487\n주문영:피시방A세트포인트구매", "큐알거래");
-		
-		String temp= "B0002A1777필수옵션 1개50060b737bf0f3ec733b804c8f7unicore";
-		
-		String temm = eUtil.encryptSHA256(temp);
-		
-		System.out.println(temm);
+		System.out.println(xht.toString());
+//		ExternalOrderInputParam param = new ExternalOrderInputParam();
+//		
+//		//smsUtil.sendShortSms("01039977736", "noti 서버오류"+"\n주문번호 : A4123875157845487\n주문영:피시방A세트포인트구매", "큐알거래");
+//		
+//		String temp= "B0002A1777필수옵션 1개50060b737bf0f3ec733b804c8f7unicore";
+//		
+//		String temm = eUtil.encryptSHA256(temp);
+//		
+//		System.out.println(temm);
 				
 //		param.setConfmNo("00314439");
 //		param.setExorderNo("exS0007");

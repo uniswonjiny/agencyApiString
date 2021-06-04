@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -33,6 +34,7 @@ import org.bizpay.common.util.KSPayMsgBean;
 import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
+import org.bizpay.domain.OrderErrorType;
 import org.bizpay.exception.ExorderException;
 import org.bizpay.exception.SqlErrorException;
 import org.bizpay.mapper.AccountMapper;
@@ -174,200 +176,246 @@ public class ExternalSeviceImpl implements ExternalService {
 	@Transactional
 	public ExternalOrderInputParam payRequest(PaymentReqParam param) throws Exception {
 		log.info("외부 수기결제 요청");
-		// 이미 결제된 정보 인지 확인
-		if(param.getExorderNo() == null) {
-			throw new ExorderException("9002");
-		}
-		if( param.getExorderNo().trim().length() <1) {
-			throw new ExorderException("9002");
-		}
-		
-		ExternalOrderInputParam tparam = new ExternalOrderInputParam();
-		tparam.setMberId(param.getMemberId());
-		tparam.setExorderNo( param.getExorderNo() );
-		ExternalOrderInputParam tparam1 = exMapper.selectExOrderNo(tparam);
-		if(tparam1== null ) {
-			throw new ExorderException("9002");
-		}
-		if("AAAA".equals(tparam1.getStatus() )) {
-			throw new ExorderException("1010"); // 이미결제된주문
-		}
-		if("C001".equals(tparam1.getStatus() )) {
-			throw new ExorderException("1010"); // 이미 결제취소된 주문입니다
-		}
 		String storeId = "";
 		int mberCode = -1;
 		String mberCodeSn = "000";
-		// 사용가능 유저인지 판단
-		HashMap<String, Object> mberChk =exMapper.selectTbBberIdCheck(param.getMemberId());  
-		if(mberChk == null) {
-			throw new ExorderException("1010"); // 결제처리 실패. 미등록 사업자 입니다
-		}else {
-			if( !"Y".equals(mberChk.get("USEAT"))  ) {
-				throw new ExorderException("1010"); // 결제처리 실패. 결제요청 불가능한 사업자 입니다
+		OrderErrorType oet = new OrderErrorType();
+		oet.setKSNET_PG_IP(  KSNET_PG_IP    );
+		oet.setKSNET_PG_PORT(KSNET_PG_PORT);
+		oet.setPKeyInType("K");
+		try {
+			// 카드결제 실행
+			Hashtable<String, Object> ht = new Hashtable<>();		
+			// 이미 결제된 정보 인지 확인
+			if(param.getExorderNo() == null) {
+				throw new ExorderException("9002");
 			}
-			mberCode =  Integer.parseInt(mberChk.get("MBERCODE").toString());
-		}
-		
-		//tbMberDetail mber_code_sn 테이터 추출
-		mberCodeSn = exMapper.selectTbMberDetailSn(mberCode);
-		if(mberCodeSn == null || "".equals(mberCodeSn)) {
-			throw new ExorderException("1010"); // 결제처리 실패. 결제 미처리 사업자 입니다
-		}
-				
-		// tbMberBasis
-		HashMap<String, Object> tbMberBasis =  exMapper.selectTbMberBasis1(mberCode);
+			if( param.getExorderNo().trim().length() <1) {
+				throw new ExorderException("9002");
+			}
+			
+			ExternalOrderInputParam tparam = new ExternalOrderInputParam();
+			tparam.setMberId(param.getMemberId());
+			tparam.setExorderNo( param.getExorderNo() );
+			ExternalOrderInputParam tparam1 = exMapper.selectExOrderNo(tparam);
+			if(tparam1== null ) {
+				throw new ExorderException("9002");
+			}
+			if("AAAA".equals(tparam1.getStatus() )) {
+				throw new ExorderException("1010"); // 이미결제된주문
+			}
+			if("C001".equals(tparam1.getStatus() )) {
+				throw new ExorderException("1010"); // 이미 결제취소된 주문입니다
+			}
+
+			// 사용가능 유저인지 판단
+			HashMap<String, Object> mberChk =exMapper.selectTbBberIdCheck(param.getMemberId());  
+			if(mberChk == null) {
+				throw new ExorderException("1010"); // 결제처리 실패. 미등록 사업자 입니다
+			}else {
+				if( !"Y".equals(mberChk.get("USEAT"))  ) {
+					throw new ExorderException("1010"); // 결제처리 실패. 결제요청 불가능한 사업자 입니다
+				}
+				mberCode =  Integer.parseInt(mberChk.get("MBERCODE").toString());
+			}
+			
+			//tbMberDetail mber_code_sn 테이터 추출
+			mberCodeSn = exMapper.selectTbMberDetailSn(mberCode);
+			if(mberCodeSn == null || "".equals(mberCodeSn)) {
+				throw new ExorderException("1010"); // 결제처리 실패. 결제 미처리 사업자 입니다
+			}
 					
-		if(tbMberBasis == null) {
-			throw new ExorderException("1010"); // 결제처리 실패. 결제 상점설정에 문제가 있습니다
-		}else{
-			if("T".equals(tbMberBasis.get("PAYTYPE")) ) {
-				storeId =  "2041700460";
-			}else if("B".equals(tbMberBasis.get("PAYTYPE")) ) {
-				storeId =  "2002307048";
-			}else if("N".equals(tbMberBasis.get("PAYTYPE")) ) {
-				storeId =  "2552500002";
-			}else {
+			// tbMberBasis
+			HashMap<String, Object> tbMberBasis =  exMapper.selectTbMberBasis1(mberCode);
+						
+			if(tbMberBasis == null) {
 				throw new ExorderException("1010"); // 결제처리 실패. 결제 상점설정에 문제가 있습니다
+			}else{
+				if("T".equals(tbMberBasis.get("PAY_TYPE")) ) {
+					storeId =  "2041700460";
+				}else if("B".equals(tbMberBasis.get("PAY_TYPE")) ) {
+					storeId =  "2002307048";
+				}else if("N".equals(tbMberBasis.get("PAY_TYPE")) ) {
+					storeId =  "2552500002";
+				}else {
+					throw new ExorderException("1010"); // 결제처리 실패. 결제 상점설정에 문제가 있습니다
+				}
 			}
-		}
-		
-		// 영수증번호 획득
-		HashMap<String , Object> tempMap = new HashMap<>();
-		tempMap.put("mber_code",String.valueOf(mberCode) );
-		tempMap.put("rcipt_no","" );
-		exMapper.propRciptNO(tempMap);
-		param.setRciptNo(tempMap.get("rcipt_no").toString());
-		tparam1.setRciptNo( tempMap.get("rcipt_no").toString() );
-		
-		tempMap.clear();
-		param.setKsnetRcipt(param.getMemberId()+"_"+param.getRciptNo());
-		
-		// 결제요청 관련 정보 세팅
-		// 주민번호 13개로 세팅 sUtil
-		param.setPidNum( sUtil.rightPad( param.getPidNum() , " " , 13  ) ); 
-		// 카드번호 세팅  *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM]) 
-		param.setPTrackII( param.getCardNo() + "=" + param.getExpiration() );
-		
-		// 카드결제 실행
-		Hashtable<String, Object> ht = new Hashtable<>();
-		ht = ksBean.sendCardMsg(
-				KSNET_PG_IP, 
-				KSNET_PG_PORT, 
-				storeId,
-				//"2999199999", // 테스트이후 해제함
-				param.getKsnetRcipt(),  // 주문번호    
-				"", 
-				param.getPidNum(), 
-				param.getEmail(), 
-				param.getOrderName(), // 상품명 
-				param.getPhoneNumber(), // 핸드폰번호 
-				"K",						// pKeyInType X(12) KEY-IN유형(K:직접입력,S:리더기사용입력)  
-				"1",						// pInterestType   X( 1)   *일반/무이자구분 1:일반 2:무이자
-				param.getPTrackII(),					 // -필수- pTrackII  X(40)   *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM]) 
-				param.getInstallment(), 
-				Long.toString(param.getAmount())  , 
-				param.getPasswd(), 
-				param.getCardPNo());
-		
-		// 카드결제 성공판단
-		if(ht == null) {
-			throw new ExorderException("9999"); // 결제처리 실패. 관리자에게 문의바랍니다
-		}
-		
-		// 성공이후 // 데이터 저장
-		String ox = sUtil.getString(ht.get("Status") ).trim();
-		if("O".equals(ox)) {
-			DelngParam delngParam = new DelngParam();
-			// delng
-			delngParam.setMberCode( mberCode);
-			delngParam.setMberCodeSn( mberCodeSn  );
-			delngParam.setRciptNo(param.getRciptNo());
-			delngParam.setAppCode("BIZPAY" );
-			delngParam.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
-			delngParam.setConfmDt(sUtil.getString(ht.get("TradeDate")).trim() );
-			delngParam.setConfmTime(sUtil.getString(ht.get("TradeTime")).trim() );
-			delngParam.setSplpc(  param.getAmount());
-			delngParam.setVat(0 ); // 부가세 0 일단은
-			delngParam.setTrgetMberCode( mberCode );
-			delngParam.setTrgetMberCodeSn(mberCodeSn);
-			delngParam.setTrgetRciptNo(param.getRciptNo());
-			delngParam.setApprovalConfirm("O");
-			delngParam.setDeviceSeqNo(1);
-			delngParam.setVanCode("VAN");
-			delngParam.setStoreId(storeId);
-			delngParam.setDelngSeCode("CARD_ISSUE");
-			delngParam.setGoodNm(param.getOrderName() );
-			delngParam.setDelngPayType( tbMberBasis.get("PAYTYPE").toString() );
-			tparam1.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
-			if(exMapper.insertDelng(delngParam) <1) {
-				throw new ExorderException("9999"); // 매출처리 실패. 관리자에게 문의바랍니다
+			oet.setPStoreId(storeId);
+			
+			// 영수증번호 획득
+			HashMap<String , Object> tempMap = new HashMap<>();
+			tempMap.put("mber_code",String.valueOf(mberCode) );
+			tempMap.put("rcipt_no","" );
+			exMapper.propRciptNO(tempMap);
+			param.setRciptNo(tempMap.get("rcipt_no").toString());
+			tparam1.setRciptNo( tempMap.get("rcipt_no").toString() );
+			
+			tempMap.clear();
+			param.setKsnetRcipt(param.getMemberId()+"_"+param.getRciptNo());
+			
+			// 결제요청 관련 정보 세팅
+			// 주민번호 13개로 세팅 sUtil
+			param.setPidNum( sUtil.rightPad( param.getPidNum() , " " , 13  ) ); 
+			// 카드번호 세팅  *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM]) 
+			param.setPTrackII( param.getCardNo() + "=" + param.getExpiration() );
+			
+
+			ht = ksBean.sendCardMsg(
+					KSNET_PG_IP, 
+					KSNET_PG_PORT, 
+					storeId,
+					//"2999199999", // 테스트이후 해제함
+					param.getKsnetRcipt(),  // 주문번호    
+					"", 
+					param.getPidNum(), 
+					param.getEmail(), 
+					param.getOrderName(), // 상품명 
+					param.getPhoneNumber(), // 핸드폰번호 
+					"K",						// pKeyInType X(12) KEY-IN유형(K:직접입력,S:리더기사용입력)  
+					"1",						// pInterestType   X( 1)   *일반/무이자구분 1:일반 2:무이자
+					param.getPTrackII(),					 // -필수- pTrackII  X(40)   *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM]) 
+					param.getInstallment(), 
+					Long.toString(param.getAmount())  , 
+					param.getPasswd(), 
+					param.getCardPNo());
+			
+			// 카드결제 성공판단
+			if(ht == null) {
+				throw new ExorderException("9999"); // 결제처리 실패. 관리자에게 문의바랍니다
 			}
+			DecimalFormat df = new DecimalFormat("##0");
+			// 성공이후 // 데이터 저장
+			String ox = sUtil.getString(ht.get("Status") ).trim();
+			oet.setPTransactionNo( sUtil.getString(ht.get("TransactionNo")).trim() );
+		// 에러시 결제 취소 되는지 확인용 	
+//			if("O".equals(ox)) {
+//				throw new Exception();
+//			}
+			if("O".equals(ox)) {
+				
 			
-			// delngCredt
-			DelngCredtParam delngCredtParam = new DelngCredtParam();
-			delngCredtParam.setMberCode(mberCode);
-			delngCredtParam.setMberCodeSn(mberCodeSn);
-			delngCredtParam.setRciptNo(param.getRciptNo());
-			delngCredtParam.setCardNo(cUtil.encrypt(sUtil.MarkForCreditCard(param.getCardNo())));
-			delngCredtParam.setInstlmtMonth(param.getInstallment());
-			delngCredtParam.setIssueCmpnyCode(sUtil.getString(ht.get("IssCode")).trim());
-			delngCredtParam.setIssueCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
-			delngCredtParam.setPuchasCmpnyCode(sUtil.getString(ht.get("AquCode")).trim());
-			delngCredtParam.setPuchasCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
-			delngCredtParam.setCdrsrNo(sUtil.getString(ht.get("MerchantNo")).trim());
-			delngCredtParam.setCardType("D"); // 확인해보자!
-			delngCredtParam.setPgVanGb("P"); // 확인해보자!
-			delngCredtParam.setTId(storeId);
-			delngCredtParam.setPgRciptNo(sUtil.getString(ht.get("TransactionNo")).trim());////pg거래번호
-			delngCredtParam.setGbInfo("U"); // 유니코아
-			delngCredtParam.setVanPgComp("PG_KSNET");
-			
-			tparam1.setOrderType("C");
-			tparam1.setOrderDetail(sUtil.getString(ht.get("Message1")).trim());
-			if(exMapper.insertDelngCredt(delngCredtParam) < 1) {
-				throw new ExorderException("9999"); // 매출처리 실패. 관리자에게 문의바랍니다
-			}
-			
-			// delng_adi
-			DelngAdiParam delngAdiParam = new DelngAdiParam();
-			delngAdiParam.setMberCode(mberCode);
-			delngAdiParam.setMberCodeSn(mberCodeSn);
-			delngAdiParam.setRciptNo(param.getRciptNo());
-			delngAdiParam.setAdiCode("PURCHSR_MBTLNUM");
-			if(param.getPhoneNumber()!= null && !"".equals(param.getPhoneNumber())) {
-				delngAdiParam.setAdiCn( cUtil.encrypt( param.getPhoneNumber() )  );				
+				DelngParam delngParam = new DelngParam();
+				// delng
+				delngParam.setMberCode( mberCode);
+				delngParam.setMberCodeSn( mberCodeSn  );
+				delngParam.setRciptNo(param.getRciptNo());
+				//delngParam.setAppCode("BIZPAY" );
+				delngParam.setAppCode("WEB001" );
+				delngParam.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
+				delngParam.setConfmDt(sUtil.getString(ht.get("TradeDate")).trim() );
+				delngParam.setConfmTime(sUtil.getString(ht.get("TradeTime")).trim() );
+				delngParam.setSplpc(  param.getAmount());
+				delngParam.setVat(0 ); // 부가세 0 일단은
+				delngParam.setTrgetMberCode( mberCode );
+				delngParam.setTrgetMberCodeSn(mberCodeSn);
+				delngParam.setTrgetRciptNo(param.getRciptNo());
+				delngParam.setApprovalConfirm("O");
+				delngParam.setDeviceSeqNo(1);
+				delngParam.setVanCode("PG_KSNET");
+				delngParam.setStoreId(storeId);
+				delngParam.setDelngSeCode("CARD_ISSUE");
+				delngParam.setGoodNm(param.getOrderName() );
+				delngParam.setDelngPayType( tbMberBasis.get("PAY_TYPE").toString() );
+				if( "N".equals(  tbMberBasis.get("SUGI_CERTIFICATION").toString()   )   ) {
+					delngParam.setPaymentDevice("SUGI_NORMAL");				
+				}else if( "Y".equals(  tbMberBasis.get("SUGI_CERTIFICATION").toString()   )   ) {
+					delngParam.setPaymentDevice("SUGI_CERTIFICATION");
+				}else 	delngParam.setPaymentDevice("SUGI_NORMAL");		
+				// 누락데이터 주의
+				delngParam.setToSwiptStatus("TE");
+				float feeRate =Float.valueOf(String.valueOf(tbMberBasis.get("FEE_RATE"))); // 수수료율
+				long sellAmt = param.getAmount() ; // 판매금액 부가세는 0으로
+				delngParam.setMberFee(feeRate); // 멤버 수수료 율
+				
+				double mberFeeAmt = 0;
+				mberFeeAmt = sellAmt *feeRate/100;
+				delngParam.setMberFeeAmt(   df.format(mberFeeAmt)  ); //멤버 수수료 금액
+				
+				// 정산금액
+				delngParam.setPayAmt(  df.format(  sellAmt - sUtil.getDouble(df.format(mberFeeAmt)) ));
+				
+				
+				tparam1.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
+				if(exMapper.insertDelng(delngParam) <1) {
+					throw new ExorderException("9999"); // 매출처리 실패. 관리자에게 문의바랍니다
+				}
+				
+				// delngCredt
+				DelngCredtParam delngCredtParam = new DelngCredtParam();
+				delngCredtParam.setMberCode(mberCode);
+				delngCredtParam.setMberCodeSn(mberCodeSn);
+				delngCredtParam.setRciptNo(param.getRciptNo());
+				delngCredtParam.setCardNo(cUtil.encrypt(sUtil.MarkForCreditCard(param.getCardNo())));
+				delngCredtParam.setInstlmtMonth(param.getInstallment());
+				delngCredtParam.setIssueCmpnyCode(sUtil.getString(ht.get("IssCode")).trim());
+				delngCredtParam.setIssueCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
+				delngCredtParam.setPuchasCmpnyCode(sUtil.getString(ht.get("AquCode")).trim());
+				delngCredtParam.setPuchasCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
+				delngCredtParam.setCdrsrNo(sUtil.getString(ht.get("MerchantNo")).trim());
+				delngCredtParam.setCardType("D"); // 확인해보자!
+				delngCredtParam.setPgVanGb("P"); // 확인해보자!
+				delngCredtParam.setTId(storeId);
+				delngCredtParam.setPgRciptNo(sUtil.getString(ht.get("TransactionNo")).trim());////pg거래번호
+				delngCredtParam.setGbInfo("U"); // 유니코아
+				delngCredtParam.setVanPgComp("PG_KSNET");
+				
+				tparam1.setOrderType("C");
+				tparam1.setOrderDetail(sUtil.getString(ht.get("Message1")).trim());
+				if(exMapper.insertDelngCredt(delngCredtParam) < 1) {
+					throw new ExorderException("9999"); // 매출처리 실패. 관리자에게 문의바랍니다
+				}
+				
+				// delng_adi
+				DelngAdiParam delngAdiParam = new DelngAdiParam();
+				delngAdiParam.setMberCode(mberCode);
+				delngAdiParam.setMberCodeSn(mberCodeSn);
+				delngAdiParam.setRciptNo(param.getRciptNo());
+				delngAdiParam.setAdiCode("PURCHSR_MBTLNUM");
+				if(param.getPhoneNumber()!= null && !"".equals(param.getPhoneNumber())) {
+					delngAdiParam.setAdiCn( cUtil.encrypt( param.getPhoneNumber() )  );				
+				}else {
+					delngAdiParam.setAdiCn( "722211d65862dac6ab81668e0544b4e3" );				// 핸드폰번호 없으면 공백값이다.				
+				}
+				if(exMapper.insertDelngAdi(delngAdiParam) <1) {
+					throw new ExorderException("9999"); // 매출 정보등록 실패. 관리자에게 문의바랍니다
+				}
+				
+				// 결제정보 업데이트
+				ExternalOrderInputParam exParam = new ExternalOrderInputParam();
+				exParam.setStatus("AAAA"); // 결제완료
+				exParam.setMberId(param.getMemberId());
+				exParam.setExorderNo( param.getExorderNo() );
+				exParam.setConfmNo(delngParam.getConfmNo());
+				exParam.setRciptNo(param.getRciptNo());
+				exParam.setEmail( param.getEmail() );
+				exParam.setMobileNum(  param.getPhoneNumber());
+				
+				tparam1.setMberId( param.getMemberId() );
+				tparam1.setOrderPrice( String.valueOf(param.getAmount()) );
+				tparam1.setExorderNo( param.getExorderNo()   );
+				tparam1.setConfmNo( delngParam.getConfmNo()    );
+				tparam1.setRciptNo( param.getRciptNo()  );
+				tparam1.setOrderName( param.getOrderName()   );
+//				tparam1.setOrderType(    );
+//				tparam1.setOrderDetail(delngCredtParam.getIssueCmpnyNm());
+				exMapper.updateExOrder(exParam);
+				
 			}else {
-				delngAdiParam.setAdiCn( "722211d65862dac6ab81668e0544b4e3" );				// 핸드폰번호 없으면 공백값이다.				
+				throw new ExorderException("9999"); //결제승인 실패. 관리자에게 문의바랍니다
 			}
-			if(exMapper.insertDelngAdi(delngAdiParam) <1) {
-				throw new ExorderException("9999"); // 매출 정보등록 실패. 관리자에게 문의바랍니다
-			}
-			
-			// 결제정보 업데이트
-			ExternalOrderInputParam exParam = new ExternalOrderInputParam();
-			exParam.setStatus("AAAA"); // 결제완료
-			exParam.setMberId(param.getMemberId());
-			exParam.setExorderNo( param.getExorderNo() );
-			exParam.setConfmNo(delngParam.getConfmNo());
-			exParam.setRciptNo(param.getRciptNo());
-			exParam.setEmail( param.getEmail() );
-			exParam.setMobileNum(  param.getPhoneNumber());
-			
-			tparam1.setMberId( param.getMemberId() );
-			tparam1.setOrderPrice( String.valueOf(param.getAmount()) );
-			tparam1.setExorderNo( param.getExorderNo()   );
-			tparam1.setConfmNo( delngParam.getConfmNo()    );
-			tparam1.setRciptNo( param.getRciptNo()  );
-			tparam1.setOrderName( param.getOrderName()   );
-//			tparam1.setOrderType(    );
-//			tparam1.setOrderDetail(delngCredtParam.getIssueCmpnyNm());
-			exMapper.updateExOrder(exParam);
-			
-		}else {
-			throw new ExorderException("9999"); //결제승인 실패. 관리자에게 문의바랍니다
-		}
-		return tparam1;
+			return tparam1;
+		} catch (ExorderException e) {
+			throw new ExorderException(e);
+		
+	} catch (Exception e) {
+		oet.setMessage("9999");
+		System.out.println("*********************");
+		System.out.println(oet.toString());
+		throw new ExorderException(oet);
+	}
+
+		
 	}
 
 	@Override
@@ -436,6 +484,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				delngCredtInfo.getPgRciptNo()							// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
 			);
 		// ksnet 결과 처리가 없는경우
+		log.info(xht.toString());
 		if(xht == null ) {
 			throw new ExorderException("C007");
 		}

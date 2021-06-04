@@ -27,9 +27,9 @@ public class DelngParam {
     private String goodCnt;
     private String custPhone;
     private String bizrno;
-    private long mberFee;
-    private long mberFeeAmt;
-    private long payAmt;
+    private float mberFee;
+    private String mberFeeAmt;
+    private String payAmt;
     private String approvalConfirm;
     private int deviceSeqNo;
     private String delngPayType;
@@ -37,4 +37,6 @@ public class DelngParam {
     private String cancelDt;
     private String cardDeleteYn;
     private String storeId;
+    private String toSwiptStatus;// 스와이프 송수신 상태
+    private String paymentDevice; // 결제사용기계
 }

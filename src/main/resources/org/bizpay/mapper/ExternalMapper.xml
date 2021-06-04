@@ -129,11 +129,12 @@
   	<!--tbMberBasis 필요정보만 추출  -->
   	<select id="selectTbMberBasis1" resultType="HashMap" >
   	SELECT
-		    induty_id as indutyId,
-		    pay_type as payType,
-		    mber_name as mberName,   
-		    company_name as companyName,
-		    fee_rate as feeRate 
+		    INDUTY_ID,
+		    PAY_TYPE,
+		    MBER_NAME,   
+		    COMPANY_NAME,
+		    FEE_RATE,
+		    SUGI_CERTIFICATION
 		FROM
 		    mber_basis
 		 where MBER_CODE = #{val}
@@ -143,6 +144,7 @@
 	INSERT INTO delng (
 	    mber_code,
 	    mber_code_sn,
+	    group_pay_mber_code,
 	    rcipt_no,
 	    app_code,
 	    confm_no,   
@@ -160,10 +162,16 @@
 	    good_nm,
 	    delng_pay_type,
 	    bigo,
-	    trmnlno
+	    trmnlno,
+	    TO_SWIPE_STATUS,
+	    MBER_FEE,
+	    MBER_FEE_AMT,
+	    PAY_AMT,
+	    PAYMENT_DEVICE
 	) VALUES (
 		#{mberCode},
 	    #{mberCodeSn},
+	    #{mberCode},
 	    #{rciptNo},
 	    #{appCode},
 	    #{confmNo},   
@@ -181,7 +189,12 @@
 	    #{goodNm},
 	    #{delngPayType},
 	    #{bigo},
-	    #{storeId}
+	    #{storeId},
+	    #{toSwiptStatus},
+	    #{mberFee},
+	    #{mberFeeAmt},
+	    #{payAmt},
+	    #{paymentDevice}
 	)
 	</insert>
 	
