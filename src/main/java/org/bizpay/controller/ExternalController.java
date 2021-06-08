@@ -12,6 +12,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
+import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.SmsUtil;
 import org.bizpay.domain.ReturnMsg;
 import org.bizpay.service.ExternalService;
@@ -146,18 +147,12 @@ public class ExternalController {
 		@ApiImplicitParam(name="orderName" ,value = "주문이름", required=false , dataType="string"  )
 	})
 	@RequestMapping(value = "orderInfo", method = RequestMethod.POST)
-	public ResponseEntity<HashMap<String, Object>> orderInfo(@RequestBody HashMap<String, Object> param) throws Exception{
+	public ResponseEntity<OrderStatusInfo> orderInfo(@RequestBody HashMap<String, Object> param) throws Exception{
 		// 필수값 확인
 		if(param.get("memberId") ==null ||  param.get("orderNo")==null || "".equals(param.get("memberId"))  || "".equals(param.get("orderNo"))) {
 			return new ResponseEntity<>( HttpStatus.BAD_GATEWAY); 
 		}
-		HashMap<String, Object> remap = service.exOrderInfo(param);
-		//remap.put("orderName", ""); // 주문이름
-		//remap.put("orderPrice", ""); // 주문가격
-		//remap.put("orderNo", ""); // 상대방 주문번호 유니코아것 아님
-		//remap.put("memberId", ""); // 주문자 아이디 - 유니코아 판매자 아이디
-		//remap.put("confmNo", ""); // 유니코아 승인번호
-		//remap.put("status", ""); // 결제상태 0000 결제전 , 1000 - AAAA 결제완료 ,2000 - C001 결제후 취소
-		return new ResponseEntity<>(remap , HttpStatus.OK); 
+		
+		return new ResponseEntity<>(service.exOrderInfo(param) , HttpStatus.OK); 
 	}
 }

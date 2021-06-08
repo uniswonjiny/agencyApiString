@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
+import org.bizpay.common.domain.external.OrderStatusInfo;
 
 public interface ExternalService {
 	public String insertExOrder(ExternalOrderInputParam param) throws Exception;
@@ -17,6 +18,6 @@ public interface ExternalService {
 	// 결제되지 않는 정보 취소 처리하기
 	public void exOrderCancel(ExternalOrderInputParam param) throws Exception;
 	// 외부결제 정보를 조회한다. 단건
-	public HashMap<String, Object> exOrderInfo(HashMap<String, Object> param )throws Exception;
+	public OrderStatusInfo exOrderInfo(HashMap<String, Object> param )throws Exception;
 	
 }

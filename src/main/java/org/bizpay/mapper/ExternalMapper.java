@@ -6,6 +6,7 @@ import org.bizpay.common.domain.DelngAdiParam;
 import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
+import org.bizpay.common.domain.external.OrderStatusInfo;
 
 public interface ExternalMapper {
 	public int insertExOrder(ExternalOrderInputParam param) throws Exception;
@@ -47,7 +48,7 @@ public interface ExternalMapper {
 	// 결제정보 수정
 	public int updateDelng(DelngParam param) throws Exception;
 	// 외부 연동 결제정보 조회
-	public HashMap<String, Object>selectExorderInfo(HashMap<String, Object> param)throws Exception;
+	public OrderStatusInfo selectExorderInfo(HashMap<String, Object> param)throws Exception;
 
 	
 }

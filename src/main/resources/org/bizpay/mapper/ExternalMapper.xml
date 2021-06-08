@@ -366,14 +366,14 @@
 	
 	</select> -->
 	
-	<select id="selectExorderInfo" parameterType="HashMap" resultType="HashMap">
+	<select id="selectExorderInfo" parameterType="HashMap" resultType="OrderStatusInfo">
 		SELECT
 			teo.name AS orderName,
 			teo.PRICE AS orderPrice,
-			teo.EXORDER_NO AS orderNo,
-			teo.MBER_ID AS memberId ,
+			teo.EXORDER_NO AS exorderNo,
+			teo.MBER_ID AS mberId ,
 			teo.CONFM_NO AS confmNo,
-			teo.STATUS AS status
+			nvl(teo.STATUS , '3010') AS status
 		FROM
 			TB_EX_ORDER teo
 		WHERE 
