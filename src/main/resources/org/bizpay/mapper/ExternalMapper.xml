@@ -384,10 +384,7 @@
 			ON mb.MBER_CODE = dc.MBER_CODE 
 			and teo.RCIPT_NO  = dc.RCIPT_NO 
 		WHERE 
-			MBER_ID = #{memberId}
-			AND EXORDER_NO = #{orderNo}
-			<if test="orderName!=null and !orderName.equals('')">  
-			AND name = #{orderName}
-			</if>
+			MBER_ID = #{mberId}
+			AND EXORDER_NO = #{exorderNo}
 	</select>
   </mapper>

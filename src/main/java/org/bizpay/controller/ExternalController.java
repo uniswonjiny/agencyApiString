@@ -145,13 +145,13 @@ public class ExternalController {
 	// 결제정보 확인
 	@ApiOperation(value="결제정보확인" , notes = "결제정보확인")
 	@ApiImplicitParams({
-		@ApiImplicitParam(name="memberId" ,value = "유니코아판매자아이디", required=true , dataType="string"  ),
-		@ApiImplicitParam(name="orderNo" ,value = "상대방의 주문번호", required=true , dataType="string"  )
+		@ApiImplicitParam(name="mberId" ,value = "유니코아판매자아이디", required=true , dataType="string"  ),
+		@ApiImplicitParam(name="exorderNo" ,value = "상대방의 주문번호", required=true , dataType="string"  )
 	})
 	@RequestMapping(value = "orderInfo", method = RequestMethod.POST)
 	public ResponseEntity<OrderStatusInfo> orderInfo(@RequestBody HashMap<String, Object> param) throws Exception{
 		// 필수값 확인
-		if(param.get("memberId") ==null ||  param.get("orderNo")==null || "".equals(param.get("memberId"))  || "".equals(param.get("orderNo"))) {
+		if(param.get("mberId") ==null ||  param.get("exorderNo")==null || "".equals(param.get("mberId"))  || "".equals(param.get("exorderNo"))) {
 			return new ResponseEntity<>( HttpStatus.BAD_GATEWAY); 
 		}
 		
