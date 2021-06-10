@@ -692,4 +692,25 @@ public class ExternalSeviceImpl implements ExternalService {
 		return info;
 	}
 
+	@Override
+	public void payPreCancel(PaymentReqParam param) throws Exception {
+		// 결제이후 취소는 결제사 연동등이 있지만 결제전 취소는 TB_EX_ORDER 하나만 처리하면 된다.
+		log.info("결제전 단순 취소");
+		
+		ExternalOrderInputParam ep = new ExternalOrderInputParam();
+		if(param.getExorderNo() == null ) {
+			throw new ExorderException("C002");
+		}
+		
+		if(param.getMemberId() == null ) {
+			throw new ExorderException("C002");
+		}
+		
+		ep.setMberId(param.getMemberId());
+		ep.setExorderNo(param.getExorderNo()  );
+		ep.setStatus(param.getStatus());
+		exMapper.updateExOrder(ep);
+		
+	}
+
 }

@@ -366,16 +366,23 @@
 	
 	</select> -->
 	
-	<select id="selectExorderInfo" parameterType="HashMap" resultType="OrderStatusInfo">
-		SELECT
+	<select id="selectExorderInfo" parameterType="HashMap" resultType="OrderStatusInfo">	   
+		SELECT 
 			teo.name AS orderName,
 			teo.PRICE AS orderPrice,
 			teo.EXORDER_NO AS exorderNo,
 			teo.MBER_ID AS mberId ,
 			teo.CONFM_NO AS confmNo,
-			nvl(teo.STATUS , '3010') AS status
+			nvl(teo.STATUS , '3010') AS status,
+			CASE when dc.ISSUE_CMPNY_NM IS NOT null  then 'C' ELSE null END AS orderMethod  , -- 현재는 카드만 있음 
+			dc.ISSUE_CMPNY_NM AS orderMethodDetail
 		FROM
 			TB_EX_ORDER teo
+			INNER JOIN MBER_BASIS mb 
+			ON teo.MBER_ID = mb.INDUTY_ID 
+			left JOIN DELNG_CREDT dc
+			ON mb.MBER_CODE = dc.MBER_CODE 
+			and teo.RCIPT_NO  = dc.RCIPT_NO 
 		WHERE 
 			MBER_ID = #{memberId}
 			AND EXORDER_NO = #{orderNo}
@@ -383,7 +390,4 @@
 			AND name = #{orderName}
 			</if>
 	</select>
-	
-	
-  	
   </mapper>

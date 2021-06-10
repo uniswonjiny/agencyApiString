@@ -15,4 +15,7 @@ public class OrderStatusInfo {
 	private String mberId;
 	private String confmNo;
 	private String status;
+	// 현재는 카드만 존재한다.
+	private String orderMethod;
+	private String orderMethodDetail;
 }

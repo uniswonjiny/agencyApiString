@@ -9,6 +9,8 @@ import org.bizpay.common.domain.external.OrderStatusInfo;
 public interface ExternalService {
 	public String insertExOrder(ExternalOrderInputParam param) throws Exception;
 	public ExternalOrderInputParam selectOrderInfo(long orderNo) throws Exception;
+	// 결제전 취소
+	public void payPreCancel(PaymentReqParam param)throws Exception;
 	public ExternalOrderInputParam payRequest(PaymentReqParam param)throws Exception;
 	public void payCancel(ExternalOrderInputParam param)throws Exception;
 	// 노티서버 호출 파라미터 버퍼로 스트링으로 보내는 예전방식

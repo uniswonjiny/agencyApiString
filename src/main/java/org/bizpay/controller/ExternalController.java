@@ -68,6 +68,17 @@ public class ExternalController {
 		return new ResponseEntity<>(info,HttpStatus.OK);
 	}
 	
+	@ApiOperation(value="QR연동결제전고객취소" , notes = "QR연동결제 결제전 고객이 취소를 선택한 경우")
+	@RequestMapping(value = "qrPayCancel", method = RequestMethod.POST)
+	public ResponseEntity<String> qrPayCancel(
+			@RequestBody PaymentReqParam param) throws Exception{
+		log.info("qr코드 결제전 취소요청");
+		System.out.println(param.toString());
+		service.payPreCancel(param);
+		
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+	
 	@ApiOperation(value="QR결제정보확인" , notes = "QR연동결제정보")
 	@RequestMapping(value = "qrOrder/{orderNo}", method = RequestMethod.GET)
 	public ResponseEntity<ExternalOrderInputParam> qrOrderInfo(@PathVariable("orderNo") long orderNo) throws Exception{
@@ -105,15 +116,7 @@ public class ExternalController {
 			return new ResponseEntity<>(rm , HttpStatus.GATEWAY_TIMEOUT); 
 		}
 		boolean flag = true;
-		
-		// 유니코아 도 취소 처리해주어야 한다. 결제전 취소 요청일 경우 취소처리해야한다.
-		//연속 리프레시나 이미 결제취소 요청한 정보가 들어 왔을때 유니코아 외부결제 정보만 취소안된 상태일 경우 심각한 문제를 야기한다
-		if("9000".equals(  param.getStatus() )) {
-			service.exOrderCancel(param);		
-			// 내부 관리 코드문제로 다시설정
-			param.setStatus("9000");
-			
-		}
+
 		int count = 0;
 		while (count<4) {
 			flag = service.notiCallHttp(param);
@@ -143,8 +146,7 @@ public class ExternalController {
 	@ApiOperation(value="결제정보확인" , notes = "결제정보확인")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="memberId" ,value = "유니코아판매자아이디", required=true , dataType="string"  ),
-		@ApiImplicitParam(name="orderNo" ,value = "상대방의 주문번호", required=true , dataType="string"  ),
-		@ApiImplicitParam(name="orderName" ,value = "주문이름", required=false , dataType="string"  )
+		@ApiImplicitParam(name="orderNo" ,value = "상대방의 주문번호", required=true , dataType="string"  )
 	})
 	@RequestMapping(value = "orderInfo", method = RequestMethod.POST)
 	public ResponseEntity<OrderStatusInfo> orderInfo(@RequestBody HashMap<String, Object> param) throws Exception{

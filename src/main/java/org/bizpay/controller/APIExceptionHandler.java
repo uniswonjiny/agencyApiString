@@ -41,13 +41,16 @@ public class APIExceptionHandler {
 		// 결제진행후 에러 였던 경우결제 취소 진행
 		try {
 			//여기서도 에러가 발생하면 방법이 없다.
-			Hashtable xht = ksBean.sendCardCancelMsg(
-					e.getOet().getKSNET_PG_IP(), 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
-				    e.getOet().getKSNET_PG_PORT(),			// -필수- port   9( 5)   *KSNET_PORT(21001)  
-					e.getOet().getPStoreId(), 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
-					e.getOet().getPKeyInType(),						// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
-					e.getOet().getPTransactionNo()						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
-				);
+			if(e.getOet().getPTransactionNo()!=null) {
+				Hashtable xht = ksBean.sendCardCancelMsg(
+						e.getOet().getKSNET_PG_IP(), 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
+					    e.getOet().getKSNET_PG_PORT(),			// -필수- port   9( 5)   *KSNET_PORT(21001)  
+						e.getOet().getPStoreId(), 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
+						e.getOet().getPKeyInType(),						// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
+						e.getOet().getPTransactionNo()						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+					);
+			}
+			
 				
 		} catch (Exception e2) {
 			e2.fillInStackTrace();
@@ -62,7 +65,7 @@ public class APIExceptionHandler {
 			dto.setMessage("이미 취소 처리된 주문");
 		}else 	if( "C002".equals(type) ) {
 			dto.setType("2014");
-			dto.setMessage("결제연동정보오류");
+			dto.setMessage("요청결제정보가 없습니다.");
 		}else 	if( "A001".equals(type) ) {
 			dto.setType("2010");
 			dto.setMessage("주문정보가 없음");
