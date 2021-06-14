@@ -310,12 +310,15 @@ public class ExternalSeviceImpl implements ExternalService {
 				delngParam.setDelngSeCode("CARD_ISSUE");
 				delngParam.setGoodNm(param.getOrderName());
 				delngParam.setDelngPayType(tbMberBasis.get("PAY_TYPE").toString());
+				// 큐알이 아닌경우 나중에!!!!!! 수정필요!!!!!!! 
+				// 이부분이 원래는 사용자결제 형식에서 가져온 부분인데 외부결제가 엮이면서 문제인 지점으로 보임 
+				// 
 				if ("N".equals(tbMberBasis.get("SUGI_CERTIFICATION").toString())) {
-					delngParam.setPaymentDevice("SUGI_NORMAL");
+					delngParam.setPaymentDevice("QR_SUGI_NORMAL");
 				} else if ("Y".equals(tbMberBasis.get("SUGI_CERTIFICATION").toString())) {
-					delngParam.setPaymentDevice("SUGI_CERTIFICATION");
+					delngParam.setPaymentDevice("QR_SUGI_CERTIFICATION");
 				} else
-					delngParam.setPaymentDevice("SUGI_NORMAL");
+					delngParam.setPaymentDevice("QR_SUGI_NORMAL");
 				// 누락데이터 주의
 				delngParam.setToSwiptStatus("TE");
 				float feeRate = Float.valueOf(String.valueOf(tbMberBasis.get("FEE_RATE"))); // 수수료율
