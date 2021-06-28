@@ -86,7 +86,8 @@
 		    update_dt,
 		    RCIPT_NO , 
 		    CONFM_NO,
-		    sysdate - UPDATE_DT as cancelPeriod
+		    pay_type,
+		    to_char(sysdate , 'YYYYMMDD') -to_char( UPDATE_DT, 'YYYYMMDD') as cancelPeriod
 		FROM
 		    tb_ex_order aa
             inner join mber_basis bb
@@ -387,4 +388,13 @@
 			MBER_ID = #{mberId}
 			AND EXORDER_NO = #{exorderNo}
 	</select>
+	
+	<!--  trAtm 입금내역확인  -->
+	 <select id="selectReqAmt" parameterType="HashMap" resultType = "Integer">
+	 	SELECT REQ_AMT FROM tbl_atm WHERE mber_code = #{mberCode} AND sales_rcipt_no = #{rciptNo}
+	 </select>
+	 <!--  trAtm 출금내역확인  -->
+	 <select id="selectTblAmt" parameterType="HashMap" resultType = "HashMap">
+	 SELECT mber_code , inout_no  FROM tbl_atm WHERE req_result = 'READY' and inout_code = 'OT' and mber_code = #{mberCode}
+	 </select>
   </mapper>

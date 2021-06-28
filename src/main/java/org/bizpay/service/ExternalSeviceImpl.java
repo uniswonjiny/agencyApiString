@@ -429,10 +429,36 @@ public class ExternalSeviceImpl implements ExternalService {
 			throw new ExorderException("0000");
 		}
 
-		// 결제이후 1일 이상 지났는지 확인
-		if (exInfo.getCancelPeriod() > 1) {
-			throw new ExorderException("C008");
+		// 사용자별 취소가능 판단
+		// 익일 당일 
+		if ( "T".equals( exInfo.getPayType()) && exInfo.getCancelPeriod() !=0) {
+			throw new ExorderException("C009");
 		}
+		// 5일 거래
+		if ( "T".equals( exInfo.getPayType()) && exInfo.getCancelPeriod() >=4) {
+			throw new ExorderException("C010");
+		}
+		// 바로정산 --  카드만 있다 카드이외의 결제 방식 생기면 수정해야하는곳 #수정 
+		// 결제 금액이 있을것으로 가정
+		/*
+		if ( "B".equals( exInfo.getPayType()) && exInfo.getCancelPeriod() >=4) {
+			// 입금내역확인
+			map1.clear();
+			map1.put("mberCode", exInfo.getMberCode());
+			map1.put("rciptNo", exInfo.getRciptNo());
+			Integer tempReqAmt = exMapper.selectReqAmt(map1);
+			if(tempReqAmt==null ) throw new ExorderException("C011");
+			if(tempReqAmt ==0) throw new ExorderException("C011");
+			map1.clear();
+			// 출금내역확인
+			
+			
+			
+			throw new ExorderException("C011");
+			
+		}
+		*/
+		
 
 		// 2. 유니코아 주문 정보 확인
 		DelngParam dParam = new DelngParam();

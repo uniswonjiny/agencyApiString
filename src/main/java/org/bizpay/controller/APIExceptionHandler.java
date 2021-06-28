@@ -91,6 +91,26 @@ public class APIExceptionHandler {
 			dto.setType("2014");
 			dto.setMessage("취소불가 주문");
 		}
+		else 	if( "C009".equals(type) ) {
+			dto.setType("2014");
+			dto.setMessage("익일입금, 당일입금 - 거래 사용자인 경우, 당일 결제건에서 대해서만 취소가 가능합니다.");
+		}
+		else 	if( "C010".equals(type) ) {
+			dto.setType("2014");
+			dto.setMessage("5일입금 거래 사용자의 경우.결제후 4일까지만 취소가 가능합니다");
+		}
+		else 	if( "C011".equals(type) ) {
+			dto.setType("2014");
+			dto.setMessage("결제정보에 오류가 있습니다.\\n관리자에게 문의하세요.");
+		}
+		else 	if( "C012".equals(type) ) {
+			dto.setType("2014");
+			dto.setMessage("결제대행사의 잔액이 부족하여 취소가 불가합니다");
+		}
+		else 	if( "C013".equals(type) ) {
+			dto.setType("2014");
+			dto.setMessage("출금 정지된 결제대행사는 취소가 불가합니다.\\n(고객센터:1600-0174)");
+		}
 		else 	if( "9999".equals(type) ) {
 			dto.setType("9999");
 			dto.setMessage("시스템 오류");

@@ -1,5 +1,6 @@
 package org.bizpay.mapper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.bizpay.common.domain.DelngAdiParam;
@@ -49,6 +50,10 @@ public interface ExternalMapper {
 	public int updateDelng(DelngParam param) throws Exception;
 	// 외부 연동 결제정보 조회
 	public OrderStatusInfo selectExorderInfo(HashMap<String, Object> param)throws Exception;
+	// 입금내역확인
+	public Integer selectReqAmt(HashMap<String, Object> param)throws Exception;
+	// 출금내역확인
+	public ArrayList<HashMap<String, Object> > selectTblAmt(HashMap<String, Object> param)throws Exception;
 
 	
 }

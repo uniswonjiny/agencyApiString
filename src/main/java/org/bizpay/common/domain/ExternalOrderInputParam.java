@@ -30,7 +30,8 @@ public class ExternalOrderInputParam {
 	private String bigo; // 사유등의 내용추가
 	private String email;
 	private String mobileNum;
-	private float cancelPeriod;// 결제이후 시간 디비 기준으로 한다.
+	private String payType;
+	private float cancelPeriod;// 결제이후 -- 시간이 아니라 날짜 기준이다. 5.6 이려면 6 으로 계산한다.
 	private int installment;// 할부가능개월
 	
 }
