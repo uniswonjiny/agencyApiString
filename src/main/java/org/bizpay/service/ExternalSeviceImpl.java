@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -36,6 +37,9 @@ import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
+import org.bizpay.domain.link.DestInfo;
+import org.bizpay.domain.link.PayMethodInfo;
+import org.bizpay.domain.link.SmsLink;
 import org.bizpay.exception.ExorderException;
 import org.bizpay.exception.SqlErrorException;
 import org.bizpay.mapper.AccountMapper;
@@ -264,15 +268,24 @@ public class ExternalSeviceImpl implements ExternalService {
 			// 카드번호 세팅 *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM])
 			param.setPTrackII(param.getCardNo() + "=" + param.getExpiration());
 
-			ht = ksBean.sendCardMsg(KSNET_PG_IP, KSNET_PG_PORT, storeId,
+			ht = ksBean.sendCardMsg(
+					KSNET_PG_IP, 
+					KSNET_PG_PORT, 
+					storeId,
 					// "2999199999", // 테스트이후 해제함
 					param.getKsnetRcipt(), // 주문번호
-					"", param.getPidNum(), param.getEmail(), param.getOrderName(), // 상품명
+					"", 
+					param.getPidNum(), 
+					param.getEmail(), 
+					param.getOrderName(), // 상품명
 					param.getPhoneNumber(), // 핸드폰번호
 					"K", // pKeyInType X(12) KEY-IN유형(K:직접입력,S:리더기사용입력)
 					"1", // pInterestType X( 1) *일반/무이자구분 1:일반 2:무이자
 					param.getPTrackII(), // -필수- pTrackII X(40) *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM])
-					param.getInstallment(), Long.toString(param.getAmount()), param.getPasswd(), param.getCardPNo());
+					param.getInstallment(), 
+					Long.toString(param.getAmount()), 
+					param.getPasswd(), 
+					param.getCardPNo());
 
 			// 카드결제 성공판단
 			if (ht == null) {
@@ -406,8 +419,6 @@ public class ExternalSeviceImpl implements ExternalService {
 
 		} catch (Exception e) {
 			oet.setMessage("9999");
-			System.out.println("*********************");
-			System.out.println(oet.toString());
 			throw new ExorderException(oet);
 		}
 
@@ -740,6 +751,128 @@ public class ExternalSeviceImpl implements ExternalService {
 		ep.setStatus(param.getStatus());
 		exMapper.updateExOrder(ep);
 		
+	}
+
+	@Override
+	public SmsLink selectSmsLinkInfo(long id) throws Exception {
+		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(id);
+		if(smsLinkInfo==null) {
+			throw new ExorderException("SMS01");
+		}
+		// 핸드폰번호 복호화
+		if(smsLinkInfo.getMberMobile() !=null && smsLinkInfo.getMberMobile().trim().length() > 0 ) {
+			smsLinkInfo.setMberMobile(cUtil.decrypt(smsLinkInfo.getMberMobile()));			
+		}
+		
+		// 판매상품정보 보정
+		String nameList = smsLinkInfo.getItName();
+		String countList = smsLinkInfo.getItCount();
+		String priceList =smsLinkInfo.getItPrice();
+		String infoList = smsLinkInfo.getItAddInfo();
+		String urlList = smsLinkInfo.getItDetailUrl();
+		if(nameList == null || nameList.trim().length() <1) {
+			throw new ExorderException("SMS02");
+		}
+		if(countList == null || countList.trim().length() <1) {
+			throw new ExorderException("SMS02");
+		}
+		if(priceList == null || priceList.trim().length() <1) {
+			throw new ExorderException("SMS02");
+		}
+		ArrayList<String> arrNameList = new ArrayList<String>();
+		for (String item : nameList.split("#")) {
+			arrNameList.add(item);
+		}
+		if(arrNameList.size() !=  smsLinkInfo.getItTotalCnt()) {
+			throw new ExorderException("SMS03");
+		}
+		smsLinkInfo.setNameList(arrNameList);
+		
+		ArrayList<String> arrCountList = new ArrayList<String>();
+		for (String item : countList.split("#")) {
+			arrCountList.add(item);
+		}
+		if(arrCountList.size() !=  smsLinkInfo.getItTotalCnt()) {
+			throw new ExorderException("SMS03");
+		}
+		smsLinkInfo.setCountList(arrCountList);
+		
+		ArrayList<String> arrPriceList = new ArrayList<String>();
+		for (String item : priceList.split("#")) {
+			arrPriceList.add(item);
+		}
+		if(arrPriceList.size() !=  smsLinkInfo.getItTotalCnt()) {
+			throw new ExorderException("SMS03");
+		}
+		
+		// 판매자판매 가능유무 한도등을 미리 검사한다.
+		// 판매금액 제한 사전검사
+		LimitInfo limiInfo = acMapper.limitInfo(smsLinkInfo.getMberCode());
+		// 1회 제한 금액오류
+		if (limiInfo.getLimitOne() < Long.valueOf( smsLinkInfo.getItTotalAmt() )) {
+			throw new ExorderException("L001");
+		}
+		// 1일 제한 금액
+		if (limiInfo.getLimitDay() < (Long.valueOf(smsLinkInfo.getItTotalAmt()) + limiInfo.getSumDay())) {
+			throw new ExorderException("L002");
+		}
+		// 1달 제한 금액
+		if (limiInfo.getLimitMonth() < (Long.valueOf(smsLinkInfo.getItTotalAmt() ) + limiInfo.getSumMonth())) {
+			throw new ExorderException("L003");
+		}
+		// 1년 제한 금액
+		if (limiInfo.getLimitYear() < (Long.valueOf(smsLinkInfo.getItTotalAmt() ) + limiInfo.getSumYear())) {
+			throw new ExorderException("L004");
+		}
+
+		smsLinkInfo.setPriceList(arrPriceList);
+		ArrayList<String> arrInfoList = new ArrayList<String>();
+		for (String item : infoList.split("#")) {
+			arrInfoList.add(item);
+		}
+		smsLinkInfo.setInfoList(arrInfoList);
+		ArrayList<String> arrUrlList = new ArrayList<String>();
+		if(urlList!=null) {
+			for (String item : urlList.split("#")) {
+				arrUrlList.add(item);
+			}
+			smsLinkInfo.setUrlList(arrUrlList);
+		}
+		return smsLinkInfo;
+	}
+
+	@Override
+	@Transactional
+	public SmsLink Payment(SmsLink sellInfo, DestInfo desInfo , PayMethodInfo payInfo) throws Exception {	
+		// 결제 전 검사진행
+		//결제전 결제금액확인
+		LimitInfo limiInfo = acMapper.limitInfo(sellInfo.getMberCode());
+		// 1회 제한 금액오류
+		if (limiInfo.getLimitOne() < Long.valueOf( sellInfo.getItTotalAmt() )) {
+			throw new ExorderException("L001");
+		}
+		// 1일 제한 금액
+		if (limiInfo.getLimitDay() < (Long.valueOf(sellInfo.getItTotalAmt()) + limiInfo.getSumDay())) {
+			throw new ExorderException("L002");
+		}
+		// 1달 제한 금액
+		if (limiInfo.getLimitMonth() < (Long.valueOf(sellInfo.getItTotalAmt() ) + limiInfo.getSumMonth())) {
+			throw new ExorderException("L003");
+		}
+		// 1년 제한 금액
+		if (limiInfo.getLimitYear() < (Long.valueOf(sellInfo.getItTotalAmt() ) + limiInfo.getSumYear())) {
+			throw new ExorderException("L004");
+		}
+		
+		// 동일카드체크
+		
+		
+		// 영수증번호 생성
+		// 1. 상태 업데이트 - mber_sms_link 
+		
+		
+		
+		return null;
 	}
 
 }

@@ -397,4 +397,27 @@
 	 <select id="selectTblAmt" parameterType="HashMap" resultType = "HashMap">
 	 SELECT mber_code , inout_no  FROM tbl_atm WHERE req_result = 'READY' and inout_code = 'OT' and mber_code = #{mberCode}
 	 </select>
+	 
+	 <!-- sms 결제요청최초 정보 조회  -->
+	 <select id="selectSmsLinkInfo" resultType="SmsLink">
+	 	SELECT 
+		  	msl.MBER_CODE ,
+		  	mb.MBER_NAME ,
+		  	mb.MBER_MOBILE ,
+		  	msl.IT_NAME ,
+		  	msl.IT_TOTAL_AMT ,
+		  	msl.IT_TOTAL_CNT ,
+		  	msl.SMSLINK_MEMO ,
+		  	msl.IT_PRICE ,
+		  	msl.IT_COUNT ,
+		  	msl.IT_DETAIL_URL ,
+		  	msl.IT_ADD_INFO ,
+			mb.INSTALLMENT_MONTHS
+		  FROM mber_sms_link  msl
+		  INNER JOIN MBER_BASIS mb
+		  ON msl.MBER_CODE  = mb.MBER_CODE 
+		  WHERE sms_link_id = #{val}
+	 </select>
+	 
+	 
   </mapper>

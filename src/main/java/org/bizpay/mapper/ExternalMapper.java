@@ -8,6 +8,7 @@ import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
+import org.bizpay.domain.link.SmsLink;
 
 public interface ExternalMapper {
 	public int insertExOrder(ExternalOrderInputParam param) throws Exception;
@@ -54,6 +55,10 @@ public interface ExternalMapper {
 	public Integer selectReqAmt(HashMap<String, Object> param)throws Exception;
 	// 출금내역확인
 	public ArrayList<HashMap<String, Object> > selectTblAmt(HashMap<String, Object> param)throws Exception;
+	// sms 최초 결제요청 정보 가져오기
+	public SmsLink selectSmsLinkInfo(long id) throws Exception;
+	
+	
 
 	
 }

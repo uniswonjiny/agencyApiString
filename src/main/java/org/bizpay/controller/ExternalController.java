@@ -15,6 +15,9 @@ import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.SmsUtil;
 import org.bizpay.domain.ReturnMsg;
+import org.bizpay.domain.link.DestInfo;
+import org.bizpay.domain.link.PayMethodInfo;
+import org.bizpay.domain.link.SmsLink;
 import org.bizpay.service.ExternalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -157,4 +160,31 @@ public class ExternalController {
 		
 		return new ResponseEntity<>(service.exOrderInfo(param) , HttpStatus.OK); 
 	}
+	
+	// sms 결제정보
+	@ApiOperation(value="SMS 결제전정보확인" , notes = "SMS 링크로 발송된 결제정보를 확인한다.")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="slid" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
+	})
+	@RequestMapping(value = "smspay/{slid}", method = RequestMethod.GET)
+	public ResponseEntity<SmsLink> orderInfo(@PathVariable("slid") long slid) throws Exception{
+		
+		return new ResponseEntity<>(service.selectSmsLinkInfo(slid) , HttpStatus.OK); 
+	}
+	
+	// sms 결제 진행 -- 결제 정보 보낸거 그대로 받아서 쓰자
+	@RequestMapping(value = "smspay", method = RequestMethod.POST)
+	public ResponseEntity<String> smspay(@RequestBody HashMap<String, Object> param) throws Exception{
+		// 결제요청 정보 획득
+		SmsLink sellInfo = (SmsLink) param.get("sellInfo");
+		// 배송지 정보 획득
+		DestInfo destInfo = (DestInfo) param.get("destInfo");
+		// 카드등 결제 정보 획득
+		PayMethodInfo payInfo =  (PayMethodInfo)param.get("payInfo");
+		
+		return new ResponseEntity<>("ok" , HttpStatus.OK); 
+	}
+	
+	
+	
 }

@@ -2,6 +2,7 @@ package org.bizpay;
 
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -46,15 +47,23 @@ public class PTest {
 	
 	@Test
 	void mainTest() throws Exception {
-		Hashtable xht = ksBean.sendCardCancelMsg(
-				KSNET_PG_IP, 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
-				KSNET_PG_PORT,			// -필수- port   9( 5)   *KSNET_PORT(21001)  
-				"2552500002", 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
-				"K", 							// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
-				"178270066440"						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
-			);
+		String nameList = "상품1#상품2#상품3";
+		ArrayList<String> arrNameList = new ArrayList<String>();
+	for (String item : nameList.split("#")) {
+		arrNameList.add(item);
+		}
+		System.out.println(arrNameList.toString());
 		
-		System.out.println(xht.toString());
+		
+//		Hashtable xht = ksBean.sendCardCancelMsg(
+//				KSNET_PG_IP, 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
+//				KSNET_PG_PORT,			// -필수- port   9( 5)   *KSNET_PORT(21001)  
+//				"2552500002", 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
+//				"K", 							// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
+//				"178270066440"						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+//			);
+//		
+//		System.out.println(xht.toString());
 //		ExternalOrderInputParam param = new ExternalOrderInputParam();
 //		
 //		//smsUtil.sendShortSms("01039977736", "noti 서버오류"+"\n주문번호 : A4123875157845487\n주문영:피시방A세트포인트구매", "큐알거래");

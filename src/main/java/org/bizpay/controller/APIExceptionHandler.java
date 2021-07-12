@@ -123,6 +123,32 @@ public class APIExceptionHandler {
 			dto.setType("9002");
 			dto.setMessage("요청항목 누락");
 		}
+		else if( "9002".equals(type) ) {
+			dto.setType("9002");
+			dto.setMessage("요청항목 누락");
+		}
+		// smspay 에서 사용하는 부분
+		else if( "SMS01".equals(type) ) {
+			dto.setMessage("결제 상품정보가 없습니다.");
+		}
+		else if( "SMS02".equals(type) ) {
+			dto.setMessage("상품정보에 문제가 있습니다.");
+		}
+		else if( "SMS03".equals(type) ) { // 상품정보 항목에 부정확한 갯수로 입력된 경우 제목 3개 가격2개 이런경우
+			dto.setMessage("상품정보가 부정확합니다.");
+		}
+		else if( "L001".equals(type) ) { 
+			dto.setMessage(" 1회 결제금액 제한");
+		}
+		else if( "L002".equals(type) ) { 
+			dto.setMessage(" 1일 결제금액 제한");
+		}
+		else if( "L003".equals(type) ) {
+			dto.setMessage("1달 결제금액 제한");
+		}
+		else if( "L004".equals(type) ) {
+			dto.setMessage("1년 결제금액 제한");
+		}
 		else {
 			dto.setType("9999");
 			dto.setMessage("시스템오류. 담당자에게 연락해 주세요");
