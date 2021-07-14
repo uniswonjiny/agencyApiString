@@ -412,7 +412,8 @@
 		  	msl.IT_COUNT ,
 		  	msl.IT_DETAIL_URL ,
 		  	msl.IT_ADD_INFO ,
-			mb.INSTALLMENT_MONTHS
+			mb.INSTALLMENT_MONTHS,
+			mb.SUGI_CERTIFICATION
 		  FROM mber_sms_link  msl
 		  INNER JOIN MBER_BASIS mb
 		  ON msl.MBER_CODE  = mb.MBER_CODE 

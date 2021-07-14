@@ -531,4 +531,32 @@
 	WHERE
 		aa.MBER_CODE = #{val}
   	</select>
+  	
+  	<!-- 동일 카드 결제 확인용  -->
+  	<select id="sameCardList" resultType="String" parameterType="SameCardList">
+  		SELECT 
+			b.CARD_NO 
+		FROM delng a, DELNG_CREDT b 
+		WHERE a.mber_code = b.MBER_CODE 
+		AND a.mber_code= #{mberCode} 
+		AND a.rcipt_no = b.rcipt_no 
+		AND a.rcipt_no like #{dateStr}||'%'  
+		AND (a.SPLPC + a.vat) =  #{price}
+		ORDER BY  a.rcipt_no desc
+  	</select>
+  	
+  	  	<!-- 영수증처리 
+  	!!!!!주의!!!!!
+  		프로시저 실행 리턴값을 받기위해서 공식문서에는 프로시저 실행에 관련된부분이 사실상 없고
+  		구글 네이버 검색되는 내용또한 모두 틀린내용이다. 
+  		select 가 아닌 insert update 로 실행해야 하고 out 부분을 정확하게 아래 처럼 기술해야 하고 
+  		input 파라미터에 값이 자동으로 주입된다.
+  	 -->
+  	<insert id="propRciptNO" parameterType="hashmap" statementType="CALLABLE">
+  			{call PROC_RCIPT_CAL(
+  				#{mber_code},
+  				#{rcipt_no , mode=OUT,jdbcType=VARCHAR, javaType=string}
+  			)}
+  	</insert>
+  	
   </mapper>

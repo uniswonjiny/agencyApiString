@@ -1,5 +1,6 @@
 package org.bizpay.domain.link;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import lombok.Getter;
@@ -9,7 +10,11 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class SmsLink {
+public class SmsLink  implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4098993817775461760L;
 	private String mberCode;
   	private String mberName;
   	private String mberMobile;
@@ -22,6 +27,7 @@ public class SmsLink {
   	private String itPrice;
   	private String itCount;
   	private int installmentMonths;
+  	private String sugiCertification;
   	private ArrayList<String> nameList;
   	private ArrayList<String> countList;
   	private ArrayList<String> priceList;

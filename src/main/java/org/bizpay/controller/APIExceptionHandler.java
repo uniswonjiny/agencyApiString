@@ -63,63 +63,63 @@ public class APIExceptionHandler {
 		if( "C001".equals(type) ) {
 			dto.setType("2011");
 			dto.setMessage("이미 취소 처리된 주문");
-		}else 	if( "C002".equals(type) ) {
+		}else if( "C002".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("요청결제정보가 없습니다.");
-		}else 	if( "A001".equals(type) ) {
+		}else if( "A001".equals(type) ) {
 			dto.setType("2010");
 			dto.setMessage("주문정보가 없음");
-		}else 	if( "C001".equals(type) ) {
+		}else if( "C001".equals(type) ) {
 			dto.setType("2011");
 			dto.setMessage("이미 취소된 주문");
-		}else 	if( "0000".equals(type) ) {
+		}else if( "0000".equals(type) ) {
 			dto.setType("2010");
 			dto.setMessage("결제완료전 주문");
-		}else 	if( "A010".equals(type) ) {
+		}else if( "A010".equals(type) ) {
 			dto.setType("2010");
 			dto.setMessage("주문정보가 없음");
-		}else 	if( "A011".equals(type) ) {
+		}else if( "A011".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("주문정보가 없음");
-		}else 	if( "C007".equals(type) ) {
+		}else if( "C007".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("카드시스템처리 오류");
-		}else 	if( "C007".equals(type) ) {
+		}else if( "C007".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("결제취소오류");
-		}else 	if( "C008".equals(type) ) {
+		}else if( "C008".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("취소불가 주문");
 		}
-		else 	if( "C009".equals(type) ) {
+		else if( "C009".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("익일입금, 당일입금 - 거래 사용자인 경우, 당일 결제건에서 대해서만 취소가 가능합니다.");
 		}
-		else 	if( "C010".equals(type) ) {
+		else if( "C010".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("5일입금 거래 사용자의 경우.결제후 4일까지만 취소가 가능합니다");
 		}
-		else 	if( "C011".equals(type) ) {
+		else if( "C011".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("결제정보에 오류가 있습니다.\\n관리자에게 문의하세요.");
 		}
-		else 	if( "C012".equals(type) ) {
+		else if( "C012".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("결제대행사의 잔액이 부족하여 취소가 불가합니다");
 		}
-		else 	if( "C013".equals(type) ) {
+		else if( "C013".equals(type) ) {
 			dto.setType("2014");
 			dto.setMessage("출금 정지된 결제대행사는 취소가 불가합니다.\\n(고객센터:1600-0174)");
 		}
-		else 	if( "9999".equals(type) ) {
+		else if( "9999".equals(type) ) {
 			dto.setType("9999");
 			dto.setMessage("시스템 오류");
 		}
-		else 	if( "1010".equals(type) ) {
+		else if( "1010".equals(type) ) {
 			dto.setType("1010");
 			dto.setMessage("가맹점 거래불가");
 		}
-		else 	if( "9002".equals(type) ) {
+		else if( "9002".equals(type) ) {
 			dto.setType("9002");
 			dto.setMessage("요청항목 누락");
 		}
@@ -148,6 +148,15 @@ public class APIExceptionHandler {
 		}
 		else if( "L004".equals(type) ) {
 			dto.setMessage("1년 결제금액 제한");
+		}
+		else if( "L005".equals(type) ) {
+			dto.setMessage("카드번호오류");
+		}
+		else if( "L006".equals(type) ) {
+			dto.setMessage("당일 동일카드 동일 금액 중복결제");
+		}
+		else if( "L007".equals(type) ) {
+			dto.setMessage("결제 상점 설정 오류");
 		}
 		else {
 			dto.setType("9999");

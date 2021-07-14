@@ -13,6 +13,7 @@ import org.bizpay.domain.AccountInOut;
 import org.bizpay.domain.AccountTrans;
 import org.bizpay.domain.BankAcntTrans;
 import org.bizpay.domain.LimitInfo;
+import org.bizpay.domain.common.SameCardList;
 
 // 계좌관련부분정리
 public interface AccountMapper {
@@ -32,4 +33,8 @@ public interface AccountMapper {
 	public int acnutTransfrYn(List<AcnutTransfrYnParam> param) throws Exception;
 	// 제한 금액 조회
 	public LimitInfo limitInfo(String mberCode) throws Exception;
+	// 동일 카드 결제 확인용
+	public List<String> sameCardList(SameCardList param) throws Exception;
+	// 영수증번호 획득및 영수증번호 자동 업데이트동시 실행
+	public void propRciptNO(HashMap<String, Object> pam)throws Exception;
 }

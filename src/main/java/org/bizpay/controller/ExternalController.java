@@ -18,6 +18,7 @@ import org.bizpay.domain.ReturnMsg;
 import org.bizpay.domain.link.DestInfo;
 import org.bizpay.domain.link.PayMethodInfo;
 import org.bizpay.domain.link.SmsLink;
+import org.bizpay.domain.link.SmsPayRequest;
 import org.bizpay.service.ExternalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
+import springfox.documentation.spring.web.json.Json;
 
 @Log
 @RestController
@@ -173,15 +175,27 @@ public class ExternalController {
 	}
 	
 	// sms 결제 진행 -- 결제 정보 보낸거 그대로 받아서 쓰자
+	// SmsLink - sms 결제 요청정보 그대로 다시 받아서 쓴다
+	// DestInfo - 배송지 정보
+	// PayMethodInfo - 카드등 결제정보
 	@RequestMapping(value = "smspay", method = RequestMethod.POST)
-	public ResponseEntity<String> smspay(@RequestBody HashMap<String, Object> param) throws Exception{
-		// 결제요청 정보 획득
-		SmsLink sellInfo = (SmsLink) param.get("sellInfo");
-		// 배송지 정보 획득
-		DestInfo destInfo = (DestInfo) param.get("destInfo");
-		// 카드등 결제 정보 획득
-		PayMethodInfo payInfo =  (PayMethodInfo)param.get("payInfo");
+	public ResponseEntity<String> smspay(@RequestBody SmsPayRequest param) throws Exception{
 		
+		log.info(param.toString());
+		
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		// 배송지 정보 획득
+		//DestInfo destInfo = (DestInfo) param.get  ("destInfo");
+		// 카드등 결제 정보 획득
+		//PayMethodInfo payInfo =  (PayMethodInfo)param.get("payInfo");
 		return new ResponseEntity<>("ok" , HttpStatus.OK); 
 	}
 	

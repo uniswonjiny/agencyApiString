@@ -8,6 +8,7 @@ import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.domain.link.DestInfo;
 import org.bizpay.domain.link.PayMethodInfo;
 import org.bizpay.domain.link.SmsLink;
+import org.bizpay.domain.link.SmsPayRequest;
 
 public interface ExternalService {
 	public String insertExOrder(ExternalOrderInputParam param) throws Exception;
@@ -28,7 +29,7 @@ public interface ExternalService {
 	public SmsLink selectSmsLinkInfo(long id) throws Exception;
 	// sms 결제하기
 	//
-	public SmsLink Payment(SmsLink sellInfo , DestInfo destInfo , PayMethodInfo payInfo ) throws Exception;
+	public SmsLink Payment(SmsPayRequest param) throws Exception;
 	
 	
 	// 결제취소

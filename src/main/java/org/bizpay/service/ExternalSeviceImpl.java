@@ -8,7 +8,9 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -19,10 +21,9 @@ import org.apache.http.util.EntityUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
+
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicResponseHandler;
 
 import org.bizpay.common.domain.DelngAdiParam;
 import org.bizpay.common.domain.DelngCredtParam;
@@ -33,15 +34,14 @@ import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.CertUtil;
 import org.bizpay.common.util.EncryptUtil;
 import org.bizpay.common.util.KSPayMsgBean;
+import org.bizpay.common.util.PayCkeck;
 import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
-import org.bizpay.domain.link.DestInfo;
-import org.bizpay.domain.link.PayMethodInfo;
 import org.bizpay.domain.link.SmsLink;
+import org.bizpay.domain.link.SmsPayRequest;
 import org.bizpay.exception.ExorderException;
-import org.bizpay.exception.SqlErrorException;
 import org.bizpay.mapper.AccountMapper;
 import org.bizpay.mapper.AuthMapper;
 import org.bizpay.mapper.ExternalMapper;
@@ -49,7 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.gson.Gson;
 
 import lombok.extern.java.Log;
 
@@ -79,6 +78,9 @@ public class ExternalSeviceImpl implements ExternalService {
 
 	@Autowired
 	EncryptUtil eUtil;
+	
+	@Autowired
+	PayCkeck pCheck;
 
 	// 운영배포시 주석 해제있음
 	@Override
@@ -720,6 +722,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		OrderStatusInfo info= exMapper.selectExorderInfo(param);
 		// status 가 내부에서 사용하는것 대외용이 다르므로 변경해준다
 		if (info == null) {
+			info = new OrderStatusInfo();
 			info.setStatus("3010");
 		}
 		if( info.getStatus() !=null && "AAAA".equals(info.getStatus())) {
@@ -843,31 +846,95 @@ public class ExternalSeviceImpl implements ExternalService {
 
 	@Override
 	@Transactional
-	public SmsLink Payment(SmsLink sellInfo, DestInfo desInfo , PayMethodInfo payInfo) throws Exception {	
-		// 결제 전 검사진행
-		//결제전 결제금액확인
-		LimitInfo limiInfo = acMapper.limitInfo(sellInfo.getMberCode());
-		// 1회 제한 금액오류
-		if (limiInfo.getLimitOne() < Long.valueOf( sellInfo.getItTotalAmt() )) {
+	public SmsLink Payment(SmsPayRequest param) throws Exception {	
+		// 1 .결제 전 검사진행
+		// 1.1결제전 결제금액확인
+		
+		String temp = pCheck.limitPayCheck(param.getMberCode(), param.getTotAmt());
+		if ( "one".equals(temp)) {
 			throw new ExorderException("L001");
-		}
-		// 1일 제한 금액
-		if (limiInfo.getLimitDay() < (Long.valueOf(sellInfo.getItTotalAmt()) + limiInfo.getSumDay())) {
+		}else if("day".equals(temp)) {
 			throw new ExorderException("L002");
-		}
-		// 1달 제한 금액
-		if (limiInfo.getLimitMonth() < (Long.valueOf(sellInfo.getItTotalAmt() ) + limiInfo.getSumMonth())) {
+		}else if("month".equals(temp)) {
 			throw new ExorderException("L003");
-		}
-		// 1년 제한 금액
-		if (limiInfo.getLimitYear() < (Long.valueOf(sellInfo.getItTotalAmt() ) + limiInfo.getSumYear())) {
+		}else if("year".equals(temp)) {
 			throw new ExorderException("L004");
 		}
 		
-		// 동일카드체크
 		
+//		LimitInfo limiInfo = acMapper.limitInfo(param.getMberCode());
+//		// 1회 제한 금액오류
+//		if (limiInfo.getLimitOne() < param.getTotAmt() ) {
+//			throw new ExorderException("L001");
+//		}
+//		// 1일 제한 금액
+//		if (limiInfo.getLimitDay() < param.getTotAmt() + limiInfo.getSumDay()) {
+//			throw new ExorderException("L002");
+//		}
+//		// 1달 제한 금액
+//		if (limiInfo.getLimitMonth() < param.getTotAmt() + limiInfo.getSumMonth()) {
+//			throw new ExorderException("L003");
+//		}
+//		// 1년 제한 금액
+//		if (limiInfo.getLimitYear() < param.getTotAmt() + limiInfo.getSumYear()) {
+//			throw new ExorderException("L004");
+//		}
+//		
+		// 1.2 동일카드체크
+		// 카드 뒷자리 4개
+		if(param.getCardNumber().length()!=14) throw new ExorderException("L005");
+		
+		// 스와이프칩인경우 - sms 결제를 단말기기로 결제?
+		String temp1 = param.getCardNumber().substring(10, 14);
+		if("****".equals(temp1 )) throw new ExorderException("L005");
+		
+		
+		// 동일 금액 동일 카드 번호(뒷네자리) 로 검사한다.
+		if(pCheck.sameCarkCkeck(temp1, param.getMberCode(), param.getTotAmt())) {
+			throw new ExorderException("L006");
+		}
+		// 상점아이디
+		String storeId = pCheck.getStoreId(Integer.parseInt(param.getMberCode()));
+		if("".equals(storeId)) throw new ExorderException("L007");
 		
 		// 영수증번호 생성
+		String rciptNo = pCheck.getRciptNo(param.getMberCode());
+		if("".equals(rciptNo)) throw new ExorderException("C011");
+		
+		// 사용자 정보 획득
+		MemberInfo mberInfo = auMapper.userInfo2(param.getMberCode());
+		// 기존 상품정보 획득
+		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(param.getSlid());
+		
+		// 주문번호 생성
+		String orderNo = mberInfo.getUsid() + "_" + rciptNo;
+		
+		// 결제시도 
+		Hashtable<String, Object> ht = new Hashtable<>();
+		// TrackII 
+		String trackII = param.getCardNumber()+ "=" + param.getExpiration();
+				
+		ht = ksBean.sendCardMsg(
+				KSNET_PG_IP, 
+				KSNET_PG_PORT, 
+				storeId,
+				// "2999199999", // 테스트이후 해제함
+				orderNo, // 주문번호
+				"", 
+				param.getPidNum(), 
+				param.getCardEmail(), // 이메일 결제한 사람이 판매한 사람이???
+				smsLinkInfo.getItName(), // 상품명
+				param.getCardMobilePhone(), // 핸드폰번호
+				"K", // pKeyInType X(12) KEY-IN유형(K:직접입력,S:리더기사용입력)
+				"1", // pInterestType X( 1) *일반/무이자구분 1:일반 2:무이자
+				trackII, // -필수- pTrackII X(40) *TrackII(KEY-IN방식의 경우 카드번호=유효기간[YYMM])
+				String.valueOf(param.getInstallment()), 
+				String.valueOf(param.getTotAmt()), 
+				param.getPasswd(), 
+				param.getPidNum());
+		
+		if(ht==null)throw new ExorderException("C011");
+		
 		// 1. 상태 업데이트 - mber_sms_link 
 		
 		
