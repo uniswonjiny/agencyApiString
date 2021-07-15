@@ -15,7 +15,7 @@ import lombok.ToString;
 public class SmsPayRequest {
 	private long slid;
 	private String mberCode; // 판매자 멤버코드
-	private String recipient; // 배송바등사람
+	private String recipient; // 배송받는사람
 	private String mobilePhone; // 배송받을사람 핸드폰번호
 	private String addrInfo; // 배송지 주소 
 	private String addrDetailInfo; //배송지 상세주소
@@ -27,9 +27,10 @@ public class SmsPayRequest {
 	private long totAmt; // 전체 결제금액
 	private String cardNumber;// 결제요청 카드번호
 	private String expiration; // 카드 유효기간
-	private int installment; // 할부기간
+	private String installment; // 할부기간
 	private String pidNum; // 생년 법인번호 - 수기 인증인경우
 	private String passwd; // 카드번호 - 수기 인증인경우
 	private String cardEmail; // 카드결제한 사람 이메일
 	private String cardMobilePhone;// 카드결제한 사람 핸드폰 번호
+	private String finshYn;// PAY_FINISH_YN;
 }

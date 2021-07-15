@@ -158,6 +158,12 @@ public class APIExceptionHandler {
 		else if( "L007".equals(type) ) {
 			dto.setMessage("결제 상점 설정 오류");
 		}
+		else if( "L008".equals(type) ) {
+			dto.setMessage("결제후 시스템 처리 문제발생<br/>고객센터에 문의 하세요(1600-0174) ");
+		}
+		else if( "L009".equals(type) ) {
+			dto.setMessage("거래가 제한된 판매자 입니다.<br/>고객센터에 문의 하세요(1600-0174) ");
+		}
 		else {
 			dto.setType("9999");
 			dto.setMessage("시스템오류. 담당자에게 연락해 주세요");

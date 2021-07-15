@@ -5,8 +5,7 @@ import java.util.HashMap;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
-import org.bizpay.domain.link.DestInfo;
-import org.bizpay.domain.link.PayMethodInfo;
+import org.bizpay.domain.link.LinkSms;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
 
@@ -28,8 +27,11 @@ public interface ExternalService {
 	// sms 결제정보 조회및 데이터 규격변경
 	public SmsLink selectSmsLinkInfo(long id) throws Exception;
 	// sms 결제하기
-	//
-	public SmsLink Payment(SmsPayRequest param) throws Exception;
+	public void Payment(SmsPayRequest param) throws Exception;
+	// link상품조회
+	public LinkSms selectLinkSmsInfo(long id) throws Exception;
+	
+	// 전체 상품조회
 	
 	
 	// 결제취소

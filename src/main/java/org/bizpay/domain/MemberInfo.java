@@ -14,7 +14,7 @@ public class MemberInfo {
     private String password;
     private String idntfcNm;
     private String cmpnm;
-    
+    private String mberCodeSn;
     private String authorCode;
     private String recommendBizCode;
     private String useAt;

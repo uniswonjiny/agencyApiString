@@ -1,22 +1,21 @@
 package org.bizpay.controller;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.URL;
+//import java.io.BufferedReader;
+//import java.io.BufferedWriter;
+//import java.io.InputStreamReader;
+//import java.io.OutputStream;
+//import java.io.OutputStreamWriter;
+//import java.net.URL;
 import java.util.HashMap;
 
-import javax.net.ssl.HttpsURLConnection;
+//import javax.net.ssl.HttpsURLConnection;
 
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.SmsUtil;
 import org.bizpay.domain.ReturnMsg;
-import org.bizpay.domain.link.DestInfo;
-import org.bizpay.domain.link.PayMethodInfo;
+import org.bizpay.domain.link.LinkSms;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
 import org.bizpay.service.ExternalService;
@@ -35,7 +34,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
-import springfox.documentation.spring.web.json.Json;
 
 @Log
 @RestController
@@ -175,30 +173,21 @@ public class ExternalController {
 	}
 	
 	// sms 결제 진행 -- 결제 정보 보낸거 그대로 받아서 쓰자
-	// SmsLink - sms 결제 요청정보 그대로 다시 받아서 쓴다
-	// DestInfo - 배송지 정보
-	// PayMethodInfo - 카드등 결제정보
 	@RequestMapping(value = "smspay", method = RequestMethod.POST)
 	public ResponseEntity<String> smspay(@RequestBody SmsPayRequest param) throws Exception{
-		
 		log.info(param.toString());
-		
-	
-		
-		
-		
-		
-		
-		
-		
-		
-		// 배송지 정보 획득
-		//DestInfo destInfo = (DestInfo) param.get  ("destInfo");
-		// 카드등 결제 정보 획득
-		//PayMethodInfo payInfo =  (PayMethodInfo)param.get("payInfo");
+		service.Payment(param);
 		return new ResponseEntity<>("ok" , HttpStatus.OK); 
 	}
 	
-	
+	// linksms 상품정보
+	@ApiOperation(value="LINK결제전정보확인" , notes = "LINK결제 링크로 발송된 결제정보를 확인한다.")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="ilid" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
+	})
+	@RequestMapping(value = "linkpay/{ilid}", method = RequestMethod.GET)
+	public ResponseEntity<LinkSms> linkpay(@PathVariable("ilid") long id) throws Exception{
+		return new ResponseEntity<>(service.selectLinkSmsInfo(id) , HttpStatus.OK); 
+	}
 	
 }

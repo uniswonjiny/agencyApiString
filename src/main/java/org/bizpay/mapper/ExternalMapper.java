@@ -8,7 +8,9 @@ import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
+import org.bizpay.domain.link.LinkSms;
 import org.bizpay.domain.link.SmsLink;
+import org.bizpay.domain.link.SmsPayRequest;
 
 public interface ExternalMapper {
 	public int insertExOrder(ExternalOrderInputParam param) throws Exception;
@@ -44,9 +46,7 @@ public interface ExternalMapper {
 	// 신용카드 결제정보확인
 	public DelngCredtParam selectDelngCredt(HashMap<String, Object> map) throws Exception;
 	// 부가정보 확인
-	public DelngAdiParam selectDelngAdi(DelngAdiParam param)throws Exception;
-	
-	
+	public DelngAdiParam selectDelngAdi(DelngAdiParam param)throws Exception;	
 	// 결제정보 수정
 	public int updateDelng(DelngParam param) throws Exception;
 	// 외부 연동 결제정보 조회
@@ -57,8 +57,9 @@ public interface ExternalMapper {
 	public ArrayList<HashMap<String, Object> > selectTblAmt(HashMap<String, Object> param)throws Exception;
 	// sms 최초 결제요청 정보 가져오기
 	public SmsLink selectSmsLinkInfo(long id) throws Exception;
-	
-	
-
+	// sms 결제 정보 수정
+	public int updateSmsLink(SmsPayRequest param) throws Exception;
+	// LinkSms 결제 정보 - 상품이 특정된경오
+	public LinkSms selectLinksmsInfo (long id) throws Exception;
 	
 }

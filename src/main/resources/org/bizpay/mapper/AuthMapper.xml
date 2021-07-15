@@ -44,12 +44,21 @@
 		        when '32' then 'DISTRIBUTOR'
 		        when '33' then 'AGENCY'
 		        else 'DEALER'
-		        end as grade
+		        end as grade,
+			max(md.MBER_CODE_SN) mber_code_sn
 		FROM
 		    mber aa
 		inner join biz bb
         on aa.biz_code = bb.biz_code
 		where aa.mber_code = #{val}
+		GROUP  BY aa.mber_code,
+			aa.biz_code,
+		    aa.usid,
+		    aa.use_at,
+		    aa.idntfc_nm,
+		    aa.author_code,
+		    aa.recommend_biz_code,
+		    bb.dealer_kind
 	</select>
 	
 	<!-- 사업자정보 -->

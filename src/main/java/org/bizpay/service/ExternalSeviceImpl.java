@@ -39,6 +39,7 @@ import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
+import org.bizpay.domain.link.LinkSms;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
 import org.bizpay.exception.ExorderException;
@@ -122,8 +123,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		String temp = param.getMberId() + param.getOrderName() + param.getOrderPrice() + param.getExorderNo()
 				+ "unicore";
 		String hashkey = eUtil.encryptSHA256(temp);
-		log.info(param.getPkHash());
-		log.info(hashkey);
+
 		if (!hashkey.equals(param.getPkHash())) {
 			return "A009";
 		}
@@ -846,10 +846,21 @@ public class ExternalSeviceImpl implements ExternalService {
 
 	@Override
 	@Transactional
-	public SmsLink Payment(SmsPayRequest param) throws Exception {	
+	public void Payment(SmsPayRequest param) throws Exception {	
+		HashMap<String, Object> tbMberBasis = exMapper.selectTbMberBasis1( Integer.parseInt(param.getMberCode() ));
+		OrderErrorType oet = new OrderErrorType(); // 카드현금등 실결제가 발행한후 오류시 강제  결제 취소 핸들러를 위한 에러타입
+		
+		// 판매자의 상태를 점검한다.
+		if(tbMberBasis==null) {
+			throw new ExorderException("L009");
+		}
+		
+		if("N".equals(tbMberBasis.get("use_at"))) {
+			throw new ExorderException("L009");
+		}
+		
 		// 1 .결제 전 검사진행
 		// 1.1결제전 결제금액확인
-		
 		String temp = pCheck.limitPayCheck(param.getMberCode(), param.getTotAmt());
 		if ( "one".equals(temp)) {
 			throw new ExorderException("L001");
@@ -861,25 +872,6 @@ public class ExternalSeviceImpl implements ExternalService {
 			throw new ExorderException("L004");
 		}
 		
-		
-//		LimitInfo limiInfo = acMapper.limitInfo(param.getMberCode());
-//		// 1회 제한 금액오류
-//		if (limiInfo.getLimitOne() < param.getTotAmt() ) {
-//			throw new ExorderException("L001");
-//		}
-//		// 1일 제한 금액
-//		if (limiInfo.getLimitDay() < param.getTotAmt() + limiInfo.getSumDay()) {
-//			throw new ExorderException("L002");
-//		}
-//		// 1달 제한 금액
-//		if (limiInfo.getLimitMonth() < param.getTotAmt() + limiInfo.getSumMonth()) {
-//			throw new ExorderException("L003");
-//		}
-//		// 1년 제한 금액
-//		if (limiInfo.getLimitYear() < param.getTotAmt() + limiInfo.getSumYear()) {
-//			throw new ExorderException("L004");
-//		}
-//		
 		// 1.2 동일카드체크
 		// 카드 뒷자리 4개
 		if(param.getCardNumber().length()!=14) throw new ExorderException("L005");
@@ -894,7 +886,8 @@ public class ExternalSeviceImpl implements ExternalService {
 			throw new ExorderException("L006");
 		}
 		// 상점아이디
-		String storeId = pCheck.getStoreId(Integer.parseInt(param.getMberCode()));
+		String storeId =pCheck.getStoreId(tbMberBasis.get("PAY_TYPE").toString());
+		
 		if("".equals(storeId)) throw new ExorderException("L007");
 		
 		// 영수증번호 생성
@@ -913,12 +906,20 @@ public class ExternalSeviceImpl implements ExternalService {
 		Hashtable<String, Object> ht = new Hashtable<>();
 		// TrackII 
 		String trackII = param.getCardNumber()+ "=" + param.getExpiration();
+		// 기존 소스 부분 에서 중간 결제단계 
+		param.setPayType("SMSPAY"); // sms 와  link 를 분리한다.
+		// 주문정보가 없으면 결제 페이지를 호출 안되고
+		// 결제 페이지에서 없는 주문시 오류 처리 대신 하므로 불필요
+		// 주석처리함
+		//param.setStep(4);
+//		if(exMapper.updateSmsLink(param) <1 ) {
+//			throw new ExorderException("A001"); // 수정이 안된건 주문이 없다
+//		}
 				
 		ht = ksBean.sendCardMsg(
 				KSNET_PG_IP, 
 				KSNET_PG_PORT, 
 				storeId,
-				// "2999199999", // 테스트이후 해제함
 				orderNo, // 주문번호
 				"", 
 				param.getPidNum(), 
@@ -937,9 +938,113 @@ public class ExternalSeviceImpl implements ExternalService {
 		
 		// 1. 상태 업데이트 - mber_sms_link 
 		
-		
-		
-		return null;
+		param.setFinshYn("Y"); // 스텝이 있는데 ??
+		param.setStep(6);
+		if(exMapper.updateSmsLink(param) <1 ) {
+			throw new ExorderException("L008"); // 결제오류처리 
+		}
+		// 결제 정보 입력 -- 결제 정보 쪽이 더 중요한 정보 이므로 이걸 후속 로직으로 옮긴다.
+		DecimalFormat df = new DecimalFormat("##0");
+		// 성공이후 // 데이터 저장
+		String ox = sUtil.getString(ht.get("Status")).trim();
+		oet.setPTransactionNo(sUtil.getString(ht.get("TransactionNo")).trim());
+		// 에러시 결제 취소 되는지 확인용
+//		if("O".equals(ox)) {
+//			throw new Exception();
+//		}
+		if ("O".equals(ox)) {
+			DelngParam delngParam = new DelngParam();
+			// delng
+			delngParam.setMberCode( Integer.parseInt(param.getMberCode())  );
+			delngParam.setMberCodeSn(mberInfo.getMberCodeSn());
+			delngParam.setRciptNo( String.valueOf(param.getRciptNo()));
+			delngParam.setAppCode("LINK");
+			delngParam.setConfmNo(sUtil.getString(ht.get("AuthNo")).trim());
+			delngParam.setConfmDt(sUtil.getString(ht.get("TradeDate")).trim());
+			delngParam.setConfmTime(sUtil.getString(ht.get("TradeTime")).trim());
+			delngParam.setSplpc(param.getTotAmt() );
+			delngParam.setVat(0); // 부가세 0 일단은
+			delngParam.setTrgetMberCode(Integer.parseInt(param.getMberCode()) );
+			delngParam.setTrgetMberCodeSn(mberInfo.getMberCodeSn());
+			delngParam.setTrgetRciptNo(String.valueOf(param.getRciptNo()));
+			delngParam.setApprovalConfirm("O");
+			delngParam.setDeviceSeqNo(1);
+			delngParam.setVanCode("PG_KSNET");
+			delngParam.setStoreId(storeId);
+			delngParam.setDelngSeCode("CARD_ISSUE"); //현재는 카드결제만 있다.
+			delngParam.setGoodNm(smsLinkInfo.getItName());
+			delngParam.setDelngPayType( tbMberBasis.get("PAY_TYPE").toString() );
+			delngParam.setPaymentDevice("1");
+			
+			// 누락데이터 주의
+			delngParam.setToSwiptStatus("TE");
+			float feeRate = Float.valueOf(String.valueOf(tbMberBasis.get("FEE_RATE"))); // 수수료율
+			long sellAmt = param.getTotAmt(); // 판매금액 부가세는 0으로
+			delngParam.setMberFee(feeRate); // 멤버 수수료 율
+
+			double mberFeeAmt = 0;
+			mberFeeAmt = sellAmt * feeRate / 100;
+			delngParam.setMberFeeAmt(df.format(mberFeeAmt)); // 멤버 수수료 금액
+
+			// 정산금액
+			delngParam.setPayAmt(df.format(sellAmt - sUtil.getDouble(df.format(mberFeeAmt))));
+			
+			if (exMapper.insertDelng(delngParam) < 1) {
+				log.info("DELNG 입력에러");
+				log.info( delngParam.toString() );
+				throw new ExorderException("L008"); // 매출처리 실패. 관리자에게 문의바랍니다
+			}
+			
+			// DELNG_CREDT 입력
+			DelngCredtParam delngCredtParam = new DelngCredtParam();
+			delngCredtParam.setMberCode(Integer.parseInt(param.getMberCode()) );
+			delngCredtParam.setMberCodeSn(mberInfo.getMberCodeSn());
+			delngCredtParam.setRciptNo(String.valueOf(param.getRciptNo()));
+			delngCredtParam.setCardNo(cUtil.encrypt(sUtil.MarkForCreditCard(param.getCardNumber())));
+			delngCredtParam.setInstlmtMonth(  param.getInstallment() );
+			delngCredtParam.setIssueCmpnyCode(sUtil.getString(ht.get("IssCode")).trim());
+			delngCredtParam.setIssueCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
+			delngCredtParam.setPuchasCmpnyCode(sUtil.getString(ht.get("AquCode")).trim());
+			delngCredtParam.setPuchasCmpnyNm(sUtil.getString(ht.get("Message1")).trim());
+			delngCredtParam.setCdrsrNo(sUtil.getString(ht.get("MerchantNo")).trim());
+			delngCredtParam.setCardType("D"); // 확인해보자!
+			delngCredtParam.setPgVanGb("P"); // 확인해보자!
+			delngCredtParam.setTId(storeId);
+			delngCredtParam.setPgRciptNo(sUtil.getString(ht.get("TransactionNo")).trim());//// pg거래번호
+			delngCredtParam.setGbInfo("U"); // 유니코아
+			delngCredtParam.setVanPgComp("PG_KSNET");
+
+			if (exMapper.insertDelngCredt(delngCredtParam) < 1) {
+				log.info("DELNG_CREDT 입력에러");
+				log.info( delngCredtParam.toString() );
+				throw new ExorderException("L008"); // 매출처리 실패. 관리자에게 문의바랍니다
+			}
+			
+			// delng_adi
+			DelngAdiParam delngAdiParam = new DelngAdiParam();
+			delngAdiParam.setMberCode(Integer.parseInt(param.getMberCode()));
+			delngAdiParam.setMberCodeSn(mberInfo.getMberCodeSn());
+			delngAdiParam.setRciptNo(String.valueOf(param.getRciptNo()));
+			delngAdiParam.setAdiCode("PURCHSR_MBTLNUM");
+			// 핸드폰 번호 처리 ?? 이전 개발분에는 값을 받는곳이 없음 그냥 빈값 넣음
+			// 구매자가 핸드폰 번호입력한경우 핸드폰번호 입력함
+			if (param.getCardMobilePhone() != null && !"".equals(param.getCardMobilePhone())) {
+				delngAdiParam.setAdiCn(cUtil.encrypt(param.getCardMobilePhone()));
+			} else {
+				delngAdiParam.setAdiCn("722211d65862dac6ab81668e0544b4e3"); // 핸드폰번호 없으면 공백값이다. 공백값을 입력해야 하는 이유????
+			}
+			if (exMapper.insertDelngAdi(delngAdiParam) < 1) {
+				log.info("delng_adi 입력에러");
+				log.info( delngAdiParam.toString() );
+				throw new ExorderException("L008"); // 매출 정보등록 실패. 관리자에게 문의바랍니다
+			}
+		}
 	}
 
+	@Override
+	public LinkSms selectLinkSmsInfo(long id) throws Exception {
+		LinkSms info = exMapper.selectLinksmsInfo(id); 
+		info.setMberMobile(cUtil.decrypt( info.getMberMobile()  ) );
+		return info;
+	}
 }

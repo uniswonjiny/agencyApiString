@@ -39,4 +39,5 @@ public class DelngParam {
     private String storeId;
     private String toSwiptStatus;// 스와이프 송수신 상태
     private String paymentDevice; // 결제사용기계
+    private String smsLinkYn;//smslink 결제 인경우 ???  appcode 값이랑 ??? 향후 다시 만들때 뺀다.
 }

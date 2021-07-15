@@ -124,4 +124,18 @@ public class PayCkeck {
 		return storeId;
 	}
 	
+	public String getStoreId(String payType) {
+		String storeId = "";
+		if ("T".equals(payType)) {
+			storeId = "2041700460";
+		} else if ("B".equals(payType)) {
+			storeId = "2002307048";
+		} else if ("N".equals(payType)) {
+			storeId = "2552500002";
+		} else {
+			storeId = "";// 결제처리 실패. 결제 상점설정에 문제가 있습니다
+		}		
+		return storeId;
+	}
+	
 }

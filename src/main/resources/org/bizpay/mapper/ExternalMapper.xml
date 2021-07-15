@@ -129,16 +129,19 @@
   	</select>
   	<!--tbMberBasis 필요정보만 추출  -->
   	<select id="selectTbMberBasis1" resultType="HashMap" >
-  	SELECT
+  		SELECT
 		    INDUTY_ID,
 		    PAY_TYPE,
 		    MBER_NAME,   
 		    COMPANY_NAME,
 		    FEE_RATE,
-		    SUGI_CERTIFICATION
+		    SUGI_CERTIFICATION,
+		    m.use_at
 		FROM
-		    mber_basis
-		 where MBER_CODE = #{val}
+		    mber_basis mb
+		INNER JOIN MBER m 
+		    ON mb.MBER_CODE = m.MBER_CODE 
+		 where mb.MBER_CODE = #{val}
   	</select>
 
 	<insert id="insertDelng" parameterType="DelngParam">
@@ -420,5 +423,37 @@
 		  WHERE sms_link_id = #{val}
 	 </select>
 	 
+	 <!--  MBER_SMS_LINK 업데이트-->
+	 <update id="updateSmsLink" parameterType="SmsPayRequest">
+	 UPDATE
+		MBER_SMS_LINK
+		SET
+			ADDR_NAME  = #{recipient},
+			CUST_ADDR = #{addrInfo} || #{addrDetailInfo} || '우편번호:' ||#{zonecode}, -- 행후 테이블 분리개발 필요 이렇게 만들면 개발하기 힘들고 디비에 부하 걸린다. 배송지 확인해도 상품입력등에서 계속 부하발생
+			STEP = #{step},
+			RCIPT_NO = #{rciptNo},
+			PAY_FINISH_YN = #{finshYn}
+			LINK_TYPE = #{payType}
+		WHERE
+			MBER_CODE = #{mberCode}
+			AND SMS_LINK_ID = #{slid}
+	 </update>
+	 
+	 <!-- link 결제 상품이존재하는 경우  -->
+	 <select id="selectLinksmsInfo" resultType="LinkSms">
+		select 
+			mil.it_name ,
+			mb.MBER_NAME ,
+		  	mb.MBER_MOBILE ,
+			mil.it_add_info ,
+			mil.it_price ,
+			mil.mber_code ,
+			mil.it_id ,
+			mil.it_detail_url 
+		from mber_item_link mil 
+		INNER JOIN MBER_BASIS mb
+		ON mil.MBER_CODE  = mb.MBER_CODE 
+		where IT_LINK_ID = #{val}
+	 </select>
 	 
   </mapper>
