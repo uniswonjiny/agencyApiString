@@ -30,9 +30,7 @@ public interface ExternalService {
 	public void Payment(SmsPayRequest param) throws Exception;
 	// link상품조회
 	public LinkSms selectLinkSmsInfo(long id) throws Exception;
-	
 	// 전체 상품조회
-	
 	
 	// 결제취소
 	
