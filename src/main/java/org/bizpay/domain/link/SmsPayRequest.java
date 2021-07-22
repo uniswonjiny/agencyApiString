@@ -13,7 +13,8 @@ import lombok.ToString;
 @Setter
 @ToString
 public class SmsPayRequest {
-	private long slid;
+	private long id;
+	private String itId; // 상품코드
 	private String mberCode; // 판매자 멤버코드
 	private String recipient; // 배송받는사람
 	private String mobilePhone; // 배송받을사람 핸드폰번호
@@ -24,6 +25,7 @@ public class SmsPayRequest {
 	private int step; // 기존것에 있던 단계 ! 나중에 처리하자
 	private long rciptNo; // 비즈페이사용 영수증번호
 	private String payType; // 결제타입
+	private int count;// 전체 주문갯수 link에서 사용한다.
 	private long totAmt; // 전체 결제금액
 	private String cardNumber;// 결제요청 카드번호
 	private String expiration; // 카드 유효기간
@@ -33,4 +35,7 @@ public class SmsPayRequest {
 	private String cardEmail; // 카드결제한 사람 이메일
 	private String cardMobilePhone;// 카드결제한 사람 핸드폰 번호
 	private String finshYn;// PAY_FINISH_YN;
+  	private int installmentMonths;
+  	private String sugiCertification;
+  	private String payFinishYn;
 }

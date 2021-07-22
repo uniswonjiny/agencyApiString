@@ -342,14 +342,14 @@
 	
 	<update id="updateDelng" >
 		UPDATE delng
-			SET card_delete_yn = #{cardDeleteYn}
+			SET 
+			card_delete_yn = #{cardDeleteYn}
 			,cancel_mber =  #{mberId}
 			,cancel_dt = #{cancelDt}
-			
 			,bigo = #{bigo}
 		WHERE mber_code=#{mberCode}
-		AND mber_code_sn=#{mberCodeSn}
-		AND rcipt_no=#{rciptNo}
+			AND mber_code_sn=#{mberCodeSn}
+			AND rcipt_no=#{rciptNo}
 	</update>
 	
 <!-- 	<select id="">
@@ -416,7 +416,8 @@
 		  	msl.IT_DETAIL_URL ,
 		  	msl.IT_ADD_INFO ,
 			mb.INSTALLMENT_MONTHS,
-			mb.SUGI_CERTIFICATION
+			mb.SUGI_CERTIFICATION,
+			msl.PAY_FINISH_YN
 		  FROM mber_sms_link  msl
 		  INNER JOIN MBER_BASIS mb
 		  ON msl.MBER_CODE  = mb.MBER_CODE 
@@ -428,15 +429,15 @@
 	 UPDATE
 		MBER_SMS_LINK
 		SET
-			ADDR_NAME  = #{recipient},
-			CUST_ADDR = #{addrInfo} || #{addrDetailInfo} || '우편번호:' ||#{zonecode}, -- 행후 테이블 분리개발 필요 이렇게 만들면 개발하기 힘들고 디비에 부하 걸린다. 배송지 확인해도 상품입력등에서 계속 부하발생
-			STEP = #{step},
-			RCIPT_NO = #{rciptNo},
-			PAY_FINISH_YN = #{finshYn}
-			LINK_TYPE = #{payType}
+			ADDR_NAME  = #{recipient}
+			,CUST_ADDR = #{addrInfo} || #{addrDetailInfo} || '우편번호:' ||#{zonecode} -- 행후 테이블 분리개발 필요 이렇게 만들면 개발하기 힘들고 디비에 부하 걸린다. 배송지 확인해도 상품입력등에서 계속 부하발생
+			,STEP = #{step}
+			,RCIPT_NO = #{rciptNo}
+			,PAY_FINISH_YN = #{finshYn}
+			,LINK_TYPE = #{payType}
 		WHERE
 			MBER_CODE = #{mberCode}
-			AND SMS_LINK_ID = #{slid}
+			AND SMS_LINK_ID = #{id}
 	 </update>
 	 
 	 <!-- link 결제 상품이존재하는 경우  -->
@@ -449,6 +450,8 @@
 			mil.it_price ,
 			mil.mber_code ,
 			mil.it_id ,
+			mb.INSTALLMENT_MONTHS,
+			mb.SUGI_CERTIFICATION,
 			mil.it_detail_url 
 		from mber_item_link mil 
 		INNER JOIN MBER_BASIS mb
@@ -456,4 +459,46 @@
 		where IT_LINK_ID = #{val}
 	 </select>
 	 
+	 <!-- link 결제를 위한 smslink 입력 단순입력 -->
+	 <insert id="insertMberSmsLinkLink" parameterType="SmsInsert">
+		<selectKey resultType="long" keyProperty="smsLinkId" order="BEFORE">
+  			select MBER_SMS_LINK_SEQ.NEXTVAL from dual
+  		</selectKey>
+	 INSERT INTO mber_sms_link (
+		mber_code,
+		it_id,
+		it_name,
+		it_count,
+		it_price,
+		it_detail_url,
+		it_total_cnt,
+		it_total_amt,
+		sms_link_id,
+		send_result,
+		cust_send_dt,
+		reg_dt,
+		step,
+		link_type,
+		it_add_info
+	)
+	VALUES (
+		#{mberCode},
+		#{itId},
+		#{itName}, 
+		#{count}, 
+		#{itPrice}, 
+		#{itDetailUrl}, 
+		#{totalCount}, 
+		#{totalAmt}, 
+		#{smsLinkId},  
+		'CUST CREATE', 
+		 to_char(sysdate , 'YYYYMMDD HH24:MI:SS' ),
+		 SYSDATE, 
+		 '4',
+		#{payType},
+		#{itAddInfo}
+	)
+	 
+	 
+	 </insert>
   </mapper>

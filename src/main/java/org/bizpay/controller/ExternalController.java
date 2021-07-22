@@ -16,6 +16,7 @@ import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.SmsUtil;
 import org.bizpay.domain.ReturnMsg;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
 import org.bizpay.service.ExternalService;
@@ -166,10 +167,10 @@ public class ExternalController {
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="slid" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
 	})
-	@RequestMapping(value = "smspay/{slid}", method = RequestMethod.GET)
-	public ResponseEntity<SmsLink> orderInfo(@PathVariable("slid") long slid) throws Exception{
+	@RequestMapping(value = "smspay/{id}", method = RequestMethod.GET)
+	public ResponseEntity<SmsLink> orderInfo(@PathVariable("id") long id) throws Exception{
 		
-		return new ResponseEntity<>(service.selectSmsLinkInfo(slid) , HttpStatus.OK); 
+		return new ResponseEntity<>(service.selectSmsLinkInfo(id) , HttpStatus.OK); 
 	}
 	
 	// sms 결제 진행 -- 결제 정보 보낸거 그대로 받아서 쓰자
@@ -183,11 +184,24 @@ public class ExternalController {
 	// linksms 상품정보
 	@ApiOperation(value="LINK결제전정보확인" , notes = "LINK결제 링크로 발송된 결제정보를 확인한다.")
 	@ApiImplicitParams({
-		@ApiImplicitParam(name="ilid" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
+		@ApiImplicitParam(name="id" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
 	})
-	@RequestMapping(value = "linkpay/{ilid}", method = RequestMethod.GET)
-	public ResponseEntity<LinkSms> linkpay(@PathVariable("ilid") long id) throws Exception{
+	@RequestMapping(value = "linkpay/{id}", method = RequestMethod.GET)
+	public ResponseEntity<LinkSms> linkpay(@PathVariable("id") long id) throws Exception{
 		return new ResponseEntity<>(service.selectLinkSmsInfo(id) , HttpStatus.OK); 
 	}
+	
+	@RequestMapping(value = "smsInsert", method = RequestMethod.POST)
+	public ResponseEntity<String> smsInsert(  @RequestBody SmsInsert param) throws Exception{
+		service.insertSmsGoods(param);
+		return new ResponseEntity<>( String.valueOf(param.getSmsLinkId()) , HttpStatus.OK); 
+	}
+	
+	// sms 상품 정보 입력 - 링크입력에 관련 되서 입력만 하는것이다 나중에 없에버릴수 있음
+//	@RequestMapping(value = "smsgoods", method = RequestMethod.POST)
+//	public ResponseEntity<SmsLink> smsgoods(  @RequestBody SmsPayRequest param) throws Exception{
+//		
+//		return new ResponseEntity<>(service.selectSmsLinkInfo(id) , HttpStatus.OK); 
+//	}
 	
 }

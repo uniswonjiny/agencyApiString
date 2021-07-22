@@ -23,6 +23,7 @@ public class SmsLink {
   	private String itCount;
   	private int installmentMonths;
   	private String sugiCertification;
+  	private String payFinishYn;
   	private ArrayList<String> nameList;
   	private ArrayList<String> countList;
   	private ArrayList<String> priceList;

@@ -50,6 +50,8 @@
 		    mber aa
 		inner join biz bb
         on aa.biz_code = bb.biz_code
+        INNER JOIN MBER_DETAIL md 
+        ON aa.MBER_CODE  = md.MBER_CODE 
 		where aa.mber_code = #{val}
 		GROUP  BY aa.mber_code,
 			aa.biz_code,

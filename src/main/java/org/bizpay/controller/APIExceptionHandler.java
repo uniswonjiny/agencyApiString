@@ -101,7 +101,7 @@ public class APIExceptionHandler {
 		}
 		else if( "C011".equals(type) ) {
 			dto.setType("2014");
-			dto.setMessage("결제정보에 오류가 있습니다.\\n관리자에게 문의하세요.");
+			dto.setMessage("결제정보에 오류가 있습니다. 관리자에게 문의하세요.");
 		}
 		else if( "C012".equals(type) ) {
 			dto.setType("2014");
@@ -109,7 +109,7 @@ public class APIExceptionHandler {
 		}
 		else if( "C013".equals(type) ) {
 			dto.setType("2014");
-			dto.setMessage("출금 정지된 결제대행사는 취소가 불가합니다.\\n(고객센터:1600-0174)");
+			dto.setMessage("출금 정지된 결제대행사는 취소가 불가합니다. (고객센터:1600-0174)");
 		}
 		else if( "9999".equals(type) ) {
 			dto.setType("9999");
@@ -137,6 +137,9 @@ public class APIExceptionHandler {
 		else if( "SMS03".equals(type) ) { // 상품정보 항목에 부정확한 갯수로 입력된 경우 제목 3개 가격2개 이런경우
 			dto.setMessage("상품정보가 부정확합니다.");
 		}
+		else if( "SMS04".equals(type) ) {
+			dto.setMessage("이미 결제된 상품입니다.");
+		}
 		else if( "L001".equals(type) ) { 
 			dto.setMessage(" 1회 결제금액 제한");
 		}
@@ -159,10 +162,13 @@ public class APIExceptionHandler {
 			dto.setMessage("결제 상점 설정 오류");
 		}
 		else if( "L008".equals(type) ) {
-			dto.setMessage("결제후 시스템 처리 문제발생<br/>고객센터에 문의 하세요(1600-0174) ");
+			dto.setMessage("결제후 시스템 처리 문제발생 고객센터에 문의 하세요(1600-0174) ");
 		}
 		else if( "L009".equals(type) ) {
-			dto.setMessage("거래가 제한된 판매자 입니다.<br/>고객센터에 문의 하세요(1600-0174) ");
+			dto.setMessage("거래가 제한된 판매자 입니다. 고객센터에 문의 하세요(1600-0174) ");
+		}
+		else if( "S001".equals(type) ) {
+			dto.setMessage("sms 상품정보내역 생성에 문제가 있습니다.  고객센터에 문의 하세요(1600-0174)");
 		}
 		else {
 			dto.setType("9999");

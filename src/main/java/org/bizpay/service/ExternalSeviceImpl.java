@@ -40,6 +40,7 @@ import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
 import org.bizpay.exception.ExorderException;
@@ -762,6 +763,11 @@ public class ExternalSeviceImpl implements ExternalService {
 		if(smsLinkInfo==null) {
 			throw new ExorderException("SMS01");
 		}
+		/*
+		 * if("Y".equals(smsLinkInfo.getPayFinishYn())) { throw new
+		 * ExorderException("SMS04"); }
+		 */
+		
 		// 핸드폰번호 복호화
 		if(smsLinkInfo.getMberMobile() !=null && smsLinkInfo.getMberMobile().trim().length() > 0 ) {
 			smsLinkInfo.setMberMobile(cUtil.decrypt(smsLinkInfo.getMberMobile()));			
@@ -808,26 +814,18 @@ public class ExternalSeviceImpl implements ExternalService {
 			throw new ExorderException("SMS03");
 		}
 		
-		// 판매자판매 가능유무 한도등을 미리 검사한다.
-		// 판매금액 제한 사전검사
-		LimitInfo limiInfo = acMapper.limitInfo(smsLinkInfo.getMberCode());
-		// 1회 제한 금액오류
-		if (limiInfo.getLimitOne() < Long.valueOf( smsLinkInfo.getItTotalAmt() )) {
+		// 주문정보 호출전 결제 가능한 금액인지 사전검사
+		String temp = pCheck.limitPayCheck(smsLinkInfo.getMberCode(), smsLinkInfo.getItTotalAmt() );
+		if ( "one".equals(temp)) {
 			throw new ExorderException("L001");
-		}
-		// 1일 제한 금액
-		if (limiInfo.getLimitDay() < (Long.valueOf(smsLinkInfo.getItTotalAmt()) + limiInfo.getSumDay())) {
+		}else if("day".equals(temp)) {
 			throw new ExorderException("L002");
-		}
-		// 1달 제한 금액
-		if (limiInfo.getLimitMonth() < (Long.valueOf(smsLinkInfo.getItTotalAmt() ) + limiInfo.getSumMonth())) {
+		}else if("month".equals(temp)) {
 			throw new ExorderException("L003");
-		}
-		// 1년 제한 금액
-		if (limiInfo.getLimitYear() < (Long.valueOf(smsLinkInfo.getItTotalAmt() ) + limiInfo.getSumYear())) {
+		}else if("year".equals(temp)) {
 			throw new ExorderException("L004");
 		}
-
+		
 		smsLinkInfo.setPriceList(arrPriceList);
 		ArrayList<String> arrInfoList = new ArrayList<String>();
 		for (String item : infoList.split("#")) {
@@ -874,7 +872,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		
 		// 1.2 동일카드체크
 		// 카드 뒷자리 4개
-		if(param.getCardNumber().length()!=14) throw new ExorderException("L005");
+		if(param.getCardNumber().length()!=16) throw new ExorderException("L005");
 		
 		// 스와이프칩인경우 - sms 결제를 단말기기로 결제?
 		String temp1 = param.getCardNumber().substring(10, 14);
@@ -892,12 +890,13 @@ public class ExternalSeviceImpl implements ExternalService {
 		
 		// 영수증번호 생성
 		String rciptNo = pCheck.getRciptNo(param.getMberCode());
+		param.setRciptNo( Long.valueOf( rciptNo ));
 		if("".equals(rciptNo)) throw new ExorderException("C011");
 		
 		// 사용자 정보 획득
 		MemberInfo mberInfo = auMapper.userInfo2(param.getMberCode());
 		// 기존 상품정보 획득
-		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(param.getSlid());
+		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(param.getId());
 		
 		// 주문번호 생성
 		String orderNo = mberInfo.getUsid() + "_" + rciptNo;
@@ -936,23 +935,22 @@ public class ExternalSeviceImpl implements ExternalService {
 		
 		if(ht==null)throw new ExorderException("C011");
 		
-		// 1. 상태 업데이트 - mber_sms_link 
-		
-		param.setFinshYn("Y"); // 스텝이 있는데 ??
-		param.setStep(6);
-		if(exMapper.updateSmsLink(param) <1 ) {
-			throw new ExorderException("L008"); // 결제오류처리 
-		}
-		// 결제 정보 입력 -- 결제 정보 쪽이 더 중요한 정보 이므로 이걸 후속 로직으로 옮긴다.
-		DecimalFormat df = new DecimalFormat("##0");
 		// 성공이후 // 데이터 저장
 		String ox = sUtil.getString(ht.get("Status")).trim();
 		oet.setPTransactionNo(sUtil.getString(ht.get("TransactionNo")).trim());
-		// 에러시 결제 취소 되는지 확인용
-//		if("O".equals(ox)) {
-//			throw new Exception();
-//		}
+		if ("X".equals(ox)) {
+			throw new ExorderException("C011");
+		}
 		if ("O".equals(ox)) {
+			// 1. 상태 업데이트 - mber_sms_link 
+			param.setFinshYn("Y"); // 스텝이 있는데 ??
+			param.setStep(6);
+			if(exMapper.updateSmsLink(param) <1 ) {
+				throw new ExorderException("L008"); // 결제오류처리 
+			}
+			
+			// 결제 정보 입력 -- 결제 정보 쪽이 더 중요한 정보 이므로 이걸 후속 로직으로 옮긴다.
+			DecimalFormat df = new DecimalFormat("##0");
 			DelngParam delngParam = new DelngParam();
 			// delng
 			delngParam.setMberCode( Integer.parseInt(param.getMberCode())  );
@@ -1044,7 +1042,19 @@ public class ExternalSeviceImpl implements ExternalService {
 	@Override
 	public LinkSms selectLinkSmsInfo(long id) throws Exception {
 		LinkSms info = exMapper.selectLinksmsInfo(id); 
+		if(info==null) {
+			throw new ExorderException("SMS01");
+		}
 		info.setMberMobile(cUtil.decrypt( info.getMberMobile()  ) );
 		return info;
+	}
+
+	@Override
+	public long insertSmsGoods(SmsInsert param) throws Exception {
+		if(exMapper.insertMberSmsLinkLink(param) >0) {
+			return param.getSmsLinkId();
+		}else {
+			throw new ExorderException("S001");
+		}
 	}
 }
