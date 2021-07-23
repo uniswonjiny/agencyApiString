@@ -11,8 +11,8 @@ public class SmsInsert {
 	private String mberCode;
 	private String itId;
 	private String itName;
-	private int count;
-	private int itPrice;
+	private String count;
+	private String itPrice;
 	private String itAddInfo;
 	private String itDetailUrl;
 	private int totalCount;

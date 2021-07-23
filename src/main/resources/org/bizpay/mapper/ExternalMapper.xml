@@ -435,6 +435,7 @@
 			,RCIPT_NO = #{rciptNo}
 			,PAY_FINISH_YN = #{finshYn}
 			,LINK_TYPE = #{payType}
+			,SMSLINK_MEMO = #{message}
 		WHERE
 			MBER_CODE = #{mberCode}
 			AND SMS_LINK_ID = #{id}
@@ -443,20 +444,42 @@
 	 <!-- link 결제 상품이존재하는 경우  -->
 	 <select id="selectLinksmsInfo" resultType="LinkSms">
 		select 
-			mil.it_name ,
-			mb.MBER_NAME ,
-		  	mb.MBER_MOBILE ,
-			mil.it_add_info ,
-			mil.it_price ,
-			mil.mber_code ,
-			mil.it_id ,
+			mil.it_name,
+			mb.MBER_NAME,
+		  	mb.MBER_MOBILE,
+			mil.it_add_info,
+			mil.it_price,
+			mil.mber_code,
+			mil.it_id,
 			mb.INSTALLMENT_MONTHS,
 			mb.SUGI_CERTIFICATION,
-			mil.it_detail_url 
+			mil.it_detail_url,
+			mil.all_item_yn
 		from mber_item_link mil 
 		INNER JOIN MBER_BASIS mb
 		ON mil.MBER_CODE  = mb.MBER_CODE 
 		where IT_LINK_ID = #{val}
+	 </select>
+	 
+	 <!-- link 결제 전체상품인경우  -->
+	 <select id="selectLinksmsList" resultType="LinkSms">
+		select 
+			mil.it_name,
+			mb.MBER_NAME,
+		  	mb.MBER_MOBILE,
+			mil.it_add_info,
+			mil.it_price,
+			mil.mber_code,
+			mil.it_id,
+			mb.INSTALLMENT_MONTHS,
+			mb.SUGI_CERTIFICATION,
+			mil.it_detail_url,
+			'Y' as all_item_yn -- 전체상품주문이므로 화면에서 구분값으로 사용할 예정
+		from mber_item_link mil 
+		INNER JOIN MBER_BASIS mb
+		ON mil.MBER_CODE  = mb.MBER_CODE 
+		where mil.MBER_CODE = #{val}
+		and all_item_yn = 'N'
 	 </select>
 	 
 	 <!-- link 결제를 위한 smslink 입력 단순입력 -->
@@ -501,4 +524,37 @@
 	 
 	 
 	 </insert>
+	 
+	 <!-- sms 카드 결제정보 호가인  -->
+	 <select id="selectSmsCardPayment" resultType="SmsCardPayment" >
+	 SELECT 
+			msl.PAY_FINISH_YN ,
+			msl.IT_TOTAL_AMT,
+			dc.CARD_NO,
+			dc.ISSUE_CMPNY_NM,
+			TO_date(d.CONFM_DT || d.CONFM_TIME , 'YYYYMMDDHH24MISS') AS CONFM_DT,
+			CASE dc.INSTLMT_MONTH
+			WHEN '00' THEN '일시불'
+			ELSE dc.INSTLMT_MONTH || '개월' 
+			END AS INSTLMT_MONTH,
+			d.SPLPC ,
+			d.VAT ,
+			mb.MBER_NAME,
+			mb.BIZ_NUM ,
+			mb.MBER_MOBILE,
+			dc.RCIPT_NO , 
+			d.CONFM_NO	
+		FROM MBER_SMS_LINK msl
+		INNER JOIN DELNG d
+			ON d.MBER_CODE = msl.MBER_CODE 
+			AND msl.RCIPT_NO = d.RCIPT_NO
+		INNER JOIN DELNG_CREDT dc
+			ON d.MBER_CODE = dc.MBER_CODE 
+			AND d.MBER_CODE_SN  = dc.MBER_CODE_SN 
+			AND d.RCIPT_NO = dc.RCIPT_NO 
+		INNER JOIN MBER_BASIS mb 
+			ON mb.MBER_CODE  = msl.MBER_CODE
+		WHERE msl.SMS_LINK_ID = #{val}
+	 </select>
+	 
   </mapper>

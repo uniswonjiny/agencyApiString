@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -40,6 +41,7 @@ import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SmsCardPayment;
 import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
@@ -906,7 +908,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		// TrackII 
 		String trackII = param.getCardNumber()+ "=" + param.getExpiration();
 		// 기존 소스 부분 에서 중간 결제단계 
-		param.setPayType("SMSPAY"); // sms 와  link 를 분리한다.
+		//param.setPayType("SMSPAY"); // sms 와  link 를 분리한다.
 		// 주문정보가 없으면 결제 페이지를 호출 안되고
 		// 결제 페이지에서 없는 주문시 오류 처리 대신 하므로 불필요
 		// 주석처리함
@@ -1040,13 +1042,27 @@ public class ExternalSeviceImpl implements ExternalService {
 	}
 
 	@Override
-	public LinkSms selectLinkSmsInfo(long id) throws Exception {
-		LinkSms info = exMapper.selectLinksmsInfo(id); 
+	public ArrayList<LinkSms> selectLinkSmsInfo(long id) throws Exception {
+		LinkSms info = exMapper.selectLinksmsInfo(id);
 		if(info==null) {
 			throw new ExorderException("SMS01");
 		}
-		info.setMberMobile(cUtil.decrypt( info.getMberMobile()  ) );
-		return info;
+		ArrayList<LinkSms> list = new ArrayList<LinkSms>();
+		// 전체 상품인지 판단
+		if("Y".equals(info.getAllItemYn()) ) {
+			list = exMapper.selectLinksmsList(info.getMberCode());
+			if(list.size()==0) {
+				throw new ExorderException("SMS01");
+			}
+			// 전화번호 복호화
+			for (LinkSms linkSms : list) {
+				linkSms.setMberMobile(cUtil.decrypt( info.getMberMobile()  ) );
+			}
+		}else {
+			info.setMberMobile(cUtil.decrypt( info.getMberMobile()  ) );
+			list.add(info);
+		}
+		return list;
 	}
 
 	@Override
@@ -1056,5 +1072,13 @@ public class ExternalSeviceImpl implements ExternalService {
 		}else {
 			throw new ExorderException("S001");
 		}
+	}
+
+	@Override
+	public SmsCardPayment selectSmsCardPayment(long id) throws Exception {
+		SmsCardPayment info = exMapper.selectSmsCardPayment(id);
+		info.setCardNo(cUtil.decrypt( info.getCardNo( )));
+		info.setMberMobile(cUtil.decrypt( info.getMberMobile() ));
+		return info;
 	}
 }

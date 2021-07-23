@@ -1,5 +1,6 @@
 package org.bizpay.controller;
 
+import java.util.ArrayList;
 //import java.io.BufferedReader;
 //import java.io.BufferedWriter;
 //import java.io.InputStreamReader;
@@ -16,6 +17,7 @@ import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.SmsUtil;
 import org.bizpay.domain.ReturnMsg;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SmsCardPayment;
 import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
@@ -187,14 +189,19 @@ public class ExternalController {
 		@ApiImplicitParam(name="id" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
 	})
 	@RequestMapping(value = "linkpay/{id}", method = RequestMethod.GET)
-	public ResponseEntity<LinkSms> linkpay(@PathVariable("id") long id) throws Exception{
+	public ResponseEntity<ArrayList<LinkSms>> linkpay(@PathVariable("id") long id) throws Exception{
 		return new ResponseEntity<>(service.selectLinkSmsInfo(id) , HttpStatus.OK); 
 	}
 	
 	@RequestMapping(value = "smsInsert", method = RequestMethod.POST)
-	public ResponseEntity<String> smsInsert(  @RequestBody SmsInsert param) throws Exception{
+	public ResponseEntity<String> smsInsert(@RequestBody SmsInsert param) throws Exception{
 		service.insertSmsGoods(param);
 		return new ResponseEntity<>( String.valueOf(param.getSmsLinkId()) , HttpStatus.OK); 
+	}
+	// sms 링크 카드 결제 정보 조히
+	@RequestMapping(value = "smsCardInfo/{id}", method = RequestMethod.GET)
+	public ResponseEntity<SmsCardPayment> smsCardInfo(@PathVariable("id") long id) throws Exception{
+		return new ResponseEntity<>(service.selectSmsCardPayment(id) , HttpStatus.OK); 
 	}
 	
 	// sms 상품 정보 입력 - 링크입력에 관련 되서 입력만 하는것이다 나중에 없에버릴수 있음

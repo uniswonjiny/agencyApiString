@@ -1,11 +1,13 @@
 package org.bizpay.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SmsCardPayment;
 import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
 import org.bizpay.domain.link.SmsPayRequest;
@@ -30,9 +32,11 @@ public interface ExternalService {
 	// sms 결제하기
 	public void Payment(SmsPayRequest param) throws Exception;
 	// link상품조회
-	public LinkSms selectLinkSmsInfo(long id) throws Exception;
+	public ArrayList<LinkSms> selectLinkSmsInfo(long id) throws Exception;
 	// sms 상품 입력
 	public long insertSmsGoods(SmsInsert param) throws Exception;
+	// sms link 카드 결제 정보
+	public SmsCardPayment selectSmsCardPayment(long id) throws Exception;
 	
 	// 전체 상품조회
 	
