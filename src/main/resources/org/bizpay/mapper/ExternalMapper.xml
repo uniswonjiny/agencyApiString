@@ -171,6 +171,12 @@
 	    MBER_FEE,
 	    MBER_FEE_AMT,
 	    PAY_AMT,
+	    <!-- 취소인경우 입력부분  -->
+	    <if test="cardDeleteYn=='Y'">
+	    card_delete_yn,
+	    cancel_mber,
+	    cancel_dt,
+	    </if>
 	    PAYMENT_DEVICE
 	) VALUES (
 		#{mberCode},
@@ -198,6 +204,12 @@
 	    #{mberFee},
 	    #{mberFeeAmt},
 	    #{payAmt},
+	    <!-- 취소인경우 입력부분  -->
+	    <if test="cardDeleteYn=='Y'">
+	    #{cardDeleteYn},
+	    #{mberId}
+	    #{cancelDt}
+	    </if>
 	    #{paymentDevice}
 	)
 	</insert>
