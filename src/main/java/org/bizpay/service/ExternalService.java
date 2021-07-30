@@ -30,13 +30,16 @@ public interface ExternalService {
 	// sms 결제정보 조회및 데이터 규격변경
 	public SmsLink selectSmsLinkInfo(long id) throws Exception;
 	// sms 결제하기
-	public void Payment(SmsPayRequest param) throws Exception;
+	public void payment(SmsPayRequest param) throws Exception;
 	// link상품조회
 	public ArrayList<LinkSms> selectLinkSmsInfo(long id) throws Exception;
 	// sms 상품 입력
 	public long insertSmsGoods(SmsInsert param) throws Exception;
 	// sms link 카드 결제 정보
 	public SmsCardPayment selectSmsCardPayment(long id) throws Exception;
+	// sms 결제완료 정보
+	public HashMap<String, Object> smsPayResultInfo(long id) throws Exception;
+	
 	
 	// 전체 상품조회
 	

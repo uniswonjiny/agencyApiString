@@ -40,7 +40,9 @@ import org.bizpay.common.util.StringUtils;
 import org.bizpay.domain.LimitInfo;
 import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
+import org.bizpay.domain.link.Destination;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SellerInfo;
 import org.bizpay.domain.link.SmsCardPayment;
 import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
@@ -846,7 +848,7 @@ public class ExternalSeviceImpl implements ExternalService {
 
 	@Override
 	@Transactional
-	public void Payment(SmsPayRequest param) throws Exception {	
+	public void payment(SmsPayRequest param) throws Exception {	
 		HashMap<String, Object> tbMberBasis = exMapper.selectTbMberBasis1( Integer.parseInt(param.getMberCode() ));
 		OrderErrorType oet = new OrderErrorType(); // 카드현금등 실결제가 발행한후 오류시 강제  결제 취소 핸들러를 위한 에러타입
 		
@@ -944,9 +946,22 @@ public class ExternalSeviceImpl implements ExternalService {
 			throw new ExorderException("C011");
 		}
 		if ("O".equals(ox)) {
+			// 배송지 정보를 입력한다. -- 앱과 충돌 안나도록 별도로 저장한다. 사유는 추후 사용될 주문정보 + 배송정보 이다
+			Destination des = new Destination();
+			des.setMberCode( Integer.parseInt( param.getMberCode() ));
+			des.setRciptNo(param.getRciptNo());
+			des.setRecipient(param.getRecipient());
+			des.setMobilePhone(param.getMobilePhone());
+			des.setAddress(param.getAddrInfo() + " " + param.getAddrDetailInfo());
+			des.setRecipient( param.getRecipient());
+			des.setMessage(param.getMessage());
+			
+			exMapper.insertDestination(des);
+			
 			// 1. 상태 업데이트 - mber_sms_link 
 			param.setFinshYn("Y"); // 스텝이 있는데 ??
 			param.setStep(6);
+			
 			if(exMapper.updateSmsLink(param) <1 ) {
 				throw new ExorderException("L008"); // 결제오류처리 
 			}
@@ -1080,5 +1095,18 @@ public class ExternalSeviceImpl implements ExternalService {
 		info.setCardNo(cUtil.decrypt( info.getCardNo( )));
 		info.setMberMobile(cUtil.decrypt( info.getMberMobile() ));
 		return info;
+	}
+
+	@Override
+	public HashMap<String, Object> smsPayResultInfo(long id) throws Exception {
+		HashMap<String, Object> map = new HashMap<>();
+		// sms 상품정보/ 판매정보 추출
+		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(id);
+		smsLinkInfo.setMberMobile( cUtil.decrypt(smsLinkInfo.getMberMobile()));
+		map.put("smsInfo", smsLinkInfo);
+		// 배송지 정보
+		Destination destination =  exMapper.selectOrderDestination( Integer.parseInt( smsLinkInfo.getMberCode()) , smsLinkInfo.getRciptNo() );
+		map.put("destination", destination);
+		return map;
 	}
 }

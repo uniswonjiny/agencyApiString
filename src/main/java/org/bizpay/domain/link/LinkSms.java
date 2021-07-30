@@ -18,6 +18,7 @@ public class LinkSms {
 	private String itDetailUrl; 
   	private String mberName;
   	private String mberMobile;
+  	private String companyName;
   	private int installmentMonths;
   	private String sugiCertification;
   	private String allItemYn;

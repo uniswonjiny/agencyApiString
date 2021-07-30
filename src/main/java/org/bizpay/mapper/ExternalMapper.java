@@ -8,7 +8,9 @@ import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
+import org.bizpay.domain.link.Destination;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.SellerInfo;
 import org.bizpay.domain.link.SmsCardPayment;
 import org.bizpay.domain.link.SmsInsert;
 import org.bizpay.domain.link.SmsLink;
@@ -69,5 +71,8 @@ public interface ExternalMapper {
 	public int insertMberSmsLinkLink(SmsInsert param) throws Exception;
 	// sms link 결제 카드 결제 정보조회
 	public SmsCardPayment selectSmsCardPayment(long id) throws Exception;
-	
+	// 배송지 정보 저장
+	public int insertDestination(Destination param) throws Exception;
+	// sms  배송지 정보
+	public Destination selectOrderDestination(int mberCode , int reciptNo ) throws Exception;
 }

@@ -12,10 +12,12 @@ import lombok.ToString;
 public class SmsLink {
 	private String mberCode;
   	private String mberName;
+  	private String companyName;
   	private String mberMobile;
   	private String itName;
   	private String itAddInfo;
   	private String itDetailUrl;
+  	private int rciptNo;
   	private int itTotalAmt ;
   	private int itTotalCnt;
   	private String smslinkMemo;

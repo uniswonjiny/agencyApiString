@@ -172,10 +172,11 @@
 	    MBER_FEE_AMT,
 	    PAY_AMT,
 	    <!-- 취소인경우 입력부분  -->
-	    <if test="cardDeleteYn=='Y'">
-	    card_delete_yn,
-	    cancel_mber,
-	    cancel_dt,
+	   	
+	    <if test='cardDeleteYn=="Y"' >
+	    CARD_DELETE_YN,
+	    CANCEL_MBER,
+	    CANCEL_DT,
 	    </if>
 	    PAYMENT_DEVICE
 	) VALUES (
@@ -205,10 +206,10 @@
 	    #{mberFeeAmt},
 	    #{payAmt},
 	    <!-- 취소인경우 입력부분  -->
-	    <if test="cardDeleteYn=='Y'">
+	   <if test='cardDeleteYn=="Y"' >
 	    #{cardDeleteYn},
-	    #{mberId}
-	    #{cancelDt}
+	    #{mberId},
+	    #{cancelDt},
 	    </if>
 	    #{paymentDevice}
 	)
@@ -418,11 +419,13 @@
 	 	SELECT 
 		  	msl.MBER_CODE ,
 		  	mb.MBER_NAME ,
+		  	mb.company_name ,
 		  	mb.MBER_MOBILE ,
 		  	msl.IT_NAME ,
 		  	msl.IT_TOTAL_AMT ,
 		  	msl.IT_TOTAL_CNT ,
 		  	msl.SMSLINK_MEMO ,
+		  	msl.RCIPT_NO,
 		  	msl.IT_PRICE ,
 		  	msl.IT_COUNT ,
 		  	msl.IT_DETAIL_URL ,
@@ -457,7 +460,8 @@
 	 <select id="selectLinksmsInfo" resultType="LinkSms">
 		select 
 			mil.it_name,
-			mb.MBER_NAME,
+			mb.MBER_NAME ,
+		  	mb.company_name ,
 		  	mb.MBER_MOBILE,
 			mil.it_add_info,
 			mil.it_price,
@@ -477,7 +481,7 @@
 	 <select id="selectLinksmsList" resultType="LinkSms">
 		select 
 			mil.it_name,
-			mb.MBER_NAME,
+			mb.COMPANY_NAME  as MBER_NAME,
 		  	mb.MBER_MOBILE,
 			mil.it_add_info,
 			mil.it_price,
@@ -533,8 +537,6 @@
 		#{payType},
 		#{itAddInfo}
 	)
-	 
-	 
 	 </insert>
 	 
 	 <!-- sms 카드 결제정보 호가인  -->
@@ -567,6 +569,37 @@
 		INNER JOIN MBER_BASIS mb 
 			ON mb.MBER_CODE  = msl.MBER_CODE
 		WHERE msl.SMS_LINK_ID = #{val}
+	 </select>
+	 
+	 <!-- 배송지 정보 저장 -->
+	 <insert id="insertDestination" parameterType="Destination">
+	 	INSERT INTO tb_order_destination (
+		    mber_code,
+		    rcipt_no,
+		    recipient,
+		    mobile_phone,
+		    address,
+		    message
+		) VALUES (
+		    #{mberCode},
+		    #{rciptNo},
+		    #{recipient},
+		    #{mobilePhone},
+		    #{address},
+		    #{message}
+		)
+	 </insert>
+	 
+	 <!-- sms 배송지 정보 -->
+	 <select id="selectOrderDestination"  resultType="Destination" >
+		select 
+			recipient ,
+			mobile_phone , 
+			address , 
+			message
+		from tb_order_destination
+		where mber_code = #{mberCode}
+		and rcipt_no = #{reciptNo}
 	 </select>
 	 
   </mapper>

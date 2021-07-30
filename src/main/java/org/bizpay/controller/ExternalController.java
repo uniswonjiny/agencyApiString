@@ -167,7 +167,7 @@ public class ExternalController {
 	// sms 결제정보
 	@ApiOperation(value="SMS 결제전정보확인" , notes = "SMS 링크로 발송된 결제정보를 확인한다.")
 	@ApiImplicitParams({
-		@ApiImplicitParam(name="slid" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
+		@ApiImplicitParam(name="slid" ,value = "sms 상품정보 키값", required=true , dataType="long"  )
 	})
 	@RequestMapping(value = "smspay/{id}", method = RequestMethod.GET)
 	public ResponseEntity<SmsLink> orderInfo(@PathVariable("id") long id) throws Exception{
@@ -179,7 +179,7 @@ public class ExternalController {
 	@RequestMapping(value = "smspay", method = RequestMethod.POST)
 	public ResponseEntity<String> smspay(@RequestBody SmsPayRequest param) throws Exception{
 		log.info(param.toString());
-		service.Payment(param);
+		service.payment(param);
 		return new ResponseEntity<>("ok" , HttpStatus.OK); 
 	}
 	
@@ -202,6 +202,12 @@ public class ExternalController {
 	@RequestMapping(value = "smsCardInfo/{id}", method = RequestMethod.GET)
 	public ResponseEntity<SmsCardPayment> smsCardInfo(@PathVariable("id") long id) throws Exception{
 		return new ResponseEntity<>(service.selectSmsCardPayment(id) , HttpStatus.OK); 
+	}
+	
+	//sms 링크 결제 완료시 왼료 정보 조회
+	@RequestMapping(value = "smsPayResultInfo/{id}", method = RequestMethod.GET)
+	public ResponseEntity<HashMap<String, Object>> smsPayResultInfo(@PathVariable("id") long id) throws Exception{
+		return new ResponseEntity<>(service.smsPayResultInfo(id) , HttpStatus.OK); 
 	}
 	
 	// sms 상품 정보 입력 - 링크입력에 관련 되서 입력만 하는것이다 나중에 없에버릴수 있음
