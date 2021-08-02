@@ -42,6 +42,8 @@ import org.bizpay.domain.MemberInfo;
 import org.bizpay.domain.OrderErrorType;
 import org.bizpay.domain.link.Destination;
 import org.bizpay.domain.link.LinkSms;
+import org.bizpay.domain.link.PaymentInfo;
+import org.bizpay.domain.link.GoodsInfo;
 import org.bizpay.domain.link.SellerInfo;
 import org.bizpay.domain.link.SmsCardPayment;
 import org.bizpay.domain.link.SmsInsert;
@@ -1099,14 +1101,80 @@ public class ExternalSeviceImpl implements ExternalService {
 
 	@Override
 	public HashMap<String, Object> smsPayResultInfo(long id) throws Exception {
-		HashMap<String, Object> map = new HashMap<>();
-		// sms 상품정보/ 판매정보 추출
 		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(id);
-		smsLinkInfo.setMberMobile( cUtil.decrypt(smsLinkInfo.getMberMobile()));
-		map.put("smsInfo", smsLinkInfo);
+		
+		String tempStr1 = "";
+		String tempStr2 = "";
+		String tempStr3 = "";
+		String tempStr4 = "";
+		String tempStr5 = "";
+		// 상품정보
+		ArrayList<GoodsInfo> goodsList = new ArrayList<GoodsInfo>();
+		// 판매자 정보
+		SellerInfo sellerInfo = new SellerInfo();
+		sellerInfo.setMberCode( smsLinkInfo.getMberCode());
+		sellerInfo.setMberName( smsLinkInfo.getMberName() );
+		sellerInfo.setMberMobile( cUtil.decrypt(smsLinkInfo.getMberMobile()) );
+		sellerInfo.setCompanyName( smsLinkInfo.getCompanyName());
+		sellerInfo.setInstallmentMonths(smsLinkInfo.getInstallmentMonths());
+		sellerInfo.setSugiCertification( smsLinkInfo.getSugiCertification());
 		// 배송지 정보
 		Destination destination =  exMapper.selectOrderDestination( Integer.parseInt( smsLinkInfo.getMberCode()) , smsLinkInfo.getRciptNo() );
-		map.put("destination", destination);
+		// 결제정보
+		PaymentInfo pInfo = new PaymentInfo();
+		// 현재는 카드만 존재하므로 
+		SmsCardPayment info = exMapper.selectSmsCardPayment(id);
+		pInfo.setType("card");
+		pInfo.setDateStr(info.getConfmDt());
+		pInfo.setName(info.getIssueCmpnyNm());
+		pInfo.setPaymentNo(cUtil.decrypt(info.getCardNo()));
+		pInfo.setRciptNo( info.getRciptNo() );
+		
+		
+		HashMap<String, Object> map = new HashMap<>();
+		// sms 상품정보/ 판매정보 추출 
+		// 상품이름이 있다면 가격 등이 다른 # 포함 정보들이 들어 있다는 가정으로 진행한다.
+		// 상품명이 최대 크기 인것으로 가정함
+		tempStr1 = smsLinkInfo.getItName().trim();
+		tempStr2 = smsLinkInfo.getItPrice().trim();
+		tempStr3 = smsLinkInfo.getItCount().trim();
+		tempStr4 = smsLinkInfo.getItDetailUrl().trim();
+		tempStr5 = smsLinkInfo.getItAddInfo().trim();
+		String tempArr1[] = tempStr1.split("#");
+		String tempArr2[] = tempStr2.split("#");
+		String tempArr3[] = tempStr3.split("#");
+		String tempArr4[] = tempStr4.split("#");
+		String tempArr5[] = tempStr5.split("#");
+		if(tempStr1.length() >0) {
+			if(tempArr1.length >0  ) {
+				for (int i = 0; i < tempArr1.length; i++) {
+					GoodsInfo tempO = new GoodsInfo();
+					tempO.setItName(tempArr1[i]);
+					if( tempArr2.length > i ) {
+						tempO.setItPrice( Integer.parseInt( tempArr2[i]));						
+					}
+					if( tempArr3.length > i ) {
+						tempO.setItCount(Integer.parseInt( tempArr3[i]));						
+					}
+					if( tempArr4.length > i ) {
+						tempO.setItDetailUrl(tempArr4[i]);						
+					}
+					if( tempArr5.length > i ) {
+						tempO.setItAddInfo(tempArr5[i]);						
+					}	
+					goodsList.add(tempO);
+				}		
+			}else {
+				return map;
+			}
+		}
+		
+		map.put("finishYn", smsLinkInfo.getPayFinishYn()); //  결제여부
+		map.put("goodsList", goodsList); // 상품정보
+		map.put("sellerInfo", sellerInfo); // 판매자정보
+		map.put("destination", destination);// 배송지 정보
+		map.put("paymentInfo", pInfo);// 결제정보
+		
 		return map;
 	}
 }
