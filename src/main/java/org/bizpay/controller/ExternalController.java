@@ -186,7 +186,7 @@ public class ExternalController {
 		msgBuf.append( "간편결제 솔루션BizPay]");
 		msgBuf.append("\\n");
 		msgBuf.append( "결제 내역 :");
-		msgBuf.append( smsUtil.getShortUrl( "https://admin.uni-core.co.kr/external/smsPayResult/"+  param.getItId()));
+		msgBuf.append( smsUtil.getShortUrl( "https://admin.uni-core.co.kr/external/smsPayResult/"+  param.getId() ));
 		msgBuf.append("\\n");
 		msgBuf.append( "비즈페이 가입: https://shorturl.at/fvzGL" );
 		smsUtil.sendShortSms(param.getMobilePhone(), "<비즈페이 SMS LINK 결제 내역>", msgBuf.toString(), param.getRecipient());
