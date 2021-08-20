@@ -18,6 +18,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.bizpay.controller.ExternalController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 
@@ -27,6 +28,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import lombok.extern.java.Log;
+@Log
 @Component
 @PropertySource("classpath:sms.properties")
 public class SmsUtil {
@@ -126,10 +129,11 @@ public class SmsUtil {
 				in.close();
 			}
 			HashMap<String,Object> dataMap=gson.fromJson(result,HashMap.class);
-			System.out.println(dataMap.toString());
+			log.info("문자발송내역" + dataMap.toString());
 			if("1".equals(dataMap.get("result_code"))) return true;
 			else return false;
 		} catch (Exception e) {
+			log.info("문자발송에러 : " + e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -175,10 +179,11 @@ public class SmsUtil {
 				in.close();
 			}
 			HashMap<String,Object> dataMap=gson.fromJson(result,HashMap.class);
-			System.out.println(dataMap.toString());
+			log.info("문자발송내역" + dataMap.toString());
 			if("1".equals(dataMap.get("result_code"))) return true;
 			else return false;
 		} catch (Exception e) {
+			log.info("문자발송에러 : " + e.getMessage());
 			e.printStackTrace();
 			return false;
 		}

@@ -22,4 +22,5 @@ public class LinkSms {
   	private int installmentMonths;
   	private String sugiCertification;
   	private String allItemYn;
+  	private String addrYn;
 }

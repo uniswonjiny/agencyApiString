@@ -31,6 +31,8 @@ public class APIExceptionHandler {
 	// exception.class 처리
 	@ExceptionHandler({DataAccessException.class ,Exception.class })
 	public  ResponseEntity<String> sqlNormal(SQLException e) {
+		
+		
 		return new ResponseEntity<String> ("서버등에 문제가 있습니다. 잠시후 이용해주세요" , HttpStatus.UNAUTHORIZED);  
 	 }
 	
@@ -59,6 +61,7 @@ public class APIExceptionHandler {
 		
 		ReturnMsg dto = new ReturnMsg();
 		String  type= e.getMessage();
+		
 		dto.setType(type);
 		if( "C001".equals(type) ) {
 			dto.setType("2011");
@@ -101,7 +104,7 @@ public class APIExceptionHandler {
 		}
 		else if( "C011".equals(type) ) {
 			dto.setType("2014");
-			dto.setMessage("결제정보에 오류가 있습니다. 관리자에게 문의하세요.");
+			dto.setMessage("입력하신 카드정보에 문제가 있습니다.");
 		}
 		else if( "C012".equals(type) ) {
 			dto.setType("2014");
@@ -140,6 +143,9 @@ public class APIExceptionHandler {
 		else if( "SMS04".equals(type) ) {
 			dto.setMessage("이미 결제된 상품입니다.");
 		}
+		else if( "SMS05".equals(type) ) {
+			dto.setMessage("판매자가 취소한 상품입니다.");
+		}
 		else if( "L001".equals(type) ) { 
 			dto.setMessage(" 1회 결제금액 제한");
 		}
@@ -169,6 +175,11 @@ public class APIExceptionHandler {
 		}
 		else if( "S001".equals(type) ) {
 			dto.setMessage("sms 상품정보내역 생성에 문제가 있습니다.  고객센터에 문의 하세요(1600-0174)");
+		}
+		else if(type.length() >0) {
+			
+			dto.setType("9999");
+			dto.setMessage(type);
 		}
 		else {
 			dto.setType("9999");

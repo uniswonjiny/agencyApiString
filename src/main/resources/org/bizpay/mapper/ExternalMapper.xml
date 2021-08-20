@@ -178,6 +178,9 @@
 	    CANCEL_MBER,
 	    CANCEL_DT,
 	    </if>
+	     <if test=" smsLinkYn!=null and !smsLinkYn.equals('') ">
+	    SMSLINK_YN,
+	     </if>
 	    PAYMENT_DEVICE
 	) VALUES (
 		#{mberCode},
@@ -210,6 +213,9 @@
 	    #{cardDeleteYn},
 	    #{mberId},
 	    #{cancelDt},
+	    </if>
+	    <if test=" smsLinkYn!=null and !smsLinkYn.equals('') ">
+	    #{smsLinkYn},
 	    </if>
 	    #{paymentDevice}
 	)
@@ -426,13 +432,16 @@
 		  	msl.IT_TOTAL_CNT ,
 		  	msl.SMSLINK_MEMO ,
 		  	msl.RCIPT_NO,
-		  	msl.IT_PRICE ,
+		  	REGEXP_REPLACE(msl.IT_PRICE , ',' ) as it_price,
 		  	msl.IT_COUNT ,
 		  	msl.IT_DETAIL_URL ,
+		  	msl.ADDR_YN,
 		  	msl.IT_ADD_INFO ,
 			mb.INSTALLMENT_MONTHS,
 			mb.SUGI_CERTIFICATION,
-			msl.PAY_FINISH_YN
+			msl.PAY_FINISH_YN,
+			msl.step,
+			msl.SMS_SEND_PHONE 
 		  FROM mber_sms_link  msl
 		  INNER JOIN MBER_BASIS mb
 		  ON msl.MBER_CODE  = mb.MBER_CODE 
@@ -444,13 +453,15 @@
 	 UPDATE
 		MBER_SMS_LINK
 		SET
-			ADDR_NAME  = #{recipient}
-			,CUST_ADDR = #{addrInfo} || #{addrDetailInfo} || '우편번호:' ||#{zonecode} -- 행후 테이블 분리개발 필요 이렇게 만들면 개발하기 힘들고 디비에 부하 걸린다. 배송지 확인해도 상품입력등에서 계속 부하발생
+			cust_name  = #{recipient}
+			,CUST_ADDR = #{addrInfo} || CHR(10) || #{addrDetailInfo} 
+			,CUST_PHONE = #{mobilePhone}
 			,STEP = #{step}
 			,RCIPT_NO = #{rciptNo}
 			,PAY_FINISH_YN = #{finshYn}
 			,LINK_TYPE = #{payType}
-			,SMSLINK_MEMO = #{message}
+			,cust_memo = #{message}
+			,pay_finish_dt = to_char(SYSDATE , 'YYYYMMDD HH24:Mi:SS' )
 		WHERE
 			MBER_CODE = #{mberCode}
 			AND SMS_LINK_ID = #{id}
@@ -464,12 +475,13 @@
 		  	mb.company_name ,
 		  	mb.MBER_MOBILE,
 			mil.it_add_info,
-			mil.it_price,
+			REGEXP_REPLACE(mil.it_price , ',' ) as it_price,
 			mil.mber_code,
 			mil.it_id,
 			mb.INSTALLMENT_MONTHS,
 			mb.SUGI_CERTIFICATION,
 			mil.it_detail_url,
+			mil.ADDR_YN,
 			mil.all_item_yn
 		from mber_item_link mil 
 		INNER JOIN MBER_BASIS mb
@@ -481,15 +493,16 @@
 	 <select id="selectLinksmsList" resultType="LinkSms">
 		select 
 			mil.it_name,
-			mb.COMPANY_NAME  as MBER_NAME,
+			mb.COMPANY_NAME,
 		  	mb.MBER_MOBILE,
 			mil.it_add_info,
-			mil.it_price,
+			REGEXP_REPLACE(mil.it_price ,',' ) as it_price,
 			mil.mber_code,
 			mil.it_id,
 			mb.INSTALLMENT_MONTHS,
 			mb.SUGI_CERTIFICATION,
 			mil.it_detail_url,
+			mil.ADDR_YN,
 			'Y' as all_item_yn -- 전체상품주문이므로 화면에서 구분값으로 사용할 예정
 		from mber_item_link mil 
 		INNER JOIN MBER_BASIS mb
@@ -592,14 +605,38 @@
 	 
 	 <!-- sms 배송지 정보 -->
 	 <select id="selectOrderDestination"  resultType="Destination" >
-		select 
+<!-- 		select 
 			recipient ,
 			mobile_phone , 
 			address , 
 			message
 		from tb_order_destination
 		where mber_code = #{mberCode}
-		and rcipt_no = #{reciptNo}
+		and rcipt_no = #{reciptNo} -->
+		
+		SELECT 
+			msl.CUST_NAME as  recipient,
+			msl.CUST_PHONE  as mobile_phone,
+			msl.CUST_ADDR as address,
+			msl.CUST_MEMO as message
+			FROM MBER_SMS_LINK msl 
+	where mber_code = #{mberCode}
+	and rcipt_no = #{reciptNo} 
+		
+	 </select>
+	 <!-- 상품정보중 판매불가 상품존재확인 -->
+	 <select id="countLinkShowN">
+	 	WITH tmp as (
+			select regexp_substr(a.IT_ID,'[^#]+', 1, rownum) as IT_ID 
+			 from (
+			  SELECT 
+			 	IT_ID
+			 FROM MBER_SMS_LINK   
+			 where SMS_LINK_ID = #{val}
+			 ) a
+			connect by rownum &lt;= length(regexp_replace(a.IT_ID,'[^#]+')) + 1
+			)
+			SELECT count(1) FROM MBER_ITEM_LINK aa WHERE aa.it_id in  (SELECT  tmp.IT_ID FROM tmp ) AND aa.SHOW_YN = 'N'
 	 </select>
 	 
   </mapper>

@@ -26,6 +26,9 @@ public class SmsLink {
   	private int installmentMonths;
   	private String sugiCertification;
   	private String payFinishYn;
+  	private String addrYn;
+  	private int step;
+  	private String smsSendPhone;
   	private ArrayList<String> nameList;
   	private ArrayList<String> countList;
   	private ArrayList<String> priceList;

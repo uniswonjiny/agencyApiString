@@ -178,18 +178,19 @@ public class ExternalController {
 	// sms 결제 진행 -- 결제 정보 보낸거 그대로 받아서 쓰자
 	@RequestMapping(value = "smspay", method = RequestMethod.POST)
 	public ResponseEntity<String> smspay(@RequestBody SmsPayRequest param) throws Exception{
-		log.info(param.toString());
 		service.payment(param);
-		StringBuffer msgBuf = new StringBuffer();
-		msgBuf.append( "[사업자, 개인 모두 사용 가능한");
-		msgBuf.append("\\n");
-		msgBuf.append( "간편결제 솔루션BizPay]");
-		msgBuf.append("\\n");
-		msgBuf.append( "결제 내역 :");
-		msgBuf.append( smsUtil.getShortUrl( "https://admin.uni-core.co.kr/external/smsPayResult/"+  param.getId() ));
-		msgBuf.append("\\n");
-		msgBuf.append( "비즈페이 가입: https://shorturl.at/fvzGL" );
-		smsUtil.sendShortSms(param.getMobilePhone(), "<비즈페이 SMS LINK 결제 내역>", msgBuf.toString(), param.getRecipient());
+//		StringBuffer msgBuf = new StringBuffer();
+//		msgBuf.append( "[BizPay]");
+//		msgBuf.append("\\n");
+//		msgBuf.append( "결제내역 ");
+//		msgBuf.append("\\n");
+//		msgBuf.append( smsUtil.getShortUrl( "https://admin.uni-core.co.kr/external/smsPayResult/"+  param.getId() ));
+//		msgBuf.append("\\n");
+//		msgBuf.append( "가입" );
+//		msgBuf.append("\\n");
+//		msgBuf.append( "https://shorturl.at/fvzGL" );
+//		log.info("최종문자발송");
+//		smsUtil.sendShortSms(param.getMobilePhone(), msgBuf.toString(), param.getRecipient());
 		return new ResponseEntity<>("ok" , HttpStatus.OK); 
 	}
 	

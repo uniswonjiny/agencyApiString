@@ -18,6 +18,7 @@ public class SmsPayRequest {
 	private String mberCode; // 판매자 멤버코드
 	private String recipient; // 배송받는사람
 	private String mobilePhone; // 배송받을사람 핸드폰번호
+	private String address; // 배송지 주소 
 	private String addrInfo; // 배송지 주소 
 	private String addrDetailInfo; //배송지 상세주소
 	private String zonecode; // 배송지 우편번호
