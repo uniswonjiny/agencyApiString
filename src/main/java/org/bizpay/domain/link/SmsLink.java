@@ -34,4 +34,5 @@ public class SmsLink {
   	private ArrayList<String> priceList;
   	private ArrayList<String> infoList;
   	private ArrayList<String> urlList;
+  	private float sendPeroid; // 보낸시간
 }

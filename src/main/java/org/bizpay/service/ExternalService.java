@@ -39,14 +39,4 @@ public interface ExternalService {
 	public SmsCardPayment selectSmsCardPayment(long id) throws Exception;
 	// sms 결제완료 정보
 	public HashMap<String, Object> smsPayResultInfo(long id) throws Exception;
-	
-	
-	// 전체 상품조회
-	
-	// 결제취소
-	
-	// 신용카드 결제처리
-	
-	
-	
 }

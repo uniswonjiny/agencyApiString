@@ -31,6 +31,7 @@ import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
+import org.bizpay.common.domain.TblAtmParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.common.util.CertUtil;
 import org.bizpay.common.util.EncryptUtil;
@@ -742,20 +743,25 @@ public class ExternalSeviceImpl implements ExternalService {
 	}
 
 	@Override
-	public SmsLink selectSmsLinkInfo(long id) throws Exception {
+	public SmsLink selectSmsLinkInfo(long id) throws Exception {		
 		SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(id);
 		if(smsLinkInfo==null) {
 			throw new ExorderException("SMS01");
 		}
 		
+		if(smsLinkInfo.getSendPeroid() >3 && smsLinkInfo.getStep()==3) {
+			throw new ExorderException("SMS07");
+		}
+		// 매출에서 취소여부확인한다.
 		// 판매자가 취소한 경우
 		if(smsLinkInfo.getStep()==8) {
 			throw new ExorderException("SMS05");
 		}
 		
 		// 판매상품이 정상 인지 확인
-		
-		
+		if(exMapper.selectCardCancelCount(smsLinkInfo.getMberCode(),  smsLinkInfo.getRciptNo()) > 0) {
+			throw new ExorderException("SMS06");
+		}
 	
 		 if("Y".equals(smsLinkInfo.getPayFinishYn())) { 
 			 throw new  ExorderException("SMS04"); 
@@ -935,6 +941,8 @@ public class ExternalSeviceImpl implements ExternalService {
 			if ("X".equals(ox)) {
 				throw new ExorderException("C011");
 			}
+			//String ox =  "O";
+			
 			if ("O".equals(ox)) {
 				// 배송지 정보를 입력한다. -- 앱과 충돌 안나도록 별도로 저장한다. 사유는 추후 사용될 주문정보 + 배송정보 이다
 //				if(param.getRecipient()!=null && param.getRecipient().length() !=0 ) {
@@ -1058,10 +1066,46 @@ public class ExternalSeviceImpl implements ExternalService {
 					log.info( delngAdiParam.toString() );
 					throw new ExorderException("L008"); // 매출 정보등록 실패. 관리자에게 문의바랍니다
 				}
+				// 결제완료후
+				// 바로 정산처리 - 현재는 카드만 !!!!!  if(gubn.equals("JA") && "B".equals(결제판매자pay_type))
+				if( "B".equals(tbMberBasis.get("PAY_TYPE").toString() ) ) {
+					TblAtmParam tap = new TblAtmParam();
+					tap.setMberCode(Integer.parseInt(param.getMberCode()));
+					tap.setInoutNo(exMapper.selectInoutNo( Integer.parseInt(param.getMberCode() ) ));
+					tap.setInoutCode("IN_SM");
+					tap.setCharge(0);
+					tap.setReqResult("OK");
+					tap.setBizCode(  tbMberBasis.get("BIZ_CODE").toString() );
+					
+					
+					//feeRate -- 수수료율
+					tap.setSalesFeePer( Float.parseFloat(tbMberBasis.get("FEE_RATE").toString()) );
+					// d수수료금액
+					int tempSalesFeeAmt = (int)(param.getTotAmt() * Float.parseFloat(tbMberBasis.get("FEE_RATE").toString()) /100);
+					tap.setSalesFeeAmt( tempSalesFeeAmt );
+					// 정산금액
+					tap.setReqAmt( param.getTotAmt() - tempSalesFeeAmt );
+					tap.setSalesTotAmt(  param.getTotAmt() );
+					tap.setSalesRciptNo(rciptNo);
+					tap.setSalesDt( sUtil.getString(ht.get("TradeDate")).trim() );
+					tap.setSalesTime( sUtil.getString(ht.get("TradeTime")).trim());
+					tap.setSalesFeePer( Float.parseFloat( tbMberBasis.get("FEE_RATE").toString()) );
+					
+					// 현재 잔액 구해오기
+					Integer tblBalance = exMapper.selectTblBalance( Integer.parseInt(param.getMberCode()) );
+					if(tblBalance == null) tblBalance=0;
+					tblBalance = (int) (tblBalance + param.getTotAmt() - tempSalesFeeAmt);
+					tap.setBalance(tblBalance);
+					
+					if(exMapper.insertTblAmt(tap) <1) {
+						throw new ExorderException("L010");
+					}	
+				}
 			}
 			
 		} catch (ExorderException e) {
-			
+			System.out.println(e.getMessage());
+			log.info(e.getLocalizedMessage());
 			throw new ExorderException(e.getMessage());
 
 		} catch (Exception e) {
@@ -1110,6 +1154,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		SmsCardPayment info = exMapper.selectSmsCardPayment(id);
 		info.setCardNo(cUtil.decrypt( info.getCardNo( )));
 		info.setMberMobile(cUtil.decrypt( info.getMberMobile() ));
+		info.setAdres(cUtil.decrypt( info.getAdres() ));
 		return info;
 	}
 
@@ -1155,8 +1200,8 @@ public class ExternalSeviceImpl implements ExternalService {
 		pInfo.setName(info.getIssueCmpnyNm());
 		pInfo.setPaymentNo(cUtil.decrypt(info.getCardNo()));
 		pInfo.setRciptNo( info.getRciptNo() );
-		
-		
+		pInfo.setConfmNo( info.getConfmNo() );
+
 		HashMap<String, Object> map = new HashMap<>();
 		// sms 상품정보/ 판매정보 추출 
 		// 상품이름이 있다면 가격 등이 다른 # 포함 정보들이 들어 있다는 가정으로 진행한다.
@@ -1199,7 +1244,8 @@ public class ExternalSeviceImpl implements ExternalService {
 		map.put("goodsList", goodsList); // 상품정보
 		map.put("sellerInfo", sellerInfo); // 판매자정보
 		map.put("destination", destination);// 배송지 정보
-		map.put("paymentInfo", pInfo);// 결제정보
+		map.put("paymentInfo", pInfo);// 결제정보 
+		map.put("cardInfo", info);// 결제정보
 		
 		return map;
 	}

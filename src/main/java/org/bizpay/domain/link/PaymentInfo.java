@@ -16,5 +16,6 @@ public class PaymentInfo {
 	private String name ; // 결제타입이름 카드이름
 	private String paymentNo; // 카드번호등
 	private int rciptNo; // 영수증번호
+	private int confmNo;
 	
 }

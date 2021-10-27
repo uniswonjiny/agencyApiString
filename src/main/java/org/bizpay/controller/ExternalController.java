@@ -166,9 +166,6 @@ public class ExternalController {
 	
 	// sms 결제정보
 	@ApiOperation(value="SMS 결제전정보확인" , notes = "SMS 링크로 발송된 결제정보를 확인한다.")
-	@ApiImplicitParams({
-		@ApiImplicitParam(name="slid" ,value = "sms 상품정보 키값", required=true , dataType="long"  )
-	})
 	@RequestMapping(value = "smspay/{id}", method = RequestMethod.GET)
 	public ResponseEntity<SmsLink> orderInfo(@PathVariable("id") long id) throws Exception{
 		

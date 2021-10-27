@@ -7,6 +7,7 @@ import org.bizpay.common.domain.DelngAdiParam;
 import org.bizpay.common.domain.DelngCredtParam;
 import org.bizpay.common.domain.DelngParam;
 import org.bizpay.common.domain.ExternalOrderInputParam;
+import org.bizpay.common.domain.TblAtmParam;
 import org.bizpay.common.domain.external.OrderStatusInfo;
 import org.bizpay.domain.link.Destination;
 import org.bizpay.domain.link.LinkSms;
@@ -58,7 +59,7 @@ public interface ExternalMapper {
 	// 입금내역확인
 	public Integer selectReqAmt(HashMap<String, Object> param)throws Exception;
 	// 출금내역확인
-	public ArrayList<HashMap<String, Object> > selectTblAmt(HashMap<String, Object> param)throws Exception;
+	public ArrayList<Integer> selectTblAmt(int mberCode )throws Exception;
 	// sms 최초 결제요청 정보 가져오기
 	public SmsLink selectSmsLinkInfo(long id) throws Exception;
 	// sms 결제 정보 수정
@@ -75,4 +76,18 @@ public interface ExternalMapper {
 	public int insertDestination(Destination param) throws Exception;
 	// sms  배송지 정보
 	public Destination selectOrderDestination(int mberCode , int reciptNo ) throws Exception;
+	//  결제 취소 여부 확인
+	public int selectCardCancelCount(String mberCode , int reciptNo ) throws Exception;
+	// 바로 정산용 메세지 확인
+	public String selectTradeRequest(String mberCode , int inoutNo ) throws Exception;
+	// tbl_atm ok 로 변경
+	public int updateTblAtmOk(String mberCode , int inoutNo) throws Exception;
+	// 바로정산 이체서비스 번호 tbl_atm INOUTNO
+	public int selectInoutNo(int mberCode) throws Exception;
+	// 바로정산 이체서비스 잔액
+	public Integer selectTblBalance(int mberCode) throws Exception;
+	// 바로정상 입력 강제 입금형식임
+	public int insertTblAmt(TblAtmParam param) throws Exception;
+	// 링크를 상대방이 받았다는거는 발송인데 이전 상태이면 변경해버린다.
+	public int updateSmsLink3(String mberCode , long id )  throws Exception;
 }

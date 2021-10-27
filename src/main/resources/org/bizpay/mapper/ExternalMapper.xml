@@ -136,7 +136,8 @@
 		    COMPANY_NAME,
 		    FEE_RATE,
 		    SUGI_CERTIFICATION,
-		    m.use_at
+		    m.use_at,
+		    mb.biz_code
 		FROM
 		    mber_basis mb
 		INNER JOIN MBER m 
@@ -416,8 +417,8 @@
 	 	SELECT REQ_AMT FROM tbl_atm WHERE mber_code = #{mberCode} AND sales_rcipt_no = #{rciptNo}
 	 </select>
 	 <!--  trAtm 출금내역확인  -->
-	 <select id="selectTblAmt" parameterType="HashMap" resultType = "HashMap">
-	 SELECT mber_code , inout_no  FROM tbl_atm WHERE req_result = 'READY' and inout_code = 'OT' and mber_code = #{mberCode}
+	 <select id="selectTblAmt"   >
+	 SELECT  inout_no  FROM tbl_atm WHERE req_result = 'READY' and inout_code = 'OT' and mber_code = #{val}
 	 </select>
 	 
 	 <!-- sms 결제요청최초 정보 조회  -->
@@ -441,12 +442,18 @@
 			mb.SUGI_CERTIFICATION,
 			msl.PAY_FINISH_YN,
 			msl.step,
-			msl.SMS_SEND_PHONE 
+			msl.SMS_SEND_PHONE ,
+			SYSDATE- TO_date(nvl(cust_send_dt , sysdate), 'YY-MM-DD HH24:MI:SS') as sendPeroid
 		  FROM mber_sms_link  msl
 		  INNER JOIN MBER_BASIS mb
 		  ON msl.MBER_CODE  = mb.MBER_CODE 
 		  WHERE sms_link_id = #{val}
 	 </select>
+	 <!-- 링크를 상대방이 받았다는거는 발송인데 이전 상태이면 변경해버린다. -->
+	 <update id="updateSmsLink3">
+	 UPDATE
+		MBER_SMS_LINK ,STEP = 3 WHERE MBER_CODE = #{mberCode} AND SMS_LINK_ID = #{id}
+	 </update>
 	 
 	 <!--  MBER_SMS_LINK 업데이트-->
 	 <update id="updateSmsLink" parameterType="SmsPayRequest">
@@ -509,6 +516,7 @@
 		ON mil.MBER_CODE  = mb.MBER_CODE 
 		where mil.MBER_CODE = #{val}
 		and all_item_yn = 'N'
+		AND SHOW_YN  = 'Y'
 	 </select>
 	 
 	 <!-- link 결제를 위한 smslink 입력 단순입력 -->
@@ -560,7 +568,7 @@
 			dc.CARD_NO,
 			dc.ISSUE_CMPNY_NM,
 			TO_date(d.CONFM_DT || d.CONFM_TIME , 'YYYYMMDDHH24MISS') AS CONFM_DT,
-			CASE dc.INSTLMT_MONTH
+			CASE NVL(dc.INSTLMT_MONTH , '00')
 			WHEN '00' THEN '일시불'
 			ELSE dc.INSTLMT_MONTH || '개월' 
 			END AS INSTLMT_MONTH,
@@ -570,7 +578,11 @@
 			mb.BIZ_NUM ,
 			mb.MBER_MOBILE,
 			dc.RCIPT_NO , 
-			d.CONFM_NO	
+			d.CONFM_NO	,
+			CANCEL_DT ,
+			mb.COMPANY_NAME ,
+			mb.biz_num,
+			mb.ADRES
 		FROM MBER_SMS_LINK msl
 		left JOIN DELNG d
 			ON d.MBER_CODE = msl.MBER_CODE 
@@ -639,4 +651,77 @@
 			SELECT count(1) FROM MBER_ITEM_LINK aa WHERE aa.it_id in  (SELECT  tmp.IT_ID FROM tmp ) AND aa.SHOW_YN = 'N'
 	 </select>
 	 
+	 <select id="selectCardCancelCount"  resultType="int" >
+	 	SELECT
+			count(1) cnt
+		FROM
+		    delng 
+		where CARD_DELETE_YN = 'Y'
+		and mber_code = #{mberCode}
+		and rcipt_no = #{reciptNo}
+	</select>
+	
+	<select id="selectTradeRequest"  resultType = "String">
+	select recv_msg from TRADE_REQUEST_TBL where recv_flag = 'Y' and mber_code = #{mberCode}  and inout_no = #{inoutNo}
+	</select>
+	
+	<update id="updateTblAtmOk">
+	update tbl_atm set req_result='ok'  where mber_code = #{mberCode}  and inout_no = #{inoutNo}
+	</update>
+	
+	<!--바로정산 이체서비스 번호 -->
+	<select id="selectInoutNo" resultType="int" >
+		select GET_INOUTNO(#{val}) from dual
+	</select>
+	<!--바로정산 이체서비스 잔액  -->
+	<select id="selectTblBalance" resultType="Integer">
+	select balance from (SELECT balance FROM tbl_atm WHERE MBER_CODE = #{val} 
+	AND  req_result = 'OK'  order by inout_no DESC ) where rownum =1
+	</select>
+	
+	<insert id="insertTblAmt" parameterType="TblAtmParam">
+	INSERT INTO tbl_atm (
+	    mber_code,
+	    inout_no,
+	    inout_code,
+	    req_amt,
+	    balance,
+	    req_dt,
+	    req_time,
+	    charge,
+	    req_result,
+	    bank,
+	    account,
+	    depositor,
+	    bigo,
+	    biz_code,
+	    sales_tot_amt,
+	    sales_fee_per,
+	    sales_fee_amt,
+	    sales_dt,
+	    sales_time,
+	    sales_rcipt_no
+	) VALUES (
+	    #{mberCode},
+	    #{inoutNo},
+	    #{inoutCode},
+	    #{reqAmt},
+	    #{balance},
+	    (select to_char(sysdate, 'YYYYMMDD') from dual),
+	    (select to_char(sysdate, 'HH24MISS') from dual),
+	    #{charge},
+	    #{reqResult},
+	    #{bank},
+	    #{account},
+	    #{depositor},
+	    #{bigo},
+	    #{bizCode},
+	    #{salesTotAmt},
+	    #{salesFeePer},
+	    #{salesFeeAmt},
+	    #{salesDt},
+	    #{salesTime},
+	    #{salesRciptNo}
+	)
+	</insert>
   </mapper>

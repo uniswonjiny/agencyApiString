@@ -22,4 +22,7 @@ public class SmsCardPayment {
 	private String mberMobile;
 	private int rciptNo;
 	private int confmNo;
+	private String cancelDt;
+	private String companyName;
+	private String adres;
 }

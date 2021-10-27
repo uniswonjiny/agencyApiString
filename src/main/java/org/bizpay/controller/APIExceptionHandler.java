@@ -146,6 +146,12 @@ public class APIExceptionHandler {
 		else if( "SMS05".equals(type) ) {
 			dto.setMessage("판매자가 취소한 상품입니다.");
 		}
+		else if( "SMS06".equals(type) ) {
+			dto.setMessage("결제 취소한 주문입니다.");
+		}
+		else if( "SMS07".equals(type) ) {
+			dto.setMessage("기간 만료된 링크입니다");
+		}
 		else if( "L001".equals(type) ) { 
 			dto.setMessage(" 1회 결제금액 제한");
 		}
@@ -172,6 +178,9 @@ public class APIExceptionHandler {
 		}
 		else if( "L009".equals(type) ) {
 			dto.setMessage("거래가 제한된 판매자 입니다. 고객센터에 문의 하세요(1600-0174) ");
+		}
+		else if( "L010".equals(type) ) {
+			dto.setMessage("바로정산 결제정보처리에 실패했습니다. ");
 		}
 		else if( "S001".equals(type) ) {
 			dto.setMessage("sms 상품정보내역 생성에 문제가 있습니다.  고객센터에 문의 하세요(1600-0174)");
