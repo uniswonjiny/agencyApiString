@@ -8,7 +8,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class DelngAdiParam {
-	private int mberCode;
+	private long mberCode;
 	private String mberCodeSn;
 	private String rciptNo;
 	private String adiCode;

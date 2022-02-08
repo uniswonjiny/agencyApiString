@@ -8,7 +8,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class DelngParam {
-	private int mberCode;
+	private long mberCode;
     private String mberCodeSn;
     private String rciptNo;
     private String vanCode;
@@ -19,7 +19,7 @@ public class DelngParam {
     private String confmTime;
     private long splpc;
     private long vat;
-    private int trgetMberCode;
+    private long trgetMberCode;
     private String trgetMberCodeSn;
     private String trgetRciptNo;
     private String bigo;

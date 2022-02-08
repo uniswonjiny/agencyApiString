@@ -17,7 +17,7 @@ public class ExternalOrderInputParam {
 	private long seq;
 	private String exorderNo;
 	private String mberId;
-	private int mberCode;
+	private long mberCode;
 	private String mberCodeSn;
 	private String orderType;// 결제유형 -- C : card , naver , kakao m ,mobile
 	private String orderDetail;// 결제유형 상세 

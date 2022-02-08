@@ -854,7 +854,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		oet.setKSNET_PG_PORT(KSNET_PG_PORT);
 		oet.setPKeyInType("K");
 		try {
-			HashMap<String, Object> tbMberBasis = exMapper.selectTbMberBasis1( Integer.parseInt(param.getMberCode() ));
+			HashMap<String, Object> tbMberBasis = exMapper.selectTbMberBasis1( Long.parseLong(param.getMberCode() ));
 			
 			// 판매자의 상태를 점검한다.
 			if(tbMberBasis==null) {
@@ -977,7 +977,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				DecimalFormat df = new DecimalFormat("##0");
 				DelngParam delngParam = new DelngParam();
 				// delng
-				delngParam.setMberCode( Integer.parseInt(param.getMberCode())  );
+				delngParam.setMberCode( Long.parseLong(param.getMberCode())  );
 				delngParam.setMberCodeSn(mberInfo.getMberCodeSn());
 				delngParam.setRciptNo( String.valueOf(param.getRciptNo()));
 				delngParam.setAppCode("LINK");
@@ -986,7 +986,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				delngParam.setConfmTime(sUtil.getString(ht.get("TradeTime")).trim());
 				delngParam.setSplpc(param.getTotAmt() );
 				delngParam.setVat(0); // 부가세 0 일단은
-				delngParam.setTrgetMberCode(Integer.parseInt(param.getMberCode()) );
+				delngParam.setTrgetMberCode(Long.parseLong(param.getMberCode()) );
 				delngParam.setTrgetMberCodeSn(mberInfo.getMberCodeSn());
 				delngParam.setTrgetRciptNo(String.valueOf(param.getRciptNo()));
 				delngParam.setApprovalConfirm("O");
@@ -1025,7 +1025,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				
 				// DELNG_CREDT 입력
 				DelngCredtParam delngCredtParam = new DelngCredtParam();
-				delngCredtParam.setMberCode(Integer.parseInt(param.getMberCode()) );
+				delngCredtParam.setMberCode(Long.parseLong(param.getMberCode()) );
 				delngCredtParam.setMberCodeSn(mberInfo.getMberCodeSn());
 				delngCredtParam.setRciptNo(String.valueOf(param.getRciptNo()));
 				delngCredtParam.setCardNo(cUtil.encrypt(sUtil.MarkForCreditCard(param.getCardNumber())));
@@ -1050,7 +1050,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				
 				// delng_adi
 				DelngAdiParam delngAdiParam = new DelngAdiParam();
-				delngAdiParam.setMberCode(Integer.parseInt(param.getMberCode()));
+				delngAdiParam.setMberCode(Long.parseLong( param.getMberCode()));
 				delngAdiParam.setMberCodeSn(mberInfo.getMberCodeSn());
 				delngAdiParam.setRciptNo(String.valueOf(param.getRciptNo()));
 				delngAdiParam.setAdiCode("PURCHSR_MBTLNUM");
@@ -1070,8 +1070,8 @@ public class ExternalSeviceImpl implements ExternalService {
 				// 바로 정산처리 - 현재는 카드만 !!!!!  if(gubn.equals("JA") && "B".equals(결제판매자pay_type))
 				if( "B".equals(tbMberBasis.get("PAY_TYPE").toString() ) ) {
 					TblAtmParam tap = new TblAtmParam();
-					tap.setMberCode(Integer.parseInt(param.getMberCode()));
-					tap.setInoutNo(exMapper.selectInoutNo( Integer.parseInt(param.getMberCode() ) ));
+					tap.setMberCode(Long.parseLong(param.getMberCode()));
+					tap.setInoutNo(exMapper.selectInoutNo( Long.parseLong(param.getMberCode() ) ));
 					tap.setInoutCode("IN_SM");
 					tap.setCharge(0);
 					tap.setReqResult("OK");
@@ -1092,7 +1092,7 @@ public class ExternalSeviceImpl implements ExternalService {
 					tap.setSalesFeePer( Float.parseFloat( tbMberBasis.get("FEE_RATE").toString()) );
 					
 					// 현재 잔액 구해오기
-					Integer tblBalance = exMapper.selectTblBalance( Integer.parseInt(param.getMberCode()) );
+					Integer tblBalance = exMapper.selectTblBalance(Long.parseLong(param.getMberCode()) );
 					if(tblBalance == null) tblBalance=0;
 					tblBalance = (int) (tblBalance + param.getTotAmt() - tempSalesFeeAmt);
 					tap.setBalance(tblBalance);

@@ -30,10 +30,10 @@ public interface ExternalMapper {
 	// 사용가능 사용자인지 확인
 	public HashMap<String, Object> selectTbBberIdCheck(String mberId) throws Exception;
 	//
-	public String selectTbMberDetailSn(int mberCode)throws Exception;
+	public String selectTbMberDetailSn(long mberCode)throws Exception;
 	
 	// selectTbMberBasis1
-	public HashMap<String, Object> selectTbMberBasis1(int mberCode) throws Exception;
+	public HashMap<String, Object> selectTbMberBasis1(long mberCode) throws Exception;
 	// 영수증번호 획득및 영수증번호 자동 업데이트동시 실행 -- 결제 과련 부분으로 옮기는중!
 	public  void propRciptNO(  HashMap<String, Object> pam)throws Exception;
 	// delng 입력
@@ -59,7 +59,7 @@ public interface ExternalMapper {
 	// 입금내역확인
 	public Integer selectReqAmt(HashMap<String, Object> param)throws Exception;
 	// 출금내역확인
-	public ArrayList<Integer> selectTblAmt(int mberCode )throws Exception;
+	public ArrayList<Integer> selectTblAmt(long mberCode )throws Exception;
 	// sms 최초 결제요청 정보 가져오기
 	public SmsLink selectSmsLinkInfo(long id) throws Exception;
 	// sms 결제 정보 수정
@@ -75,7 +75,7 @@ public interface ExternalMapper {
 	// 배송지 정보 저장
 	public int insertDestination(Destination param) throws Exception;
 	// sms  배송지 정보
-	public Destination selectOrderDestination(int mberCode , int reciptNo ) throws Exception;
+	public Destination selectOrderDestination(long mberCode , int reciptNo ) throws Exception;
 	//  결제 취소 여부 확인
 	public int selectCardCancelCount(String mberCode , int reciptNo ) throws Exception;
 	// 바로 정산용 메세지 확인
@@ -83,9 +83,9 @@ public interface ExternalMapper {
 	// tbl_atm ok 로 변경
 	public int updateTblAtmOk(String mberCode , int inoutNo) throws Exception;
 	// 바로정산 이체서비스 번호 tbl_atm INOUTNO
-	public int selectInoutNo(int mberCode) throws Exception;
+	public int selectInoutNo(long mberCode) throws Exception;
 	// 바로정산 이체서비스 잔액
-	public Integer selectTblBalance(int mberCode) throws Exception;
+	public Integer selectTblBalance(long mberCode) throws Exception;
 	// 바로정상 입력 강제 입금형식임
 	public int insertTblAmt(TblAtmParam param) throws Exception;
 	// 링크를 상대방이 받았다는거는 발송인데 이전 상태이면 변경해버린다.
