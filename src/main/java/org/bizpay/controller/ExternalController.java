@@ -1,15 +1,7 @@
 package org.bizpay.controller;
 
 import java.util.ArrayList;
-//import java.io.BufferedReader;
-//import java.io.BufferedWriter;
-//import java.io.InputStreamReader;
-//import java.io.OutputStream;
-//import java.io.OutputStreamWriter;
-//import java.net.URL;
 import java.util.HashMap;
-
-//import javax.net.ssl.HttpsURLConnection;
 
 import org.bizpay.common.domain.ExternalOrderInputParam;
 import org.bizpay.common.domain.PaymentReqParam;
@@ -32,16 +24,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 
 @Log
 @RestController
 @RequestMapping("/ext")
-@Api(tags = "외부연동결제")
 @CrossOrigin(origins={"*"})
 public class ExternalController {
 	
@@ -50,20 +37,7 @@ public class ExternalController {
 	
 	@Autowired
 	ExternalService service;
-	// 내부 서버에서 처리하는 것이므로 코드처리 하지 않는다. 중계페이지에서 팝업 알람 화면 구성해야한다.
-//	@ApiOperation(value="QR연동결제정보 입력" , notes = "QR연동결제 사전 결제 정보입력")
-//	@RequestMapping(value = "qrOrderInput", method = RequestMethod.POST)
-//	public ResponseEntity<String> qrPay(
-//			@RequestBody ExternalOrderInputParam param) throws Exception{
-//		log.info("qr코드용 외부 연동결제주문정보 입력");
-//
-//		if(service.insertExOrder(param) >0) {
-//			return new ResponseEntity<>( param.getSeq() + "", HttpStatus.OK);
-//		}else {
-//			return new ResponseEntity<>( "주문정보 생성에 문제가 발생했습니다.", HttpStatus.UNAUTHORIZED);
-//		}	
-//	}
-	@ApiOperation(value="QR연동결제요청" , notes = "QR연동결제 요청")
+	
 	@RequestMapping(value = "qrPayRequest", method = RequestMethod.POST)
 	public ResponseEntity<ExternalOrderInputParam> qrPayRequest(
 			@RequestBody PaymentReqParam param) throws Exception{
@@ -74,7 +48,6 @@ public class ExternalController {
 		return new ResponseEntity<>(info,HttpStatus.OK);
 	}
 	
-	@ApiOperation(value="QR연동결제전고객취소" , notes = "QR연동결제 결제전 고객이 취소를 선택한 경우")
 	@RequestMapping(value = "qrPayCancel", method = RequestMethod.POST)
 	public ResponseEntity<String> qrPayCancel(
 			@RequestBody PaymentReqParam param) throws Exception{
@@ -85,7 +58,6 @@ public class ExternalController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
-	@ApiOperation(value="QR결제정보확인" , notes = "QR연동결제정보")
 	@RequestMapping(value = "qrOrder/{orderNo}", method = RequestMethod.GET)
 	public ResponseEntity<ExternalOrderInputParam> qrOrderInfo(@PathVariable("orderNo") long orderNo) throws Exception{
 		log.info("qr코드용 외부 연동결제주문정보");
@@ -97,7 +69,6 @@ public class ExternalController {
 		}	
 	}
 	
-	@ApiOperation(value="QR결제취소" , notes = "QR결제취소하기")
 	@RequestMapping(value = "exOrderCancel", method = RequestMethod.POST)
 	public ResponseEntity<ReturnMsg> qrOrderCancel(@RequestBody ExternalOrderInputParam param) throws Exception{
 		log.info("qr코드용 외부 연동결제주문정보 입력");
@@ -108,14 +79,12 @@ public class ExternalController {
 		return new ResponseEntity<>(rm , HttpStatus.OK); // 에러 발생하면 서비스에서 핸들러 호출하도록 되어 있음 
 	}
 	
-	@ApiOperation(value="QR결제노티" , notes = "QR결제노티")
 	@RequestMapping(value = "notiSend", method = RequestMethod.POST)
 	public ResponseEntity<ReturnMsg> notiSend(@RequestBody ExternalOrderInputParam param) throws Exception{
 		log.info("결제완료나 결제전  노티 ");
 		ReturnMsg rm = new ReturnMsg();
 		rm.setType("100");
-		rm.setMessage("노티호출완료");
-		
+		rm.setMessage("노티호출완료");	
 		if(param.getNotiUrl()==null || param.getNotiUrl().trim().length() <10) {
 			rm.setType("200");
 			rm.setMessage("요청항목 누락");
@@ -149,11 +118,6 @@ public class ExternalController {
 	}
 	
 	// 결제정보 확인
-	@ApiOperation(value="결제정보확인" , notes = "결제정보확인")
-	@ApiImplicitParams({
-		@ApiImplicitParam(name="mberId" ,value = "유니코아판매자아이디", required=true , dataType="string"  ),
-		@ApiImplicitParam(name="exorderNo" ,value = "상대방의 주문번호", required=true , dataType="string"  )
-	})
 	@RequestMapping(value = "orderInfo", method = RequestMethod.POST)
 	public ResponseEntity<OrderStatusInfo> orderInfo(@RequestBody HashMap<String, Object> param) throws Exception{
 		// 필수값 확인
@@ -165,7 +129,6 @@ public class ExternalController {
 	}
 	
 	// sms 결제정보
-	@ApiOperation(value="SMS 결제전정보확인" , notes = "SMS 링크로 발송된 결제정보를 확인한다.")
 	@RequestMapping(value = "smspay/{id}", method = RequestMethod.GET)
 	public ResponseEntity<SmsLink> orderInfo(@PathVariable("id") long id) throws Exception{
 		
@@ -176,26 +139,10 @@ public class ExternalController {
 	@RequestMapping(value = "smspay", method = RequestMethod.POST)
 	public ResponseEntity<String> smspay(@RequestBody SmsPayRequest param) throws Exception{
 		service.payment(param);
-//		StringBuffer msgBuf = new StringBuffer();
-//		msgBuf.append( "[BizPay]");
-//		msgBuf.append("\\n");
-//		msgBuf.append( "결제내역 ");
-//		msgBuf.append("\\n");
-//		msgBuf.append( smsUtil.getShortUrl( "https://admin.uni-core.co.kr/external/smsPayResult/"+  param.getId() ));
-//		msgBuf.append("\\n");
-//		msgBuf.append( "가입" );
-//		msgBuf.append("\\n");
-//		msgBuf.append( "https://shorturl.at/fvzGL" );
-//		log.info("최종문자발송");
-//		smsUtil.sendShortSms(param.getMobilePhone(), msgBuf.toString(), param.getRecipient());
 		return new ResponseEntity<>("ok" , HttpStatus.OK); 
 	}
 	
 	// linksms 상품정보
-	@ApiOperation(value="LINK결제전정보확인" , notes = "LINK결제 링크로 발송된 결제정보를 확인한다.")
-	@ApiImplicitParams({
-		@ApiImplicitParam(name="id" ,value = "유니코아판매자아이디", required=true , dataType="long"  )
-	})
 	@RequestMapping(value = "linkpay/{id}", method = RequestMethod.GET)
 	public ResponseEntity<ArrayList<LinkSms>> linkpay(@PathVariable("id") long id) throws Exception{
 		return new ResponseEntity<>(service.selectLinkSmsInfo(id) , HttpStatus.OK); 

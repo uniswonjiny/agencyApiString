@@ -62,7 +62,7 @@ public interface AgencyMapper {
 	// 잔액 구하기
 	public double selectBalance(String mbrCode) throws Exception;
 	// 입출금 번호
-	public double selectInoutNo(String mbrCode) throws Exception;
+	public long selectInoutNo(String mbrCode) throws Exception;
 	// 현금결제 중복확인
 	public int selectCashCount(HashMap<String, Object> map) throws Exception;
 	

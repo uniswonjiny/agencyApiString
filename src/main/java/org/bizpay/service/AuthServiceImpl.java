@@ -21,17 +21,15 @@ import lombok.extern.java.Log;
 public class AuthServiceImpl implements AuthService {
 	@Value("${jwt.secret}")
 	private String auth;
-	
 	@Autowired
 	AuthMapper aMapper;
-	
 	@Autowired
 	CertUtil cert;
-	
+
 	@Override
 	public String loginKey(String userId, String password) throws Exception {
 		log.info("로그인및 인증키생성 : " + auth);
-		
+
 		return null;
 	}
 
@@ -57,20 +55,20 @@ public class AuthServiceImpl implements AuthService {
 		return aMapper.dealerList(bizCode);
 	}
 
-	@SuppressWarnings("unused")
 	@Override
-	public MemberInfo loginConfirm(LoginParam param) throws Exception {
-		MemberInfo info =  aMapper.userInfo(param.getUserId());
-		if(info == null ) {	
-			
+	public MemberInfo loginConfirm(String userId , String password) throws Exception {
+
+		log.info("로그인 확인");
+		MemberInfo info = aMapper.userInfo(userId);
+		if(info == null ) {
 			throw new AuthErrorException("id");
 		}
-		
+
 		String comparePassWord = cert.decrypt(info.getPassword());
-		if(!comparePassWord.equals(param.getPassword() ) ) {
+		if(!comparePassWord.equals(password ) ) {
 			throw new AuthErrorException("password");
 		}
-		
+
 		if("Y".equals(info.getUseAt())) {
 			if("AUTHOR_MNGR".equals(info.getAuthorCode()) ||  "AUTHOR_DEALER".equals(info.getAuthorCode()) ) {
 				 return info;
@@ -80,7 +78,6 @@ public class AuthServiceImpl implements AuthService {
 		}else {
 			throw new AuthErrorException("no");
 		}
-
 	}
 
 	@Override
@@ -99,9 +96,8 @@ public class AuthServiceImpl implements AuthService {
 		temp = aMapper.selectBizrno(bizno);
 		if(temp ==0) {
 			bizno = cert.encrypt(bizno);
-			temp = aMapper.selectBizrno(bizno);	
+			temp = aMapper.selectBizrno(bizno);
 		}
 		return temp;
 	}
-
 }

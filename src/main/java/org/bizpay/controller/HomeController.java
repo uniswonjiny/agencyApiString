@@ -5,7 +5,6 @@ import org.bizpay.service.ExternalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
@@ -17,10 +16,10 @@ import lombok.extern.java.Log;
 @Log
 @CrossOrigin(origins={"*"})
 public class HomeController {
-	
+
 	@Autowired
 	ExternalService service;
-	
+
 	@RequestMapping(value="/", method=RequestMethod.GET)
 	public ModelAndView home() {
 		ModelAndView mav = new ModelAndView();
@@ -28,7 +27,15 @@ public class HomeController {
 		mav.setViewName("index");
 		return mav;
 	}
-	
+
+	@RequestMapping(value="/main/*", method=RequestMethod.GET)
+	public ModelAndView main() {
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("message", "Home...");
+		mav.setViewName("index");
+		return mav;
+	}
+
 	@RequestMapping(value="/qrPay", method=RequestMethod.POST)
 	public RedirectView qrpay(ExternalOrderInputParam param) {
 		log.info("qr코드용 외부 연동결제주문정보 입력");

@@ -17,7 +17,7 @@ public class SmsLink {
   	private String itName;
   	private String itAddInfo;
   	private String itDetailUrl;
-  	private int rciptNo;
+  	private long rciptNo;
   	private int itTotalAmt ;
   	private int itTotalCnt;
   	private String smslinkMemo;

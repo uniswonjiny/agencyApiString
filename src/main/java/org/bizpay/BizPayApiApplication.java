@@ -6,12 +6,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 
-@MapperScan(basePackages = {"org.bizpay.mapper"})
-@SpringBootApplication(scanBasePackages = {"org.bizpay.common.util" , "org.bizpay.controller" ,"org.bizpay.service" })
+@MapperScan(value= {"org.bizpay.mapper", "org.bizpay.agency.mapper"})
+@SpringBootApplication(scanBasePackages = {"org.bizpay.common.util", "org.bizpay.controller", "org.bizpay.service", "org.bizpay.agency.controller" , "org.bizpay.agency.service"})
 public class BizPayApiApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(BizPayApiApplication.class, args);
-	}
-	
+    public static void main(String[] args) {
+        SpringApplication.run(BizPayApiApplication.class, args);
+    }
+
 
 }

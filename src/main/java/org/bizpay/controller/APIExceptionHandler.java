@@ -19,23 +19,19 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import io.swagger.annotations.Api;
-
 @ControllerAdvice
-@Api(tags = "에러처리 ")
 public class APIExceptionHandler {
-	
 	@Autowired
 	KSPayMsgBean ksBean;
-	
+
 	// exception.class 처리
 	@ExceptionHandler({DataAccessException.class ,Exception.class })
 	public  ResponseEntity<String> sqlNormal(SQLException e) {
-		
-		
-		return new ResponseEntity<String> ("서버등에 문제가 있습니다. 잠시후 이용해주세요" , HttpStatus.UNAUTHORIZED);  
+		System.out.printf(e.toString());
+
+		return new ResponseEntity<String> ("서버등에 문제가 있습니다. 잠시후 이용해주세요" , HttpStatus.UNAUTHORIZED);
 	 }
-	
+
 	// 외부 연동 결제 관련 에러 처리용 핸들러
 	// ExorderException
 	@ExceptionHandler({ExorderException.class})
@@ -45,23 +41,23 @@ public class APIExceptionHandler {
 			//여기서도 에러가 발생하면 방법이 없다.
 			if(e.getOet().getPTransactionNo()!=null) {
 				Hashtable xht = ksBean.sendCardCancelMsg(
-						e.getOet().getKSNET_PG_IP(), 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)  
-					    e.getOet().getKSNET_PG_PORT(),			// -필수- port   9( 5)   *KSNET_PORT(21001)  
-						e.getOet().getPStoreId(), 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)  
-						e.getOet().getPKeyInType(),						// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)  
-						e.getOet().getPTransactionNo()						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)  
+						e.getOet().getKSNET_PG_IP(), 				// -필수- ipaddr  X(15)   *KSNET_IP(개발:210.181.28.116, 운영:210.181.28.137)
+					    e.getOet().getKSNET_PG_PORT(),			// -필수- port   9( 5)   *KSNET_PORT(21001)
+						e.getOet().getPStoreId(), 								// -필수- pStoreId  X(10)   *상점아이디(개발:2999199999, 운영:?)
+						e.getOet().getPKeyInType(),						// -필수- pKeyInType   X(12)  KEY-IN유형(K:직접입력,S:리더기사용입력)
+						e.getOet().getPTransactionNo()						// -필수- pTransactionNo  X( 1)  *거래번호(승인응답시의 KEY:1로시작되는 12자리숫자)
 					);
 			}
-			
-				
+
+
 		} catch (Exception e2) {
 			e2.fillInStackTrace();
 		}
-		
-		
+
+
 		ReturnMsg dto = new ReturnMsg();
 		String  type= e.getMessage();
-		
+
 		dto.setType(type);
 		if( "C001".equals(type) ) {
 			dto.setType("2011");
@@ -152,10 +148,10 @@ public class APIExceptionHandler {
 		else if( "SMS07".equals(type) ) {
 			dto.setMessage("기간 만료된 링크입니다");
 		}
-		else if( "L001".equals(type) ) { 
+		else if( "L001".equals(type) ) {
 			dto.setMessage(" 1회 결제금액 제한");
 		}
-		else if( "L002".equals(type) ) { 
+		else if( "L002".equals(type) ) {
 			dto.setMessage(" 1일 결제금액 제한");
 		}
 		else if( "L003".equals(type) ) {
@@ -186,7 +182,7 @@ public class APIExceptionHandler {
 			dto.setMessage("sms 상품정보내역 생성에 문제가 있습니다.  고객센터에 문의 하세요(1600-0174)");
 		}
 		else if(type.length() >0) {
-			
+
 			dto.setType("9999");
 			dto.setMessage(type);
 		}
@@ -196,12 +192,12 @@ public class APIExceptionHandler {
 		}
 		 return new ResponseEntity<ReturnMsg> (dto,HttpStatus.NOT_EXTENDED);  // 510
 	}
-	
+
 	@ExceptionHandler({SqlErrorException.class})
 	public  ResponseEntity<String> conflict(SqlErrorException e) {
 		String temp = e.getMessage();
-		if("".equals(temp) || temp == null  ) temp = "데이터처리 문제"; 
-		return new ResponseEntity<String> (temp , HttpStatus.UNAUTHORIZED);  
+		if("".equals(temp) || temp == null  ) temp = "데이터처리 문제";
+		return new ResponseEntity<String> (temp , HttpStatus.UNAUTHORIZED);
 	  }
 	// 인증 실패시 / 로그인등 실패시
 	@ResponseStatus( HttpStatus.UNAUTHORIZED)
@@ -211,62 +207,62 @@ public class APIExceptionHandler {
 		String temp = e.getMessage();
 		dto.setType("auth");
 		// 로그인 실패시 실패한 항목구분
-		if( temp.contains("id") ){ 
+		if( temp.equals("id") ){
 			dto.setMessage("아이디를 확인하세요");
-		}else if(temp.contains("password")){
+		}else if(temp.equals("password")){
 			dto.setMessage("비밀번호를 확인하세요");
-		}else if(temp.contains("idpw")){
-			dto.setMessage("계정정보를 확인하세요");						
-		}else if(temp.contains("auth")){
-			dto.setMessage("인증에 실패했습니다. 계정을 확인하세요");						
-		}else if(temp.contains("no")){
-			dto.setMessage("서비스제한 사용자입니다.");						
-		}else if(temp.contains("grade")){
-			dto.setMessage("권한이 부족한 사용자입니다.");						
+		}else if(temp.equals("idPw")){
+			dto.setMessage("계정정보를 확인하세요");
+		}else if(temp.equals("auth")){
+			dto.setMessage("인증에 실패했습니다. 계정을 확인하세요");
+		}else if(temp.equals("no")){
+			dto.setMessage("서비스제한 사용자입니다.");
+		}else if(temp.equals("grade")){
+			dto.setMessage("권한이 부족한 사용자입니다.");
 		}else {
 			dto.setMessage(temp);
-		} 
-		
-        return new ResponseEntity<ReturnMsg> (dto,HttpStatus.UNAUTHORIZED);  
+		}
+
+        return new ResponseEntity<ReturnMsg> (dto,HttpStatus.UNAUTHORIZED);
 	}
-	
+
 	// 인증 실패시 / 로그인등 실패시
 	@ResponseStatus( HttpStatus.FORBIDDEN)
 	@ExceptionHandler(value = KeyErrorException.class)
 	 public ResponseEntity<ReturnMsg> handleKeyException(KeyErrorException e){
 		ReturnMsg dto = new ReturnMsg();
 		dto.setType("key");
-		dto.setMessage(e.getMessage());	
-        return new ResponseEntity<ReturnMsg> (dto,HttpStatus.FORBIDDEN);  
+		dto.setMessage(e.getMessage());
+        return new ResponseEntity<ReturnMsg> (dto,HttpStatus.FORBIDDEN);
 	}
-	
+
 	// 기존 앱 오류 처리 핸들러
 	@ExceptionHandler(AppPreException.class)
 	public  ResponseEntity<HashMap<String , String>> appPre(AppPreException e) {
 		HashMap<String , String> map = new HashMap<String, String>();
-		
-		
+
+
 		if("".equals(e.getCode()) || e.getCode() == null  ) map.put("status", "ERROR");
 		else map.put("status", e.getCode());
 
 		if("".equals(e.getMessage()) || e.getMessage() == null  ) map.put("status_detail", "서버처리에러");
 		else map.put("status_detail", e.getMessage()); // errorMsg
 		// 기존앱에서는 200 으로 응답했다.
-		return new ResponseEntity<> (map, HttpStatus.OK);  
+		return new ResponseEntity<> (map, HttpStatus.OK);
 	  }
-	
+
 	// 디비 입력 수정 등에서 문제가 생긴경우
 //	@ResponseStatus( HttpStatus.INTERNAL_SERVER_ERROR)
 //	@ExceptionHandler(value = SqlErrorException.class)
 //	public ResponseEntity<ReturnMsg> handleSqlException(KeyErrorException e){
 //		ReturnMsg dto = new ReturnMsg();
 //		String temp = e.getMessage();
-//		if( temp.contains("sqlerr") ){ 
+//		if( temp.contains("sqlerr") ){
 //			dto.setType("data");
-//			dto.setMessage("정보수정이슈");	
+//			dto.setMessage("정보수정이슈");
 //		}
-//		
-//		dto.setMessage(e.getMessage());	
-//        return new ResponseEntity<ReturnMsg> (dto,HttpStatus.INTERNAL_SERVER_ERROR);  
+//
+//		dto.setMessage(e.getMessage());
+//        return new ResponseEntity<ReturnMsg> (dto,HttpStatus.INTERNAL_SERVER_ERROR);
 //	}
 }

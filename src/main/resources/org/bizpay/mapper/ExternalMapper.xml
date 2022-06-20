@@ -239,7 +239,8 @@
 		    t_id,
 		    pg_rcipt_no,
 		    gb_info,
-		    van_pg_comp
+		    van_pg_comp,
+		    card_valid_no
 		) VALUES (
 		    #{mberCode},
 		    #{mberCodeSn},
@@ -256,7 +257,8 @@
 		    #{tId},
 		    #{pgRciptNo},
 		    #{gbInfo},
-		    #{vanPgComp}
+		    #{vanPgComp},
+		    #{cardValidNo}
 		)
 	</insert>
 	
@@ -670,7 +672,7 @@
 	</update>
 	
 	<!--바로정산 이체서비스 번호 -->
-	<select id="selectInoutNo" resultType="int" >
+	<select id="selectInoutNo" resultType="long" >
 		select GET_INOUTNO(#{val}) from dual
 	</select>
 	<!--바로정산 이체서비스 잔액  -->

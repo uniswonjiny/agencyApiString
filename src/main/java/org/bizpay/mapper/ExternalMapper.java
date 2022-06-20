@@ -75,15 +75,15 @@ public interface ExternalMapper {
 	// 배송지 정보 저장
 	public int insertDestination(Destination param) throws Exception;
 	// sms  배송지 정보
-	public Destination selectOrderDestination(long mberCode , int reciptNo ) throws Exception;
+	public Destination selectOrderDestination(long mberCode , long reciptNo ) throws Exception;
 	//  결제 취소 여부 확인
-	public int selectCardCancelCount(String mberCode , int reciptNo ) throws Exception;
+	public int selectCardCancelCount(String mberCode , long reciptNo ) throws Exception;
 	// 바로 정산용 메세지 확인
-	public String selectTradeRequest(String mberCode , int inoutNo ) throws Exception;
+	public String selectTradeRequest(String mberCode , long inoutNo ) throws Exception;
 	// tbl_atm ok 로 변경
-	public int updateTblAtmOk(String mberCode , int inoutNo) throws Exception;
+	public int updateTblAtmOk(String mberCode , long inoutNo) throws Exception;
 	// 바로정산 이체서비스 번호 tbl_atm INOUTNO
-	public int selectInoutNo(long mberCode) throws Exception;
+	public long selectInoutNo(long mberCode) throws Exception;
 	// 바로정산 이체서비스 잔액
 	public Integer selectTblBalance(long mberCode) throws Exception;
 	// 바로정상 입력 강제 입금형식임

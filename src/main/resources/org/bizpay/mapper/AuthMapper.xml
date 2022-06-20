@@ -15,7 +15,7 @@
 		    bb.cmpnm,
 		    aa.author_code,
 		    aa.recommend_biz_code,
-            case bb.dealer_kind 
+            case bb.dealer_kind
 		        when '31' then 'HEADOFFICE'
 		        when '32' then 'DISTRIBUTOR'
 		        when '33' then 'AGENCY'
@@ -25,10 +25,10 @@
 		    mber aa
 		inner join biz bb
         on aa.biz_code = bb.biz_code
-		where aa.usid = #{val}
+		where aa.usid = #{id}
 <!-- 		and aa.AUTHOR_CODE != 'AUTHOR_USER' -->
 	</select>
-	
+
 		<select id="userInfo2" resultType="MemberInfo">
 		SELECT
 			aa.mber_code,
@@ -39,7 +39,7 @@
 		    aa.author_code,
 		    aa.recommend_biz_code,
 		    bb.dealer_kind,
-            case bb.dealer_kind 
+            case bb.dealer_kind
 		        when '31' then 'HEADOFFICE'
 		        when '32' then 'DISTRIBUTOR'
 		        when '33' then 'AGENCY'
@@ -50,8 +50,8 @@
 		    mber aa
 		inner join biz bb
         on aa.biz_code = bb.biz_code
-        INNER JOIN MBER_DETAIL md 
-        ON aa.MBER_CODE  = md.MBER_CODE 
+        INNER JOIN MBER_DETAIL md
+        ON aa.MBER_CODE  = md.MBER_CODE
 		where aa.mber_code = #{val}
 		GROUP  BY aa.mber_code,
 			aa.biz_code,
@@ -62,7 +62,7 @@
 		    aa.recommend_biz_code,
 		    bb.dealer_kind
 	</select>
-	
+
 	<!-- 사업자정보 -->
 	<select id="bizInfo" resultType="BizInfo">
 		SELECT
@@ -113,7 +113,7 @@
 		    baro_rate,
 		    etc_rate,
 		    join_amt,
-		    case dealer_kind 
+		    case dealer_kind
 		        when '31' then 'HEADOFFICE'
 		        when '32' then 'DISTRIBUTOR'
 		        when '33' then 'AGENCY'
@@ -126,14 +126,14 @@
 		    biz
 		where biz_code = #{val}
 	</select>
-	
+
 	<!-- 딜러정보 -->
 	<select id="dealerList" resultType="DealerInfo">
-		SELECT 
-			biz_code, 
+		SELECT
+			biz_code,
 			cmpnm,
 			trget_biz_code,
-			case dealer_kind 
+			case dealer_kind
 		        when '31' then 'HEADOFFICE'
 		        when '32' then 'DISTRIBUTOR'
 		        when '33' then 'AGENCY'
@@ -144,10 +144,10 @@
 			CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code
 		ORDER BY cmpnm
 	</select>
-	
+
 	<select id="dealerKind" resultType="String">
 	select
-	 case dealer_kind 
+	 case dealer_kind
 		        when '31' then 'HEADOFFICE'
 		        when '32' then 'DISTRIBUTOR'
 		        when '33' then 'AGENCY'
@@ -157,19 +157,19 @@
 		    biz
 		where biz_code = #{val}
 	</select>
-	
+
 	<!--  사용자 사용여부만 수정한다. -->
 	<update id="updateMberUseAt" parameterType="HashMap">
 	UPDATE MBER
-	SET 
+	SET
 	    USE_AT =  #{useAt}
 	WHERE MBER_CODE = #{mberCode}
 	</update>
-	
+
 	<!-- 사용여부 변경 이력 입력  -->
 	<insert id="insertMberHistUserAt" parameterType="HashMap">
-	insert 
-	into 
+	insert
+	into
 	mber_hist2(
 		mber_code,
 		sn,
@@ -180,12 +180,12 @@
 		#{mberCode},<!--  수정당하는 대상 -->
 		nvl( (SELECT MAX(sn)+1 FROM mber_hist2 WHERE mber_code= #{mberCode} ) , 1) ,
 		'MH_USE_AT',
-		#{useAt} 
+		#{useAt}
 	)
 	</insert>
 	<!-- 사용자 변경 이력  -->
 	<insert id="insertMberHist2" parameterType="HashMap">
-	insert into 
+	insert into
 	mber_hist2(
 		mber_code,
 		sn,
@@ -202,7 +202,7 @@
 		#{creatMberCode}
 	)
 	</insert>
-	
+
 	<!-- 추천대리점 변경  -->
 	<update id="updateRecommendBizCode" parameterType="HashMap">
 		update mber_basis set recommend_biz_code = #{recommendBizCode} where biz_Code  =  #{bizCode}
@@ -212,14 +212,14 @@
 		SELECT
 			count(1)
 		FROM
-		    mber 
+		    mber
 		where usid = #{val}
 
 	</select>
-	
+
 	<!-- 사업자번호 확인  -->
 	<select id="selectBizrno" resultType="int">
 		select count(1) from biz where bizrno =  #{val}
 	</select>
-	
+
   </mapper>

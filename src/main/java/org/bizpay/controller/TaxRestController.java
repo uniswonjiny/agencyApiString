@@ -19,37 +19,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 
 @Log
 @RestController
 @RequestMapping("/tax")
 @CrossOrigin(origins={"*"})
-@Api(tags = "세금계산서 ")
 public class TaxRestController {
 	@Autowired
 	TaxService tService;
-	@ApiOperation(value="세금계산서 발급목록" , notes = "세금계산서 발급목록 조회")
+
 	@RequestMapping(value = "taxIssueList", method = RequestMethod.POST)
 	public ResponseEntity<List<TaxIssue>>  taxIssueList(@RequestBody TaxIssueParam param) throws Exception {
 		log.info("세금계산서 발급목록 조회");
 		return new ResponseEntity<>(tService.taxIssueList(param), HttpStatus.OK);
 	}
-	@ApiOperation(value="세무서 신고목록" , notes = "세무서 신고목록")
+	
 	@RequestMapping(value = "taxReportList", method = RequestMethod.POST)
 	public ResponseEntity<List<TaxReport>>  taxReportList(@RequestBody TaxReportParam param) throws Exception {
 		log.info("세무서 신고목록 조회");
 		return new ResponseEntity<>(tService.taxReportList(param), HttpStatus.OK);
 	}
-	@ApiOperation(value="보증료 목록" , notes = "보증료 목록 조회")
+	
 	@RequestMapping(value = "guarantList", method = RequestMethod.POST)
 	public ResponseEntity<List<Guarant>> guarantList(@RequestBody GuarantParam param) throws Exception {
 		log.info("보증료 목록 조회");
 		return new ResponseEntity<>(tService.guarantList(param), HttpStatus.OK);
 	}
-	@ApiOperation(value="세무서 신고파일" , notes = "세무서 신고파일생성")
+	
 	@RequestMapping(value = "taxFileInfo", method = RequestMethod.POST)
 	public ResponseEntity<HashMap<String, Object>>  taxFileInfo(@RequestBody TaxIssueParam param) throws Exception {
 		log.info("세무서 신고파일 정보 조회 - 파일은 화면에서 만든다 - 서버에 임시파일양산되는것 방지");

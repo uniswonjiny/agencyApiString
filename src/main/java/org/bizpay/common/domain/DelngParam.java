@@ -31,7 +31,7 @@ public class DelngParam {
     private String mberFeeAmt;
     private String payAmt;
     private String approvalConfirm;
-    private int deviceSeqNo;
+    private long deviceSeqNo;
     private String delngPayType;
     private String mberId;
     private String cancelDt;

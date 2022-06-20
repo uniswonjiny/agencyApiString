@@ -60,8 +60,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
-@Log
+@Slf4j
 @Service
 public class ExternalSeviceImpl implements ExternalService {
 	public static final String KSNET_PG_IP = "210.181.28.137";// "210.181.28.137"; //-필수- ipaddr X(15)
@@ -98,34 +99,43 @@ public class ExternalSeviceImpl implements ExternalService {
 		log.info("외부결제연동 결제정보 부분만 입력 delng 아니다");
 		// 금액이 숫자인지 확인
 		if (!param.getOrderPrice().matches("[+-]?\\d*(\\.\\d+)?")) {
+			log.error(" insertExOrder 금액이 숫자가 아닙니다. - " + param.toString());
 			return "A007";
 		}
 
 		// 1. 요청한 값이 정상적인지 검사
 		if ("".equals(param.getNextUrl())) {
+			log.error(" insertExOrder 요청값이정상이 아닙니다.. - " + param.toString());
 			return "A002";
 		}
 		if ("".equals(param.getNotiUrl())) {
+			log.error(" insertExOrder noti 주소 없음 - " + param.toString());
 			return "A003";
 		}
 		if ("".equals(param.getExorderNo())) {
+			log.error(" insertExOrder 외부 주문번호 없음 - " + param.toString());
 			return "A004";
 		}
 		if ("".equals(param.getMberId())) {
+			log.error(" insertExOrder 사용자아이디 없음 - " + param.toString());
 			return "A005";
 		}
 		if ("".equals(param.getOrderName())) {
+			log.error(" insertExOrder 주문명 없음 - " + param.toString());
 			return "A006";
 		}
-		if (Long.valueOf(param.getOrderPrice()) < 100) {
+		if (Long.valueOf(param.getOrderPrice()) < 1000) {
+			log.error(" insertExOrder 최소 금액 오류 - " + param.toString());
 			return "A007";
 		}
 		if ("".equals(param.getPkHash())) {
+			log.error(" insertExOrder 해시값 없음 - " + param.toString());
 			return "A008";
 		}
 
 		// 해시 키값 확인 -- 운영배포시 주석 해제
 		if (param.getPkHash() == null || param.getPkHash().length() < 1) {
+			log.error(" insertExOrder 해시값 없음 - " + param.toString());
 			return "A008";
 		}
 		String temp = param.getMberId() + param.getOrderName() + param.getOrderPrice() + param.getExorderNo()
@@ -133,6 +143,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		String hashkey = eUtil.encryptSHA256(temp);
 
 		if (!hashkey.equals(param.getPkHash())) {
+			log.error(" insertExOrder 해시값 불일치 - " + param.toString());
 			return "A009";
 		}
 
@@ -143,7 +154,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				log.info("이전 주문만 완료후 후속 결제가 안된 경우");
 				return String.valueOf(reP.getSeq());
 			} else {
-				log.info("이전 주문관련 결제등이 발생해버린 경우");
+				log.error(" insertExOrder 해시값 불일치 - " + param.toString());
 				return "S001"; // !코드추가후 수정
 			}
 		}
@@ -378,7 +389,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				delngCredtParam.setPgRciptNo(sUtil.getString(ht.get("TransactionNo")).trim());//// pg거래번호
 				delngCredtParam.setGbInfo("U"); // 유니코아
 				delngCredtParam.setVanPgComp("PG_KSNET");
-
+				delngCredtParam.setCardValidNo( cUtil.encrypt( param.getExpiration() ));
 				tparam1.setOrderType("C");
 				tparam1.setOrderDetail(sUtil.getString(ht.get("Message1")).trim());
 				if (exMapper.insertDelngCredt(delngCredtParam) < 1) {
@@ -907,8 +918,8 @@ public class ExternalSeviceImpl implements ExternalService {
 			SmsLink smsLinkInfo = exMapper.selectSmsLinkInfo(param.getId());
 			
 			// 주문번호 생성
-			String orderNo = mberInfo.getUsid() + "_" + rciptNo;
-			
+			//String orderNo = mberInfo.getUsid() + "_" + rciptNo;
+			String orderNo = mberInfo.getUsid();
 			// 결제시도 
 			Hashtable<String, Object> ht = new Hashtable<>();
 			// TrackII 
@@ -1041,6 +1052,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				delngCredtParam.setPgRciptNo(sUtil.getString(ht.get("TransactionNo")).trim());//// pg거래번호
 				delngCredtParam.setGbInfo("U"); // 유니코아
 				delngCredtParam.setVanPgComp("PG_KSNET");
+				delngCredtParam.setCardValidNo( cUtil.encrypt( param.getExpiration() ));
 
 				if (exMapper.insertDelngCredt(delngCredtParam) < 1) {
 					log.info("DELNG_CREDT 입력에러");
@@ -1081,7 +1093,7 @@ public class ExternalSeviceImpl implements ExternalService {
 					//feeRate -- 수수료율
 					tap.setSalesFeePer( Float.parseFloat(tbMberBasis.get("FEE_RATE").toString()) );
 					// d수수료금액
-					int tempSalesFeeAmt = (int)(param.getTotAmt() * Float.parseFloat(tbMberBasis.get("FEE_RATE").toString()) /100);
+					int tempSalesFeeAmt = (int)Math.ceil((param.getTotAmt() * Float.parseFloat(tbMberBasis.get("FEE_RATE").toString()) /100));
 					tap.setSalesFeeAmt( tempSalesFeeAmt );
 					// 정산금액
 					tap.setReqAmt( param.getTotAmt() - tempSalesFeeAmt );
@@ -1182,7 +1194,7 @@ public class ExternalSeviceImpl implements ExternalService {
 		}
 		
 		// 배송지 정보
-		Destination destination =  exMapper.selectOrderDestination( Integer.parseInt( smsLinkInfo.getMberCode()) , smsLinkInfo.getRciptNo() );
+		Destination destination =  exMapper.selectOrderDestination( Long.parseLong( smsLinkInfo.getMberCode()) , smsLinkInfo.getRciptNo() );
 		// 필요정보 복호화
 		if (destination.getRecipient() != null && !"".equals(destination.getRecipient())) {
 			destination.setRecipient( cUtil.decrypt(  destination.getRecipient()   )  );

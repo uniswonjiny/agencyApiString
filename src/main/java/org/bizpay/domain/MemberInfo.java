@@ -1,23 +1,19 @@
 package org.bizpay.domain;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
-@Getter
-@Setter
-@ToString
+@Data
 public class MemberInfo {
-	private String mberCode;
-    private String bizCode;
-    private String usid;
-    private String password;
-    private String idntfcNm;
-    private String cmpnm;
-    private String mberCodeSn;
-    private String authorCode;
-    private String recommendBizCode;
-    private String useAt;
-    private String grade;
-    private int dealerKind;
+    String mberCode;
+    String bizCode;
+    String usid;
+    String password;
+    String idntfcNm;
+    String cmpnm;
+    String mberCodeSn;
+    String authorCode;
+    String recommendBizCode;
+    String useAt;
+    String grade;
+    int dealerKind;
 }

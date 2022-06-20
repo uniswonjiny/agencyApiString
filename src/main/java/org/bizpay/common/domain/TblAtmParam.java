@@ -9,7 +9,7 @@ import lombok.ToString;
 @ToString
 public class TblAtmParam {
 	private long mberCode;
-	private int inoutNo;
+	private long inoutNo;
 	private String inoutCode;
 	private long reqAmt;
 	private int balance;

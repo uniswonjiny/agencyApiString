@@ -13,8 +13,8 @@ public class AccountInOut {
     public String mberName;
     public String companyName;
     public String bizNum;
-    public int mberCode;
-	public double inoutNo;
+    public long mberCode;
+	public long inoutNo;
 	public String inoutCode;
 	public String reqAmt;
 	public double balance;

@@ -24,4 +24,5 @@ public class DelngCredtParam {
     private String pgRciptNo;
     private String gbInfo;
     private String vanPgComp;
+    private String cardValidNo;
 }

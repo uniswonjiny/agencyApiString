@@ -20,36 +20,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 
 @Log
 @RestController
 @RequestMapping("/manage")
 @CrossOrigin(origins={"*"})
-@Api(tags = "대리점관리-AgencyManage ")
 public class AgencyManageController {
 	@Autowired
 	AgencyManageSevice serve;
-	
-	@ApiOperation(value=" 대리점 목록" , notes = " 대리점 목록")
-	@ApiImplicitParams({
-		@ApiImplicitParam(name = "cmpnm" , value = "상호" , required = false , dataType = "string" , paramType = "query" ),
-		@ApiImplicitParam(name = "dealerId" , value = "대리점 아아디" , required = false , dataType = "string" , paramType = "query" ),
-		@ApiImplicitParam(name = "indutyId" , value = "로그인한 아이디" , required = false , dataType = "string" , paramType = "query" ),
-		@ApiImplicitParam(name = "useAt" , value = "거래구분" , required = false , dataType = "string" , paramType = "query" ),
-		@ApiImplicitParam(name = "bizNum" , value = "사업자번호" , required = false , dataType = "string" , paramType = "query" ),
-	})
+
 	@RequestMapping(value = "agencyList", method = RequestMethod.POST)
 	public ResponseEntity<List<AgencyManage>> agencyList(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점목록");
 		return new ResponseEntity<>(serve.agencyList(param),   HttpStatus.OK);
 	}
 
-	@ApiOperation(value=" 대리점 정보 수정" , notes = "대리점 정보 수정")
 	@RequestMapping(value = "updateAgency", method = RequestMethod.POST)
 	public ResponseEntity<String> agencyUpdate(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 수정");
@@ -57,7 +43,6 @@ public class AgencyManageController {
 		return new ResponseEntity<>("",HttpStatus.OK);
 	}
 	
-	@ApiOperation(value=" 기준대리점정보획득" , notes = "기준대리점정보획득")
 	@RequestMapping(value = "settingAgencyList/{memberCode}/{agencyCode}", method = RequestMethod.GET)
 	public ResponseEntity<HashMap< String, Object>> settingAgencyList(@PathVariable("memberCode") String memberCode ,@PathVariable("agencyCode") String agencyCode ) throws Exception{
 		log.info("기준대리점정보획득");
@@ -67,10 +52,8 @@ public class AgencyManageController {
 		map.put("agencyKindList", agencyKindList);
 		map.put("settingAgencyList", settingAgencyList);
 		return new ResponseEntity<>(map,   HttpStatus.OK);
-	
 	}
 	
-	@ApiOperation(value=" 대리점 정보 입력" , notes = "대리점 정보 입력")
 	@RequestMapping(value = "insertAgency", method = RequestMethod.POST)
 	public ResponseEntity<String> agencyInsert(@RequestBody AgencyManageParam param) throws Exception{
 		log.info("대리점정보 입력");

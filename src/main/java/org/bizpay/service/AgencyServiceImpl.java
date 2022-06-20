@@ -468,7 +468,7 @@ public class AgencyServiceImpl implements AgencyService {
 				double balance = mapper.selectBalance(mberCode);
 				balance =   balance + 정산금액;
 				// 입출금번호 
-				double InoutNo = mapper.selectInoutNo(mberCode);
+				long InoutNo = mapper.selectInoutNo(mberCode);
 				
 				map2.clear();
 				map2.put("mberCode", mberCode);

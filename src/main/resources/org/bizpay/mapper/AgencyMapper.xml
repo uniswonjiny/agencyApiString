@@ -3,7 +3,7 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
   <mapper namespace="org.bizpay.mapper.AgencyMapper">
-  	
+
   	<select id="summaryInfo" resultType="AgencySales" >
   		        SELECT
                     cmpnm,
@@ -238,7 +238,7 @@
                                                                     AND c.card_delete_yn = 'N'
                                                                     AND c.confm_dt between #{dateStart} and #{dateEnd}
                                                                     AND c.delng_se_code = 'CARD_ISSUE'
-   
+
                                                                     <if test="!bizCode.equals('') and widthMber==2"> <!--  권한이 딜러(대리점) 인경우와 상위관리자에서 검색메뉴 대리점을 선택한 경우로 분리 -->
                                                                     	AND A.biz_code= #{bizCode}
                                                                     </if>
@@ -248,14 +248,14 @@
 																    <if test="bizNum!=null and !bizNum.equals('') " >
 															  			AND d.biz_num like '%'||#{bizNum}||'%'
 															  		</if>
-															  		
+
 															  		<if test="mberId!=null and !mberId.equals('') " >
-															  			AND d.induty_id like '%'||#{mberId}||'%' 
+															  			AND d.induty_id like '%'||#{mberId}||'%'
 															  		</if>
 															  		<if test="companyName!=null and !companyName.equals('') " >
-															  			AND d.company_name like '%'||#{companyName}||'%' 
+															  			AND d.company_name like '%'||#{companyName}||'%'
 															  		</if>
-															  		
+
                                                                 GROUP BY a.cmpnm,a.biz_type,a.dealer_kind,b.usid,a.biz_code,a.pymnt_rate,d.mber_name,
                                                                     d.company_name,d.biz_num,d.fee_rate,d.fee_distributor,d.fee_agency,d.fee_dealer
                                                                 HAVING
@@ -266,75 +266,75 @@
                                     )
                             )
                     ) ORDER BY t4,t5 DESC,t6 DESC
-        
-  	
+
+
   	</select>
 	<select id="summaryInfo2" resultType="AgencySales2" >
-	select 
-	    result_6.* 
-	    from 
-	    ( 
-	        select result_5.* 
-	        ,(CASE WHEN t2_biz_code = '0000002' then t1_biz_code else (case when t3_biz_code = '0000002' then t2_biz_code else t3_biz_code end) end) as t4 
-	        ,(CASE WHEN t2_biz_code = '0000002' then '' else (case when t3_biz_code = '0000002' then t1_biz_code else t2_biz_code end) end) as t5 
-	        ,(CASE WHEN t2_biz_code = '0000002' then '' else (case when t3_biz_code = '0000002' then '' else t1_biz_code end) end) as t6 
-	        from 
-	        ( 
-	            select result_4.* 
-	            , (select cmpnm from biz where biz_code = t3_biz_code) as t3_cmpnm  
-	            , (select biz_type from biz where biz_code = t3_biz_code) as t3_biz_type  
-	            , (select dealer_kind from biz where biz_code = t3_biz_code) as t3_dealer_kind  
-	            
-	            from 
-	            ( 
-	                select result_3.* 
-	                , (select trget_biz_code from biz where biz_code = t2_biz_code) as t3_biz_code 
-	                from 
-	                ( 
-	                select result_2.*  
-	                ,(select cmpnm from biz where biz_code = t2_biz_code) as t2_cmpnm  
-	                ,(select biz_type from biz where biz_code = t2_biz_code) as t2_biz_type  
-	                , (select dealer_kind from biz where biz_code = t2_biz_code) as t2_dealer_kind  
-	                , (CASE WHEN result_2.recommend_p_biz_code is null then null else (select dealer_kind from biz where biz_code = result_2.recommend_p_biz_code) end) as recommend_p_dealer_kind 
-	                , (CASE WHEN result_2.recommend_p_biz_code is null then null else (select cmpnm from biz where biz_code = result_2.recommend_p_biz_code) end) as recommend_p_cmpnm 
-	                    from  
-	                    ( 
-	                        select result_1.* 
-	                        , cmpnm as t1_cmpnm 
-	                        , biz_type as t1_biz_type 
-	                        , dealer_kind as t1_dealer_kind 
-	                        , (select trget_biz_code from biz where biz_code = t1_biz_code) as t2_biz_code 
-	                        , (CASE WHEN result_1.recommend_dealer_kind = '34' then (select trget_biz_code from biz where biz_code = result_1.RECOMMEND_BIZ_CODE) else null end) as recommend_p_biz_code 
-	                        from  
-	                        ( 
-	                            SELECT * FROM  
-	                            (  
-	                                SELECT  
-	                                a.biz_code as t1_biz_code, 
-	                                a.cmpnm, 
-	                                a.biz_type, 
-	                                a.dealer_kind, 
-	                                b.usid, 
-	                                SUM(splpc+vat) AS tot,  
-	                                a.pymnt_rate,  
-	                                d.mber_name,  
-	                                d.company_name,  
-	                                d.biz_num,  
-	                                d.fee_rate,  
-	                                d.RECOMMEND_BIZ_CODE, 
-	                                (select dealer_kind from biz where biz_code = d.RECOMMEND_BIZ_CODE) as recommend_dealer_kind, 
-	                                (select cmpnm from biz where biz_code = d.RECOMMEND_BIZ_CODE) as recommend_cmpnm, 
-	                                COUNT(d.mber_name) cnt, d.fee_distributor, d.fee_agency, d.fee_dealer  
-	                                FROM biz a,mber b,delng c, mber_basis d  
-	                                WHERE a.biz_code=b.biz_code  
+	select
+	    result_6.*
+	    from
+	    (
+	        select result_5.*
+	        ,(CASE WHEN t2_biz_code = '0000002' then t1_biz_code else (case when t3_biz_code = '0000002' then t2_biz_code else t3_biz_code end) end) as t4
+	        ,(CASE WHEN t2_biz_code = '0000002' then '' else (case when t3_biz_code = '0000002' then t1_biz_code else t2_biz_code end) end) as t5
+	        ,(CASE WHEN t2_biz_code = '0000002' then '' else (case when t3_biz_code = '0000002' then '' else t1_biz_code end) end) as t6
+	        from
+	        (
+	            select result_4.*
+	            , (select cmpnm from biz where biz_code = t3_biz_code) as t3_cmpnm
+	            , (select biz_type from biz where biz_code = t3_biz_code) as t3_biz_type
+	            , (select dealer_kind from biz where biz_code = t3_biz_code) as t3_dealer_kind
+
+	            from
+	            (
+	                select result_3.*
+	                , (select trget_biz_code from biz where biz_code = t2_biz_code) as t3_biz_code
+	                from
+	                (
+	                select result_2.*
+	                ,(select cmpnm from biz where biz_code = t2_biz_code) as t2_cmpnm
+	                ,(select biz_type from biz where biz_code = t2_biz_code) as t2_biz_type
+	                , (select dealer_kind from biz where biz_code = t2_biz_code) as t2_dealer_kind
+	                , (CASE WHEN result_2.recommend_p_biz_code is null then null else (select dealer_kind from biz where biz_code = result_2.recommend_p_biz_code) end) as recommend_p_dealer_kind
+	                , (CASE WHEN result_2.recommend_p_biz_code is null then null else (select cmpnm from biz where biz_code = result_2.recommend_p_biz_code) end) as recommend_p_cmpnm
+	                    from
+	                    (
+	                        select result_1.*
+	                        , cmpnm as t1_cmpnm
+	                        , biz_type as t1_biz_type
+	                        , dealer_kind as t1_dealer_kind
+	                        , (select trget_biz_code from biz where biz_code = t1_biz_code) as t2_biz_code
+	                        , (CASE WHEN result_1.recommend_dealer_kind = '34' then (select trget_biz_code from biz where biz_code = result_1.RECOMMEND_BIZ_CODE) else null end) as recommend_p_biz_code
+	                        from
+	                        (
+	                            SELECT * FROM
+	                            (
+	                                SELECT
+	                                a.biz_code as t1_biz_code,
+	                                a.cmpnm,
+	                                a.biz_type,
+	                                a.dealer_kind,
+	                                b.usid,
+	                                SUM(splpc+vat) AS tot,
+	                                a.pymnt_rate,
+	                                d.mber_name,
+	                                d.company_name,
+	                                d.biz_num,
+	                                d.fee_rate,
+	                                d.RECOMMEND_BIZ_CODE,
+	                                (select dealer_kind from biz where biz_code = d.RECOMMEND_BIZ_CODE) as recommend_dealer_kind,
+	                                (select cmpnm from biz where biz_code = d.RECOMMEND_BIZ_CODE) as recommend_cmpnm,
+	                                COUNT(d.mber_name) cnt, d.fee_distributor, d.fee_agency, d.fee_dealer
+	                                FROM biz a,mber b,delng c, mber_basis d
+	                                WHERE a.biz_code=b.biz_code
 										AND A.recommend_biz_code in (SELECT biz_code FROM biz START WITH biz_code =  #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
-		                                AND b.mber_code=c.mber_code  
-		                                AND b.mber_code=d.mber_code 
-		                                AND c.card_delete_yn = 'N' 
-		                                AND c.delng_se_code='CARD_ISSUE'  
-										AND d.RECOMMEND_BIZ_CODE != '0000002'  
+		                                AND b.mber_code=c.mber_code
+		                                AND b.mber_code=d.mber_code
+		                                AND c.card_delete_yn = 'N'
+		                                AND c.delng_se_code='CARD_ISSUE'
+										AND d.RECOMMEND_BIZ_CODE != '0000002'
 		                                AND  c.confm_dt between #{dateStart} and #{dateEnd}
-										<if test="bizCode!=null and !bizCode.equals('')"> 
+										<if test="bizCode!=null and !bizCode.equals('')">
 											AND A.recommend_biz_code= #{bizCode}
 										</if>
 										<if test="mberName!=null and !mberName.equals('')" >
@@ -344,118 +344,118 @@
 											AND d.biz_num like '%'||#{bizNum}||'%'
 										</if>
 										<if test="mberId!=null and !mberId.equals('') " >
-											AND d.induty_id like '%'||#{mberId}||'%' 
+											AND d.induty_id like '%'||#{mberId}||'%'
 										</if>
 										<if test="companyName!=null and !companyName.equals('') " >
-											AND d.company_name like '%'||#{companyName}||'%' 
+											AND d.company_name like '%'||#{companyName}||'%'
 										</if>
-									GROUP BY a.cmpnm,a.biz_type,a.dealer_kind,b.usid,a.biz_code,a.pymnt_rate,d.mber_name,d.company_name,d.biz_num,d.fee_rate, d.RECOMMEND_BIZ_CODE, d.fee_distributor, d.fee_agency, d.fee_dealer 
-									HAVING SUM(splpc+vat)!=0 
-						        )  
-						    ) result_1 
-						) result_2 
-					) result_3 
-				) result_4 
-			) result_5 
-		) result_6 ORDER BY  recommend_cmpnm, t4, t5 DESC, t6 DESC 
+									GROUP BY a.cmpnm,a.biz_type,a.dealer_kind,b.usid,a.biz_code,a.pymnt_rate,d.mber_name,d.company_name,d.biz_num,d.fee_rate, d.RECOMMEND_BIZ_CODE, d.fee_distributor, d.fee_agency, d.fee_dealer
+									HAVING SUM(splpc+vat)!=0
+						        )
+						    ) result_1
+						) result_2
+					) result_3
+				) result_4
+			) result_5
+		) result_6 ORDER BY  recommend_cmpnm, t4, t5 DESC, t6 DESC
 	</select>
-	
+
 	<select id="summaryInfo3in0" resultType="String" >
 		SELECT  a.biz_code
 		FROM biz a
-		WHERE  
-			a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
-		<if test="bizCode!=null and !bizCode.equals('')"> 
+		WHERE
+			a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
+		<if test="bizCode!=null and !bizCode.equals('')">
 			AND A.biz_code= #{bizCode}
 		</if>
 		<if test="bizNum!=null and !bizNum.equals('') " >
 			AND a.BIZRNO like '%'||#{bizNum}||'%'
 		</if>
 		<if test="mberId!=null and !mberId.equals('') " >
-			AND a.induty_id like '%'||#{mberId}||'%' 
+			AND a.induty_id like '%'||#{mberId}||'%'
 		</if>
 		<if test="companyName!=null and !companyName.equals('') " >
-			AND a.company_name like '%'||#{companyName}||'%' 
+			AND a.company_name like '%'||#{companyName}||'%'
 		</if>
 		ORDER BY CMPNM  , trget_biz_code
 	</select>
-	
+
 	<select id="summaryInfo3in1" resultType="AgencySales3" >
-	select  
+	select
 	TRGET_BIZ_CODE, trget_cmpnm,biz_type,biz_code,dealer_cmpnm,dealer_join_amt,bprprr,create_dt
 	 , (CASE WHEN biz_type = 'N' THEN (in_amt / 1.1) - (in_amt / 1.1 * 0.033)  ELSE in_amt END) AS tot
 	from
-     (SELECT  
+     (SELECT
      	a.TRGET_BIZ_CODE
-     	, (SELECT dest.cmpnm FROM biz dest WHERE dest.biz_code = a.TRGET_BIZ_CODE) AS trget_cmpnm  
-     	, (SELECT dest.biz_type FROM biz dest WHERE dest.biz_code = a.TRGET_BIZ_CODE) AS biz_type  
-     	, a.biz_code  
-     	, a.cmpnm as dealer_cmpnm 
-     	, a.join_amt as dealer_join_amt 
-     	, a.bprprr  
-     	, a.create_dt 
+     	, (SELECT dest.cmpnm FROM biz dest WHERE dest.biz_code = a.TRGET_BIZ_CODE) AS trget_cmpnm
+     	, (SELECT dest.biz_type FROM biz dest WHERE dest.biz_code = a.TRGET_BIZ_CODE) AS biz_type
+     	, a.biz_code
+     	, a.cmpnm as dealer_cmpnm
+     	, a.join_amt as dealer_join_amt
+     	, a.bprprr
+     	, a.create_dt
      	, (CASE WHEN a.join_amt IS NULL OR a.join_amt = 0 THEN 0 ELSE  a.join_amt * 6 / 10 END) AS in_amt
- 	FROM biz a  
- 	WHERE  
-    	trget_biz_code != '0000002'       
-     	AND dealer_kind = '34'       
-		AND biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
-		AND JOIN_AMT > 0 
+ 	FROM biz a
+ 	WHERE
+    	trget_biz_code != '0000002'
+     	AND dealer_kind = '34'
+		AND biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode} CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
+		AND JOIN_AMT > 0
 		AND CREATE_DT between #{dateStart} and #{dateEnd}
-		<if test="bizCode!=null and !bizCode.equals('')"> 
+		<if test="bizCode!=null and !bizCode.equals('')">
 			AND A.biz_code= #{bizCode}
 		</if>
 		<if test="bizNum!=null and !bizNum.equals('') " >
 			AND a.BIZRNO like '%'||#{bizNum}||'%'
 		</if>
 		<if test="mberId!=null and !mberId.equals('') " >
-			AND a.induty_id like '%'||#{mberId}||'%' 
+			AND a.induty_id like '%'||#{mberId}||'%'
 		</if>
 		<if test="companyName!=null and !companyName.equals('') " >
-			AND a.company_name like '%'||#{companyName}||'%' 
+			AND a.company_name like '%'||#{companyName}||'%'
 		</if>
 		)
  		ORDER BY TRGET_BIZ_CODE
 	</select>
-	
+
 	<select id="summaryInfo3in2" resultType="AgencySales3" >
      select recommend_biz_code , trget_cmpnm , biz_type , biz_code , agent_cmpnm , agent_join_amt , bprprr , create_dt
      , (CASE WHEN biz_type = 'N' THEN (in_amt / 1.1) - (in_amt / 1.1 * 0.033)  ELSE in_amt END) AS tot
-     	
-     from 
-     (SELECT  
-    	a.recommend_biz_code  
-     	, (SELECT dest.cmpnm FROM biz dest WHERE dest.biz_code = a.recommend_biz_code) AS trget_cmpnm  
-     	, (SELECT dest.biz_type FROM biz dest WHERE dest.biz_code = a.recommend_biz_code) AS biz_type  
-     	, a.biz_code  
-     	, a.cmpnm as agent_cmpnm  
-     	, a.join_amt as agent_join_amt 
+
+     from
+     (SELECT
+    	a.recommend_biz_code
+     	, (SELECT dest.cmpnm FROM biz dest WHERE dest.biz_code = a.recommend_biz_code) AS trget_cmpnm
+     	, (SELECT dest.biz_type FROM biz dest WHERE dest.biz_code = a.recommend_biz_code) AS biz_type
+     	, a.biz_code
+     	, a.cmpnm as agent_cmpnm
+     	, a.join_amt as agent_join_amt
      	, (CASE WHEN a.join_amt IS NULL OR a.join_amt = 0 THEN 0 ELSE a.join_amt / 2 END) AS in_amt
-     	, a.bprprr  
-     	, a.create_dt  
- 	FROM biz a  
- 	WHERE  
+     	, a.bprprr
+     	, a.create_dt
+ 	FROM biz a
+ 	WHERE
     	a.recommend_biz_code != '0000002'
-    	AND a.dealer_kind = '33'   
-    	AND a.CREATE_DT between #{dateStart} and #{dateEnd}    
-		AND a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
-		AND a.JOIN_AMT > 0 
-		<if test="bizCode!=null and !bizCode.equals('')"> 
+    	AND a.dealer_kind = '33'
+    	AND a.CREATE_DT between #{dateStart} and #{dateEnd}
+		AND a.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
+		AND a.JOIN_AMT > 0
+		<if test="bizCode!=null and !bizCode.equals('')">
 			AND A.biz_code= #{bizCode}
 		</if>
 		<if test="bizNum!=null and !bizNum.equals('') " >
 			AND a.BIZRNO like '%'||#{bizNum}||'%'
 		</if>
 		<if test="mberId!=null and !mberId.equals('') " >
-			AND a.induty_id like '%'||#{mberId}||'%' 
+			AND a.induty_id like '%'||#{mberId}||'%'
 		</if>
 		<if test="companyName!=null and !companyName.equals('') " >
-			AND a.company_name like '%'||#{companyName}||'%' 
+			AND a.company_name like '%'||#{companyName}||'%'
 		</if>
 	)
- 	ORDER BY recommend_biz_code  
+ 	ORDER BY recommend_biz_code
 	</select>
-	
+
 	<select id="sellerSummaryList" resultType="SellerSummary" >
 		SELECT
 			case b.pay_type when 'N' then '일반' else ( case b.pay_type  when 'B' then '바로정산' else '익일입금' end ) end as kpay_type,
@@ -464,61 +464,61 @@
 			   SUM( case when c.delng_se_code IN('CARD_ISSUE','CARD_CNCL') then splpc+vat else 0 end ) AS card_tot,
 			   SUM( case when c.delng_se_code IN('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL') then splpc+vat else 0 end ) AS cash_tot,
 			   SUM( splpc+vat ) AS tot,
-			   b.fee_rate, 
-			   b.mber_name, 
-			   b.company_name, 
-			   b.biz_num, 
-			   b.pay_type, 
-			   SUM(case when c.delng_se_code IN('CARD_ISSUE','CARD_CNCL') then 1 else 0 end) AS card_cnt, 
-			   SUM(case when c.delng_se_code IN('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL') then 1 else 0 end) AS cash_cnt, 
-			   COUNT(b.mber_name) AS tot_cnt 
-		  FROM biz a,mber_basis b,delng c 
-		 WHERE a.biz_code=b.biz_code 
-		   AND b.mber_code=c.mber_code 
+			   b.fee_rate,
+			   b.mber_name,
+			   b.company_name,
+			   b.biz_num,
+			   b.pay_type,
+			   SUM(case when c.delng_se_code IN('CARD_ISSUE','CARD_CNCL') then 1 else 0 end) AS card_cnt,
+			   SUM(case when c.delng_se_code IN('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL') then 1 else 0 end) AS cash_cnt,
+			   COUNT(b.mber_name) AS tot_cnt
+		  FROM biz a,mber_basis b,delng c
+		 WHERE a.biz_code=b.biz_code
+		   AND b.mber_code=c.mber_code
 		   AND c.card_delete_yn = 'N'
-		   AND b.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 
-		   AND c.delng_se_code IN('CARD_ISSUE','CASH_RCIPT_ISSUE') 
-		   AND c.confm_dt between #{dateStart} and #{dateEnd} 
-	<if test="bizCode!=null and !bizCode.equals('')"> 
+		   AND b.biz_code in (SELECT biz_code FROM biz START WITH biz_code = #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
+		   AND c.delng_se_code IN('CARD_ISSUE','CASH_RCIPT_ISSUE')
+		   AND c.confm_dt between #{dateStart} and #{dateEnd}
+	<if test="bizCode!=null and !bizCode.equals('')">
 		AND A.biz_code= #{bizCode}
 	</if>
 	<if test="bizNum!=null and !bizNum.equals('') " >
 		AND b.biz_num like '%'||#{bizNum}||'%' <!-- BIZRNO 와 구별이 .... 값이 안나오면 변경  -->
 	</if>
 	<if test="mberId!=null and !mberId.equals('') " >
-		AND b.induty_id like '%'||#{mberId}||'%' 
+		AND b.induty_id like '%'||#{mberId}||'%'
 	</if>
 	<if test="companyName!=null and !companyName.equals('') " >
-		AND b.company_name like '%'||#{companyName}||'%' 
+		AND b.company_name like '%'||#{companyName}||'%'
 	</if>
 	<if test="mberName!=null and !mberName.equals('') " >
-		AND b.mber_name like '%'||#{mberName}||'%' 
+		AND b.mber_name like '%'||#{mberName}||'%'
 	</if>
-		GROUP BY a.cmpnm,b.induty_id,b.fee_rate,b.mber_name, b.company_name, b.biz_num , b.pay_type 
+		GROUP BY a.cmpnm,b.induty_id,b.fee_rate,b.mber_name, b.company_name, b.biz_num , b.pay_type
 		HAVING SUM(splpc+vat)!=0
-		ORDER BY a.cmpnm,b.induty_id 
+		ORDER BY a.cmpnm,b.induty_id
 	</select>
 	<select id="salesAdjustmentList" resultType="SalesAdjustment">
-	SELECT 
-		   SUBSTR(c.confm_dt,1,4)||'-'||SUBSTR(c.confm_dt,5,2)||'-'||SUBSTR(c.confm_dt,7,2) AS confm_dt, 
-		   a.cmpnm, 
-	       b.induty_id AS usid, 
-		   splpc+vat AS tot, 
-		   b.fee_rate, 
-		   CASE WHEN C.CARD_DELETE_YN IS NULL THEN '정상' 
-		   WHEN C.CARD_DELETE_YN = 'N' THEN '정상' 
-		   WHEN C.CARD_DELETE_YN = 'Y' THEN '취소' END AS card_delete_nm, 
-		   c.card_delete_yn AS card_delete_yn_, 
-		   c.cancel_mber, 
-		   TO_CHAR(c.cancel_dt,'YYYY-MM-DD') AS cancel_dt, 
-		   c.bigo, 
-		   c.mber_code, 
-		   c.mber_code_sn, 
-		   c.rcipt_no, 
-		   b.mber_name, 
-		   c.delng_se_code, 
-		   case b.pay_type when 'N' then '일반' else ( case b.pay_type  when 'B' then '바로정산' else '익일입금' end ) end as pay_type,  
-		   case when c.delng_se_code in ('CARD_ISSUE','CARD_RCIPT_ISSUE')  then '카드' else '현금' end as delng_gb,  
+	SELECT
+		   SUBSTR(c.confm_dt,1,4)||'-'||SUBSTR(c.confm_dt,5,2)||'-'||SUBSTR(c.confm_dt,7,2) AS confm_dt,
+		   a.cmpnm,
+	       b.induty_id AS usid,
+		   splpc+vat AS tot,
+		   b.fee_rate,
+		   CASE WHEN C.CARD_DELETE_YN IS NULL THEN '정상'
+		   WHEN C.CARD_DELETE_YN = 'N' THEN '정상'
+		   WHEN C.CARD_DELETE_YN = 'Y' THEN '취소' END AS card_delete_nm,
+		   c.card_delete_yn AS card_delete_yn_,
+		   c.cancel_mber,
+		   TO_CHAR(c.cancel_dt,'YYYY-MM-DD') AS cancel_dt,
+		   c.bigo,
+		   c.mber_code,
+		   c.mber_code_sn,
+		   c.rcipt_no,
+		   b.mber_name,
+		   c.delng_se_code,
+		   case b.pay_type when 'N' then '일반' else ( case b.pay_type  when 'B' then '바로정산' else '익일입금' end ) end as pay_type,
+		   case when c.delng_se_code in ('CARD_ISSUE','CARD_RCIPT_ISSUE')  then '카드' else '현금' end as delng_gb,
 		   c.confm_no ,
 		   pay_type,
 		   case when pay_type='T' and (select TRUNC(SYSDATE) -  TO_DATE(c.confm_dt, 'YYYYMMDD')  from dual) = 0 then 'O'
@@ -527,16 +527,16 @@
 		    else 'X' end as cancelEnable
 	FROM biz a
 	inner join mber_basis b
-	on a.biz_code=b.biz_code 
+	on a.biz_code=b.biz_code
 	inner join delng c
-	on b.mber_code=c.mber_code 
+	on b.mber_code=c.mber_code
 	left join delng_credt d
-	on b.mber_code=d.mber_code 
+	on b.mber_code=d.mber_code
 	and c.mber_code_sn = d.mber_code_sn
 	and c.rcipt_no = d.rcipt_no
 	WHERE 1=1
-	AND b.biz_code in (SELECT biz_code FROM biz START WITH biz_code =  #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code) 		
-	AND c.confm_dt BETWEEN #{dateStart} and #{dateEnd} 
+	AND b.biz_code in (SELECT biz_code FROM biz START WITH biz_code =  #{memberBizeCode}  CONNECT BY NOCYCLE PRIOR biz_code = trget_biz_code)
+	AND c.confm_dt BETWEEN #{dateStart} and #{dateEnd}
 	<if test="calculateType!=null and !calculateType.equals('') " >
 		AND b.calculate_type = #{calculateType}
 	</if>
@@ -554,79 +554,79 @@
 	</if>
 	<if test="delngSeCode!=null and !delngSeCode.equals('') " >
 		<if test="delngSeCode.equals('card')" >
-			AND c.delng_se_code IN ('CARD_ISSUE','CARD_CNCL') 
+			AND c.delng_se_code IN ('CARD_ISSUE','CARD_CNCL')
 		</if>
 		<if test="delngSeCode.equals('cash')" >
-			AND c.delng_se_code IN ('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL') 
+			AND c.delng_se_code IN ('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL')
 		</if>
 		<if test="delngSeCode.equals('all')" >
-			AND c.delng_se_code IN ('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL' , 'CASH_RCIPT_CNCL' ,'CARD_CNCL') 
+			AND c.delng_se_code IN ('CASH_RCIPT_ISSUE','CASH_RCIPT_CNCL' , 'CASH_RCIPT_CNCL' ,'CARD_CNCL')
 		</if>
 	</if>
-	ORDER BY a.cmpnm,b.induty_id 
+	ORDER BY a.cmpnm,b.induty_id
 	</select>
-	
+
 	<update id="delngCancel">
-		UPDATE delng 
-					SET card_delete_yn = 'Y' 
-					 ,cancel_mber = #{usid} 
-					 ,cancel_dt = #{cancelDate} 
+		UPDATE delng
+					SET card_delete_yn = 'Y'
+					 ,cancel_mber = #{usid}
+					 ,cancel_dt = #{cancelDate}
 					 ,bigo = #{cancelReason}
-					 WHERE mber_code=#{mberCode} 
+					 WHERE mber_code=#{mberCode}
 					 AND mber_code_sn=#{mberCodeSn}
 					 AND rcipt_no=#{rciptNo}
 	</update>
-	
+
 	<select id="delngConfirm" resultType="DelngCancelParam">
 		SELECT * FROM delng
-		WHERE mber_code= #{mberCode} 
-			AND mber_code_sn=  #{mberCodeSn} 
-			AND rcipt_no= #{rciptNo} 
+		WHERE mber_code= #{mberCode}
+			AND mber_code_sn=  #{mberCodeSn}
+			AND rcipt_no= #{rciptNo}
 	</select>
-	
+
 	<select id="delngCardConfirm">
-		SELECT * FROM delng_credt 
-		WHERE mber_code= #{mberCode} 
-			AND mber_code_sn=  #{mberCodeSn} 
-			AND rcipt_no= #{rciptNo} 
+		SELECT * FROM delng_credt
+		WHERE mber_code= #{mberCode}
+			AND mber_code_sn=  #{mberCodeSn}
+			AND rcipt_no= #{rciptNo}
 	</select>
-	
+
 	<select id="getPayType" resultType="String">
 		select pay_type from MBER_BASIS where mber_code = #{val}
 	</select>
-	
+
 	<!-- 중복검사 delng newtbDelng - 이전 쿼리문이름  -->
 	<select id="newtbDelng" resultType="int" parameterType="HashMap">
-	SELECT count(1) FROM delng 
+	SELECT count(1) FROM delng
 	WHERE mber_code = #{mberCode}
 		and CONFM_DT=#{confmDt}
 		and CONFM_TIME=#{confmTime}
 		and CONFM_NO=#{confmNo}
 	</select>
-	
+
 	<!-- mber_code_sn 최대값확인 -->
 	<select id="selectMaxMberCodeSn" resultType="int">
 		SELECT MAX(mber_code_sn) AS mber_code_sn FROM mber_detail WHERE mber_code=#{val}
 	</select>
-	
+
 	<!-- mber_code_sn 최대값확인 -->
 	<select id="tbMberBasis" resultType="HashMap">
 		SELECT biz_code , pay_type, fee_rate , mber_mobile
 		FROM mber_basis WHERE induty_id= #{val}
 	</select>
-	
+
 	<!-- 최대 rcipt_no -->
 	<select id="selectMaxRciptNo" parameterType="HashMap" resultType="int">
-		SELECT MAX(rcipt_no)+1 FROM delng 
+		SELECT MAX(rcipt_no)+1 FROM delng
 		WHERE mber_code= #{mberCode}
-			AND mber_code_sn=#{mberCodeSn} 
+			AND mber_code_sn=#{mberCodeSn}
 			AND rcipt_no LIKE #{confrmDt}||'%'
 			AND rcipt_no &gt; #{confrmDt}||'5'
 	</select>
-	
+
 	<!--  영수증번호존재 rcipt_no 존재 확인 -->
 	<select id="selectRciptNoCount" parameterType="HashMap" resultType="int">
-		SELECT count(1) FROM delng 
+		SELECT count(1) FROM delng
 		WHERE mber_code=#{mberCode}
 		and rcipt_no=#{rciptNo}
 	</select>
@@ -634,81 +634,81 @@
 	<!-- 매출정보  입력 카드 현금 -->
 	<insert id="insertDelng" parameterType="HashMap">
 	INSERT INTO delng (
-		mber_code 
-		,mber_code_sn 
-		,rcipt_no 
-		,van_code 
-		,app_code 
-		,delng_se_code 
-		,confm_no 
-		,confm_dt 
-		,confm_time 
-		,splpc 
-		,vat 
-		,delng_pay_type 
-		,trget_mber_code 
-		,trget_mber_code_sn 
-		,trget_rcipt_no 
-		,creat_dt 
-		,card_delete_yn 
-		,cancel_mber 
-		,cancel_dt 
+		mber_code
+		,mber_code_sn
+		,rcipt_no
+		,van_code
+		,app_code
+		,delng_se_code
+		,confm_no
+		,confm_dt
+		,confm_time
+		,splpc
+		,vat
+		,delng_pay_type
+		,trget_mber_code
+		,trget_mber_code_sn
+		,trget_rcipt_no
+		,creat_dt
+		,card_delete_yn
+		,cancel_mber
+		,cancel_dt
 		,bigo
-		)VALUES 
-		#{mberCode} 
-		,#{mberCodeSn} 
-		,#{rciptNo} 
-		,#{vanType} 
+		)VALUES
+		#{mberCode}
+		,#{mberCodeSn}
+		,#{rciptNo}
+		,#{vanType}
 		,#{appCode}
 		,#{payCode}
-		,#{confmNo} 
-		,#{confmDt} 
-		,#{confmTime} 
+		,#{confmNo}
+		,#{confmDt}
+		,#{confmTime}
 		,#{splpc}
-		,'0' 
-		, pay_type  
-		,#{mberCode} 
-		,#{mberCodeSn} 
-		,#{rciptNo} 
-		,SYSDATE 
-		,'N' 
-		,'' 
-		,'' 
-		,#{message} -- '매출일괄등록건' 
+		,'0'
+		, pay_type
+		,#{mberCode}
+		,#{mberCodeSn}
+		,#{rciptNo}
+		,SYSDATE
+		,'N'
+		,''
+		,''
+		,#{message} -- '매출일괄등록건'
 	)
 	</insert>
-	
-	
+
+
 	<!-- delng_credt 입력 -->
 	<insert id="insertDelngCredt" parameterType="HashMap">
 		INSERT INTO delng_credt (
-			mber_code 
-			,mber_code_sn 
-			,rcipt_no 
-			,card_no 
-			,instlmt_month 
-			,issue_cmpny_code 
-			,issue_cmpny_nm 
-			,puchas_cmpny_code 
-			,puchas_cmpny_nm 
-			,cdrsr_no 
+			mber_code
+			,mber_code_sn
+			,rcipt_no
+			,card_no
+			,instlmt_month
+			,issue_cmpny_code
+			,issue_cmpny_nm
+			,puchas_cmpny_code
+			,puchas_cmpny_nm
+			,cdrsr_no
 			,card_type
-		) 
+		)
 			VALUES(
-			#{mberCode} 
-			,#{mberCodeSn} 
-			,#{rciptNo} 
+			#{mberCode}
+			,#{mberCodeSn}
+			,#{rciptNo}
 			,#{cardNo}
 			,#{instlmtMonth}
-			,'' 
+			,''
 			,#{issueCmpnyNm}
-			,'' 
-			,'' 
-			,'' 
+			,''
+			,''
+			,''
 			,'N'
 		)
 	</insert>
-	
+
 	<!-- pushAtmInfo 기존소스 메소드명 -->
 	<insert id="pushAtmInfo" parameterType="HashMap">
 	INSERT INTO tbl_atm (
@@ -755,7 +755,7 @@
 	    #{salesRciptNo}
 	)
 	</insert>
-	
+
 	<!-- delng_adi 입력 -->
 	<insert id="insertDelngAdi" parameterType="HashMap">
 		INSERT INTO delng_adi (
@@ -772,13 +772,13 @@
 		    #{adiCn}
 		)
 	</insert>
-	
+
 	<!-- delng_cash 입력 -->
 	<insert id="insertDelngCash"  parameterType="HashMap">
-	INSERT 
+	INSERT
 		INTO delng_cash (
 			mber_code
-			,mber_code_sn 
+			,mber_code_sn
 			,rcipt_no
 			,idntfc_no
 			,isu_se_code
@@ -788,27 +788,28 @@
 			#{mberCodeSn},
 			#{rciptNo},
 			,'00000000000'
-			,'NO DIVISION' 
-		) 
+			,'NO DIVISION'
+		)
 	</insert>
-	
+
 	<!-- 잔액구하기  -->
 	<select id="selectBalance" resultType="double">
-		SELECT balance  FROM 
-			(SELECT * FROM tbl_atm 
-				WHERE mber_code = #{val} 
-					AND req_result = 'OK' 
-				ORDER BY inout_no DESC) 
-			WHERE ROWNUM &lt; 2 
-	</select>
-	
-	<!-- 입출금 번호 (결제 영수증번호와 동일) 구하기 -->
-	<select id="selectInoutNo" resultType="double">
-		SELECT inout_no FROM 
-			(SELECT * FROM tbl_atm 
-				WHERE mber_code=#{val} 
-				ORDER BY inout_no DESC) 
+		SELECT balance  FROM
+			(SELECT * FROM tbl_atm
+				WHERE mber_code = #{val}
+					AND req_result = 'OK'
+				ORDER BY inout_no DESC)
 			WHERE ROWNUM &lt; 2
 	</select>
-	
+
+	<!-- 입출금 번호 (결제 영수증번호와 동일) 구하기 -->
+	<select id="selectInoutNo" resultType="long">
+		SELECT inout_no FROM
+			(SELECT * FROM tbl_atm
+				WHERE mber_code=#{val}
+				ORDER BY inout_no DESC)
+			WHERE ROWNUM &lt; 2
+	</select>
+
+
   </mapper>
