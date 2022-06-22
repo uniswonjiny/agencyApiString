@@ -1,9 +1,6 @@
 package org.bizpay.agency.mapper;
 
-import org.bizpay.agency.domain.param.AgencyParam;
-import org.bizpay.agency.domain.param.NoticeParam;
-import org.bizpay.agency.domain.param.RevenueParam;
-import org.bizpay.agency.domain.param.TransactionParam;
+import org.bizpay.agency.domain.param.*;
 import org.bizpay.agency.domain.result.*;
 import org.bizpay.exception.SqlErrorException;
 
@@ -39,9 +36,7 @@ public interface AgencyMemberMapper {
     // 거래내역
     public List<TransactionInfo> getTransactionList(TransactionParam param) throws SqlErrorException;
     // 거래내역 전체 갯수
-    public int getTransactionCount(TransactionParam param) throws SqlErrorException;
-
-    public List<AgencyList> selectAgencyList(AgencyParam param) throws SqlErrorException;
+    public HashMap<String, Integer> getTransactionCount(TransactionParam param) throws SqlErrorException;
     // eo
     public SettlementInfo settlementInfo(HashMap<String, String> map) throws SqlErrorException;
     public List<Notice> selectNoticeList(NoticeParam param) throws SqlErrorException;
@@ -72,4 +67,18 @@ public interface AgencyMemberMapper {
     public int selectJoinAmtUpSum (RevenueParam param) throws SqlErrorException;
     // 지사의 가맹비수익 전체갯수
     public int selectJoinAmtUpCount (RevenueParam param) throws SqlErrorException;
+    // 대리점관리 목록
+    public List<AgencyManagementList> selectAgencyAgencyManagementList(AgencyManageParam param) throws SqlErrorException;
+    // 대리점관리 전체갯수
+    public int selectAgencyAgencyManagementCount(AgencyManageParam param) throws SqlErrorException;
+    // 가맹점 관리 목록
+    public List<MerchantManagementList> selectMerchantManagementList(AgencyParam param) throws SqlErrorException;
+    // 가맹점 관리 전체 숫자
+    public int selectMerchantManagementCount(AgencyParam param) throws SqlErrorException;
+    // 대리점 등록요청
+    public List<ReqAgency> selectRegAgencyList(ReqAgencyParam param) throws SqlErrorException;
+    // 대리점 등록요청 목록
+    public int insertRegAgency(ReqAgencyParam param) throws SqlErrorException;
+    // 대리점 목록 전체 갯수
+    public int selectRegAgencyCount(ReqAgencyParam param) throws SqlErrorException;
 }

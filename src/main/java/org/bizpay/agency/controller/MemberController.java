@@ -58,8 +58,8 @@ public class MemberController {
 
     @PostMapping("/agencyList")
     @ResponseBody
-    public ResponseEntity<List<AgencyList>> agencyList(@RequestBody AgencyParam param) throws Exception {
-        log.info("대리점 지사 목록");
+    public ResponseEntity<HashMap<String, Object>>agencyList(@RequestBody AgencyManageParam param) throws Exception {
+        log.info("대리점관리 - 대리점 지사 목록");
         return new ResponseEntity<>(memberService.agencyList(param), HttpStatus.OK);
     }
 
@@ -82,5 +82,28 @@ public class MemberController {
     public ResponseEntity<HashMap<String, Object>> incomeInfo(@RequestBody RevenueParam param) throws Exception {
         log.info("대리점 수익현황 전체 합계부분");
         return new ResponseEntity<>(memberService.inComeInfo(param), HttpStatus.OK);
+    }
+
+    // 가맹점관리
+    @PostMapping("/merchantManagementList")
+    @ResponseBody
+    public ResponseEntity<HashMap<String, Object>> merchantManagement(@RequestBody AgencyParam param) throws Exception {
+        log.info("가맹점관리");
+        return new ResponseEntity<>(memberService.merchantManagementList(param), HttpStatus.OK);
+    }
+
+    // 대리점 등록 목록
+    @PostMapping("/selectRegAgencyList")
+    @ResponseBody
+    public ResponseEntity<HashMap<String, Object>> selectRegAgencyList(@RequestBody ReqAgencyParam param) throws Exception {
+        log.info("대리점 등록 목록");
+        return new ResponseEntity<>(memberService.selectRegAgencyList(param), HttpStatus.OK);
+    }
+    // 대리점 등록 하기
+    @PostMapping("/insertRegAgency")
+    @ResponseBody
+    public ResponseEntity<Integer> insertRegAgency(@RequestBody ReqAgencyParam param) throws Exception {
+        log.info("대리점 등록 하기");
+        return new ResponseEntity<>(memberService.insertRegAgency(param), HttpStatus.OK);
     }
 }

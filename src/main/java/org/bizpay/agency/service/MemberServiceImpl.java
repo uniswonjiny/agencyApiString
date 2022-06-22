@@ -1,10 +1,7 @@
 package org.bizpay.agency.service;
 
 import lombok.extern.java.Log;
-import org.bizpay.agency.domain.param.AgencyParam;
-import org.bizpay.agency.domain.param.NoticeParam;
-import org.bizpay.agency.domain.param.RevenueParam;
-import org.bizpay.agency.domain.param.TransactionParam;
+import org.bizpay.agency.domain.param.*;
 import org.bizpay.agency.domain.result.*;
 import org.bizpay.agency.mapper.AgencyMemberMapper;
 import org.bizpay.common.util.CertUtil;
@@ -66,7 +63,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public AgencyCount AgencyCount(String userId, String dealerKind) throws Exception {
-        log.info("영업현황 ID : " + userId);
+        log.info("영업현황");
         HashMap<String, String> map = new HashMap<>();
         map.put("userId", userId);
         map.put("dealerKind", dealerKind);
@@ -77,20 +74,37 @@ public class MemberServiceImpl implements MemberService {
     public HashMap<String, Object> transactionList(TransactionParam param) throws Exception {
         log.info(" 거래내역 조회 ");
         HashMap<String, Object> map = new HashMap<String, Object>();
+        HashMap<String, Integer> map2 = agencyMemberMapper.getTransactionCount(param);
         List<TransactionInfo> list = agencyMemberMapper.getTransactionList(param);
         for (TransactionInfo info : list ) {
             info.setCardNo(cert.decrypt( info.getCardNo()));
         }
-        map.put("count" , agencyMemberMapper.getTransactionCount(param));
+
         map.put("data" , list);
+        map.put("count",map2.get("COUNT"));
+        map.put("amount",map2.get("AMOUNT"));
+        //map.putAll(agencyMemberMapper.getTransactionCount(param));
         return map;
     }
 
     @Override
-    public List<AgencyList> agencyList(AgencyParam param) throws Exception {
-        log.info(" 대리점 지산 조회 ");
-        List<AgencyList> list = agencyMemberMapper.selectAgencyList(param);
-        return list;
+    public HashMap<String, Object> agencyList(AgencyManageParam param) throws Exception {
+        log.info(" 대리점관리 대리잠 지사 목록  조회 ");
+        HashMap<String, Object> map = new HashMap<>();
+
+        List<AgencyManagementList> list = agencyMemberMapper.selectAgencyAgencyManagementList(param);
+
+        for (AgencyManagementList info : list ) {
+            info.setEmail(cert.decrypt(info.getEmail()));
+            info.setBankSerial(cert.decrypt(info.getBankSerial()));
+            info.setMTelno(cert.decrypt(info.getMTelno()));
+            info.setBplc(cert.decrypt(info.getBplc()));
+        }
+
+        map.put("count" , agencyMemberMapper.selectAgencyAgencyManagementCount(param));
+        map.put("list" , list);
+
+        return map;
     }
 
     @Override
@@ -130,6 +144,49 @@ public class MemberServiceImpl implements MemberService {
             map.put("getJoinAmtSum", agencyMemberMapper.selectJoinAmtUpSum(param)); // 가맹비 수익
             map.put("getJoinAmtSum", agencyMemberMapper); // 추천지사 수익
         }
+        return map;
+    }
+
+    @Override
+    public HashMap<String, Object> merchantManagementList(AgencyParam param) throws Exception {
+        log.info("가맹점 목록정보조회");
+        HashMap<String, Object> map = new HashMap<String, Object>();
+
+        List<MerchantManagementList> list = agencyMemberMapper.selectMerchantManagementList(param);
+        for (MerchantManagementList info : list ) {
+            info.setEmail(cert.decrypt(info.getEmail()));
+            info.setAccountNo(cert.decrypt(info.getAccountNo()));
+            info.setAdres(cert.decrypt(info.getAdres()));
+            info.setMberMobile(cert.decrypt(info.getMberMobile()));
+        }
+        map.put("count", agencyMemberMapper.selectMerchantManagementCount(param));
+        map.put("data", list);
+        return map;
+    }
+    @Override
+    public int insertRegAgency(ReqAgencyParam param) throws Exception {
+        if (param.getEmail()!= null && !param.getEmail().equals("")) {
+            param.setEmail(cert.encrypt(param.getEmail()));
+        }
+        if (param.getMobileNumber() != null && !param.getMobileNumber().equals("")) {
+            param.setMobileNumber(cert.encrypt(param.getMobileNumber()));
+        }
+        return agencyMemberMapper.insertRegAgency(param);
+    }
+
+    @Override
+    public HashMap<String, Object> selectRegAgencyList(ReqAgencyParam param) throws Exception {
+        log.info("대리점등록목록 조회");
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        List<ReqAgency> list = agencyMemberMapper.selectRegAgencyList(param);
+        if(list.size() > 0){
+            for (ReqAgency agency : list) {
+                agency.setEmail( cert.decrypt( agency.getEmail()));
+                agency.setMobileNumber(cert.decrypt(agency.getMobileNumber()));
+            }
+        }
+        map.put("list", list);
+        map.put("count", agencyMemberMapper.selectRegAgencyCount(param));
         return map;
     }
 

@@ -1,9 +1,6 @@
 package org.bizpay.agency.service;
 
-import org.bizpay.agency.domain.param.AgencyParam;
-import org.bizpay.agency.domain.param.NoticeParam;
-import org.bizpay.agency.domain.param.RevenueParam;
-import org.bizpay.agency.domain.param.TransactionParam;
+import org.bizpay.agency.domain.param.*;
 import org.bizpay.agency.domain.result.*;
 import org.springframework.http.ResponseEntity;
 
@@ -24,11 +21,17 @@ public interface MemberService {
     // 거래내역
     public HashMap<String, Object> transactionList(TransactionParam param) throws Exception;
     // 대리점 지사 록록
-    public List<AgencyList> agencyList(AgencyParam param) throws Exception;
+    public HashMap<String, Object> agencyList(AgencyManageParam param) throws Exception;
     // 대리점 정산서
     public SettlementInfo settlementInfo(String dealerId, String cclDt) throws Exception;
     // 공지사항
     public HashMap<String, Object> selectNoticeList(NoticeParam param) throws Exception;
     // 수익현황전체합부분
     public HashMap<String, Object> inComeInfo(RevenueParam param) throws Exception;
+    // 가매점정보
+    public HashMap<String, Object> merchantManagementList(AgencyParam param) throws Exception;
+    // 대리점등록요청
+    public int insertRegAgency(ReqAgencyParam param) throws Exception;
+    // 대리점 등록 요청 사항목록
+    public HashMap<String, Object> selectRegAgencyList(ReqAgencyParam param) throws Exception;
 }

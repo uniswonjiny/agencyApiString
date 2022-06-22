@@ -7,8 +7,8 @@ public class NoticeParam {
     private String title;
     private String content;
     private String type;
-    private int startPageNumber;
-    private int endPageNumber;
+    private int startNo; // 시작 페이지
+    private int endNo; // 종료 페이지 번호
     private String startDt;
     private String endDt;
     private int dealerKind;

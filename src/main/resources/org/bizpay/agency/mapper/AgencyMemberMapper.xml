@@ -3,6 +3,33 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.bizpay.agency.mapper.AgencyMemberMapper">
+    <sql id="transBizCode" >
+        <!-- 지사인경우 -->
+        <if test='dealerKind== 33' >
+            select BIZ_CODE from MBER where USID = #{userId}
+            union
+            select BIZ_CODE from biz where TRGET_BIZ_CODE in ( select BIZ_CODE from MBER where USID = #{userId})
+        </if>
+
+        <!-- 대리점인 경우 -->
+        <if test='dealerKind == 34' >
+            select BIZ_CODE from MBER where USID = #{userId}
+        </if>
+    </sql>
+
+    <sql id="bizCodeList">
+        <!-- 지사인경우 -->
+        <if test='dealerKind== 33' >
+            select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
+            union
+            select BIZ_CODE from biz where BOSS_BIZ_CODE in (select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId}))
+        </if>
+
+        <!-- 대리점인 경우 -->
+        <if test='dealerKind == 34' >
+            select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
+        </if>
+    </sql>
     <!-- 로그인유무만 -->
     <select id="loginMember" resultType="HashMap">
         select aa.dealer_id,
@@ -88,24 +115,24 @@
             <when test="dealerKind!=null and dealerKind.equals('33')">
                 select (select count(1) as a1
                 from biz
-                where TRGET_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId}))      as directCount,
+                where TRGET_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID = #{userId}) and DEALER_KIND = 34)      as directCount,
                 (select count(1) as a2
                 from biz
-                where RECOMMEND_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})) as inDirectCount
+                where RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID = #{userId})  and DEALER_KIND = 33 ) as inDirectCount
                 from dual
             </when>
             <when test="dealerKind!=null and dealerKind.equals('34')">
                 select (
                     select count(1) as a1
                     from biz
-                    where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
+                    where BOSS_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID = #{userId})
                     )      as directCount,
                 (
                 select count(1) as a2 from biz where BOSS_BIZ_CODE in
                 (
                 select biz_code
                 from biz
-                where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
+                where BOSS_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID = #{userId})
                 )
 
                 ) as inDirectCount
@@ -113,16 +140,19 @@
             </when>
             <otherwise> select 0 as directCount, 0 as inDirectCount from daul</otherwise>
         </choose>
-
-
-
     </select>
+    <!-- 지사인경우 -->
+    <!-- 추천 지사 리스트 -->
+
+    <!-- 소속대리점 리스트 -->
+
+
     <!-- 대리점일 경우 영업현황 -->
     <select id="getAgencyCount2" resultType="org.bizpay.agency.domain.result.AgencyCount">
         select
-            (select count(1) as a1 from biz where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{val}))  as directCount,
+            (select count(1) as a1 from biz where BOSS_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID  = #{val}))  as directCount,
             (select count(1) as a2 from BIZ where BOSS_BIZ_CODE in (
-                select BIZ_CODE as a1 from biz where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{val})
+                select BIZ_CODE as a1 from biz where BOSS_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID = #{val})
             )) as inDirectCount
         from dual
     </select>
@@ -143,11 +173,11 @@
             <if test='dealerKind== 33'>
                 <!-- 가맹점 리스트 -->
                 <if test="type!=null and type.equals('d') ">
-                    select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
+                    select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where dealer_id = #{userId})
                 </if>
                 <!-- 대리점가맹점 리스트 -->
                 <if test="type!=null and type.equals('e') ">
-                    select BIZ_CODE from biz where BOSS_BIZ_CODE in (select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId}))
+                    select BIZ_CODE from biz where BOSS_BIZ_CODE in (select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where dealer_id = #{userId}))
                 </if>
             </if>
             <!-- 대리점인 경우 -->
@@ -155,7 +185,7 @@
                 select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
             </if>
         ) bb
-        where bb.no between #{startPageNumber} and #{endPageNumber}
+        where bb.no between #{startNo} and #{endNo}
     </select>
     <!-- 가맹점 매출수일 지사 대리점 공통 -->
     <select id="getDistributorRevenue1" resultType="integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
@@ -253,12 +283,12 @@
         </if>
         and TO_DATE(b.confm_dt , 'YYYY-MM-DD') between #{startConfmDt} and #{endConfmDt}
         ) aa
-        where aa.no between #{startPageNumber} and #{endPageNumber}
+        where aa.no between #{startNo} and #{endNo}
     </select>
 
     <!-- 거래조회 전체갯수 -->
-    <select id="getTransactionCount" resultType="int" parameterType="org.bizpay.agency.domain.param.TransactionParam">
-        SELECT count(1)
+    <select id="getTransactionCount" resultType="HashMap" parameterType="org.bizpay.agency.domain.param.TransactionParam">
+        SELECT count(0) as count , sum( b.splpc + b.vat) as amount
         FROM delng b
         left outer join delng_credt a
         on a.mber_code = b.mber_code AND a.mber_code_sn = b.mber_code_sn AND a.rcipt_no = b.rcipt_no
@@ -291,44 +321,6 @@
         and TO_DATE(b.confm_dt , 'YYYY-MM-DD') between #{startConfmDt} and #{endConfmDt}
     </select>
 
-    <!-- 대리점관리 -->
-    <select id="selectAgencyList" resultType="org.bizpay.agency.domain.result.AgencyList" parameterType="org.bizpay.agency.domain.param.AgencyParam">
-        select * from
-        (SELECT row_number() over (order by aa.create_dt desc) as no,
-        aa.dealer_kind,
-        aa.cmpnm,
-        aa.create_dt,
-        aa.bprprr,
-        aa.email,
-        aa.bplc,
-        aa.m_telno,
-        (select count(1) from biz inBiz where inBiz.BOSS_BIZ_CODE = aa.BIZ_CODE) as agency_count
-        from biz aa
-        where
-            aa.create_dt between #{startDt} and #{endDt}
-            <if test="dealerId!=null and !dealerId.equals('') " >
-                and aa.dealer_id like '%'||#{dealerId}||'%'
-            </if>
-            <if test="dealerName!=null and !dealerName.equals('') " >
-                and aa.cmpnm like '%'||#{dealerName}||'%'
-            </if>
-            <if test="dealerMemberName!=null and !dealerMemberName.equals('') " >
-                and aa.bprprr like '%'||#{dealerMemberName}||'%'
-            </if>
-            <choose>
-                <!-- 추천인경우 -->
-                <when test="type!=null and type.equals('c') ">
-                    and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-                    and aa.DEALER_KIND = 33
-                </when>
-                <otherwise>
-                    and aa.BOSS_BIZ_CODE =  (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-                    and aa.DEALER_KIND = ${dealerKind}
-                </otherwise>
-            </choose>
-        ) aaa
-        where aaa.no between #{startPageNumber} and #{endPageNumber}
-    </select>
     <!-- 대리점 정산서 -->
     <select id="settlementInfo" resultType="org.bizpay.agency.domain.result.SettlementInfo" parameterType="HashMap">
         select
@@ -404,7 +396,7 @@
                 and type = #{type}
             </if>
         ) bb
-        where bb.no between #{startPageNumber} and #{endPageNumber}
+        where bb.no between ${startNo} and ${endNo}
     </select>
 
     <!-- 가맹비수익 목록 -->
@@ -569,14 +561,238 @@
           and de.DELNG_SE_CODE in ('CARD_ISSUE', 'CASH_RCIPT_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL')
         group by  mba.MBER_NAME , mba.FEE_RATE
     </select>
+    <!-- * 대리점관리-->
+    <!-- 대리점관리목록 -->
+    <select id="selectAgencyAgencyManagementList" parameterType="org.bizpay.agency.domain.param.AgencyManageParam" resultType="org.bizpay.agency.domain.result.AgencyManagementList">
+        select * from
+        (select
+        row_number() over (order by dt  desc) as no,
+        dealer_kind,
+        aa.biz_code,
+        dealer_id,
+        <if test="dealerKind==33">
+        ( select count(0) from biz where trget_biz_code = aa.biz_code ) as count,
+        </if>
+        <if test="dealerKind==34">
+        ( select count(0) from biz where boss_biz_code = aa.biz_code ) as count,
+        </if>
+        to_char(dt, 'YYYY-MM-DD' ) as create_dt,
+        cmpnm,
+        bprprr,
+        aa.email,
+        aa.bank_name,
+        aa.bank_serial,
+        aa.bank_user,
+        aa.m_telno,
+        aa.bplc
+        from BIZ aa
+        where DEALER_KIND = #{dealerKind}
+        and aa.dt between #{startDt} and #{endDt}
+        <if test="dealerKind==33">
+            and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+        </if>
+        <if test="dealerKind==34">
+            and aa.BOSS_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+        </if>
+        <if test="dealerId!=null and !dealerId.equals('')" >
+            and aa.dealer_id = #{dealerId}
+        </if>
+        <if test="cmpnm!=null and !cmpnm.equals('')" >
+            and aa.cmpnm like '%'||#{cmpnm}||'%'
+        </if>
+        <if test="bprprr!=null and !bprprr.equals('')" >
+            and aa.bprprr like '%'||#{bprprr}||'%'
+        </if>
+        )
+        where no between ${startNo} and ${endNo}
+    </select>
+    <!-- 대리점관리 전체갯수 -->
+    <select id="selectAgencyAgencyManagementCount" resultType="int" parameterType="org.bizpay.agency.domain.param.AgencyManageParam" >
+    select
+        count(0)
+        from BIZ aa
+        where DEALER_KIND = #{dealerKind}
+        and aa.dt between #{startDt} and #{endDt}
+        <if test="dealerKind==33">
+            and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+        </if>
+        <if test="dealerKind==34">
+            and aa.BOSS_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+        </if>
+        <if test="dealerId!=null and !dealerId.equals('')" >
+            and aa.dealer_id = #{dealerId}
+        </if>
+        <if test="cmpnm!=null and !cmpnm.equals('')" >
+            and aa.cmpnm like '%'||#{cmpnm}||'%'
+        </if>
+        <if test="bprprr!=null and !bprprr.equals('')" >
+            and aa.bprprr like '%'||#{bprprr}||'%'
+        </if>
+
+    </select>
 
     <!-- * 가맹점관리 -->
     <!-- 가맹점관리 대리점 -->
-    <select id="" >
+    <select id="selectMerchantManagementList" resultType="org.bizpay.agency.domain.result.MerchantManagementList" parameterType="org.bizpay.agency.domain.param.AgencyParam">
+        select * from
+            (select
+                row_number() over (order by  mba.mber_code desc) as no,
+                mba.usid,
+                mbb.company_name,
+                mbb.mber_name,
+                mbb.creat_dt,
+                case calculate_type when 'k' then 'ksnet' else '직정산' end as calculate_type,
+                mbb.fee_rate,
+                mbb.adres,
+                mbb.mber_mobile,
+                mbb.email,
+                mbb.account_no,
+                mbb.bank_name,
+                mbb.depositor,
+                (select company_name from biz where biz_code = bi.TRGET_BIZ_CODE) as boss_name
+            from mber mba
+            inner join mber_basis mbb
+                on mba.mber_code = mbb.mber_code
+            inner join biz bi
+                on mba.biz_code = bi.biz_code
+            where
+                    mbb.CREAT_DT between #{startDt} and #{endDt}
 
+                <if test="dealerKind==34">
+                    and bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
+                </if>
+                <if test="dealerKind==33 ">
+                    <!--가맹점리스트 -->
+                    <if test='type.equals("a")' >
+                        and bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
+                    </if>
+                    <!--대리점가맹점리스트 -->
+                    <if test='type.equals("b")' >
+                        and bi.BIZ_CODE in ( select biz_code from biz where TRGET_BIZ_CODE in (
+                        select biz_code from biz where DEALER_ID = #{userId}
+                        )
+                        )
+                    </if>
+                </if>
+
+                <if test="dealerMemberName!=null and !dealerMemberName.equals('') " >
+                and mbb.MBER_NAME like '%'||#{dealerMemberName}||'%'
+                </if>
+                <if test="dealerId!=null and !dealerId.equals('') " >
+                and mbb.usid like '%'||#{dealerId}||'%'
+                </if>
+                <if test="dealerName!=null and !dealerName.equals('') " >
+                and mbb.company_name like '%'||#{dealerName}||'%'
+                </if>
+            )
+        where no between ${startNo} and ${endNo}
    </select>
 
+    <!-- 가맹점관리 대리점 전체갯수 -->
+    <select id="selectMerchantManagementCount" resultType="int"  parameterType="org.bizpay.agency.domain.param.AgencyParam">
+        select
+        count(0)
+        from mber mba
+        inner join mber_basis mbb
+        on mba.mber_code = mbb.mber_code
+        inner join biz bi
+        on mba.biz_code = bi.biz_code
+        where bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
+        where
+        mbb.CREAT_DT between #{startDt} and #{endDt}
 
+        <if test="dealerKind==34">
+            and bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
+        </if>
+        <if test="dealerKind==33 ">
+            <!--가맹점리스트 -->
+            <if test='type.equals("a")' >
+                and bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
+            </if>
+            <!--대리점가맹점리스트 -->
+            <if test='type.equals("b")' >
+                and bi.BIZ_CODE in ( select biz_code from biz where TRGET_BIZ_CODE in (
+                select biz_code from biz where DEALER_ID = #{userId}
+                )
+                )
+            </if>
+        </if>
+        <if test="dealerMemberName!=null and !dealerMemberName.equals('') " >
+            and mbb.MBER_NAME like '%'||#{dealerMemberName}||'%'
+        </if>
+        <if test="dealerId!=null and !dealerId.equals('') " >
+            and mbb.usid like '%'||#{dealerId}||'%'
+        </if>
+        <if test="dealerName!=null and !dealerName.equals('') " >
+            and mbb.company_name like '%'||#{dealerName}||'%'
+        </if>
+    </select>
+
+    <!-- 대리점 가맹점 리스트 franchise -->
+    <select id="selectfranchiseManagementList" resultType="org.bizpay.agency.domain.result.MerchantManagementList" parameterType="org.bizpay.agency.domain.param.AgencyParam">
+        select * from
+        (select
+            row_number() over (order by  mba.mber_code desc) as no,
+            mba.usid,
+            bi.cmpnm,
+            mbb.company_name,
+            mbb.mber_name,
+            mbb.creat_dt,
+            case calculate_type when 'k' then 'ksnet' else '직정산' end as calculate_type,
+            mbb.fee_rate,
+            mbb.adres,
+            mbb.mber_mobile,
+            mbb.email,
+            mbb.account_no,
+            mbb.bank_name,
+            mbb.depositor
+        from mber mba
+        inner join mber_basis mbb
+        on mba.mber_code = mbb.mber_code
+        inner join biz bi
+        on mba.biz_code = bi.biz_code
+        where bi.TRGET_BIZ_CODE in (
+            select BIZ_CODE from biz where TRGET_BIZ_CODE = (select BIZ_CODE from MBER where USID =  #{userId})
+        )
+        and mbb.CREAT_DT between #{startDt} and #{endDt}
+        <if test="dealerMemberName!=null and !dealerMemberName.equals('') " >
+            and mbb.MBER_NAME like '%'||#{dealerMemberName}||'%'
+        </if>
+        <if test="dealerId!=null and !dealerId.equals('') " >
+            and mbb.usid like '%'||#{dealerId}||'%'
+        </if>
+        <if test="dealerName!=null and !dealerName.equals('') " >
+            and mbb.company_name like '%'||#{dealerName}||'%'
+        </if>
+        )
+        where no between ${startNo} and ${endNo}
+    </select>
+    <!-- 대리점 가맹점 리스트 전체숫자 -->
+    <select id="selectfranchiseManagementCount" resultType="int"  parameterType="org.bizpay.agency.domain.param.AgencyParam">
+        select
+            count(0)
+        from mber mba
+        inner join mber_basis mbb
+        on mba.mber_code = mbb.mber_code
+        inner join biz bi
+        on mba.biz_code = bi.biz_code
+        where bi.TRGET_BIZ_CODE in (
+        select BIZ_CODE from biz where TRGET_BIZ_CODE = (select BIZ_CODE from MBER where USID =  #{userId})
+        )
+        and mbb.CREAT_DT between #{startDt} and #{endDt}
+        <if test="dealerMemberName!=null and !dealerMemberName.equals('') " >
+            and mbb.MBER_NAME like '%'||#{dealerMemberName}||'%'
+        </if>
+        <if test="dealerId!=null and !dealerId.equals('') " >
+            and mbb.usid like '%'||#{dealerId}||'%'
+        </if>
+        <if test="dealerName!=null and !dealerName.equals('') " >
+            and mbb.company_name like '%'||#{dealerName}||'%'
+        </if>
+        )
+
+
+    </select>
 
 
 
@@ -704,31 +920,56 @@
             ) bb
     </select>
 
-    <sql id="transBizCode" >
-        <!-- 지사인경우 -->
-        <if test='dealerKind== 33' >
-            select BIZ_CODE from BIZ where TRGET_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-            union
-            select BIZ_CODE from biz where TRGET_BIZ_CODE in (select BIZ_CODE from BIZ where TRGET_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId}))
+    <!-- 대리점 등록요청 -->
+    <insert id="insertRegAgency" parameterType="org.bizpay.agency.domain.param.ReqAgencyParam">
+        insert into TB_REG_AGENCY (BOSS_BIZ_CODE, COMPANY_NAME, MEMBER_NAME, EMAIL, MOBILE_NUMBER)
+        values (#{bossBizCode},#{companyName},#{memberName},#{email},#{mobileNumber})
+    </insert>
+    <!-- 대리점 등록요청 목록 -->
+    <select id="selectRegAgencyList" parameterType="org.bizpay.agency.domain.param.ReqAgencyParam" resultType="org.bizpay.agency.domain.result.ReqAgency">
+        select * from
+            (select row_number() over (order by no desc) as row_no,
+                boss_biz_code,
+                email,
+                company_name,
+                mobile_number,
+                created_at,
+                no,
+                 case status
+                    when 0 then '신규등록요청'
+                    when 1 then '계약서발송'
+                    when 9 then '등록완료'
+                    else '대기' end as status
+             from TB_REG_AGENCY
+            where to_char(created_at, 'YYYY-MM-DD') between #{startDt} and #{endDt}
+            <if test="companyName!=null and !companyName.equals('') " >
+                and companyName like '%'||#{companyName}||'%'
+            </if>
+            <if test="status!=null and !status.equals('') " >
+                and status = {status}
+            </if>
+        ) where row_no bteween ${startNo} and ${endNo}
+    </select>
+    <!-- 대리점등록목록 전체 갯수 -->
+    <select id="selectRegAgencyCount" parameterType="org.bizpay.agency.domain.param.ReqAgencyParam" resultType="int">
+    select
+        boss_biz_code,
+        email,
+        company_name,
+        created_at,
+        no,
+        case status
+        when 0 then '신규등록요청'
+        when 1 then '계약서발송'
+        when 9 then '등록완료'
+        else '대기' end as status
+    from TB_REG_AGENCY
+    where to_char(created_at, 'YYYY-MM-DD') between #{startDt} and #{endDt}
+        <if test="companyName!=null and !companyName.equals('') " >
+            and companyName like '%'||#{companyName}||'%'
         </if>
-
-        <!-- 대리점인 경우 -->
-        <if test='dealerKind == 34' >
-            select BIZ_CODE from BIZ where TRGET_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
+        <if test="status!=null and !status.equals('') " >
+            and status = {status}
         </if>
-    </sql>
-
-    <sql id="bizCodeList">
-        <!-- 지사인경우 -->
-        <if test='dealerKind== 33' >
-            select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-            union
-            select BIZ_CODE from biz where BOSS_BIZ_CODE in (select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId}))
-        </if>
-
-        <!-- 대리점인 경우 -->
-        <if test='dealerKind == 34' >
-            select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-        </if>
-    </sql>
+    </select>
 </mapper>
