@@ -76,13 +76,7 @@ public class MemberController {
         log.info("공지사항 목록");
         return new ResponseEntity<>(memberService.selectNoticeList(param), HttpStatus.OK);
     }
-    // 수익현황 전체 수익현황부분
-    @PostMapping("/incomeInfo")
-    @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> incomeInfo(@RequestBody RevenueParam param) throws Exception {
-        log.info("대리점 수익현황 전체 합계부분");
-        return new ResponseEntity<>(memberService.inComeInfo(param), HttpStatus.OK);
-    }
+
 
     // 가맹점관리
     @PostMapping("/merchantManagementList")
@@ -105,5 +99,12 @@ public class MemberController {
     public ResponseEntity<Integer> insertRegAgency(@RequestBody ReqAgencyParam param) throws Exception {
         log.info("대리점 등록 하기");
         return new ResponseEntity<>(memberService.insertRegAgency(param), HttpStatus.OK);
+    }
+    // 수익현황 전체 수익현황부분
+    @PostMapping("/fetchIncomeInfo")
+    @ResponseBody
+    public ResponseEntity<HashMap<String, Object>> incomeInfo(@RequestBody RevenueParam param) throws Exception {
+        log.info("대리점 수익현황 전체 합계부분");
+        return new ResponseEntity<>(memberService.inComeInfo(param), HttpStatus.OK);
     }
 }

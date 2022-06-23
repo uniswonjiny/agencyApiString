@@ -133,16 +133,15 @@ public class MemberServiceImpl implements MemberService {
         HashMap<String, Object> map = new HashMap<String, Object>();
         // 대리점인 경우
         if(param.getDealerKind() == 34){
-            map.put("getJoinAmtSum", agencyMemberMapper.getJoinAmtSum(param)); // 가맹비
-            map.put("selectMerchantSalesSum",agencyMemberMapper.selectMerchantSalesSum(param)); // 가맹점매출수익
+            map.put("agencyMemberShipFeeSum", agencyMemberMapper.agencyMemberShipFeeList(param) ); // 가맹비
+            map.put("recruitmentAgencySalesSum",agencyMemberMapper.merchantIncomeSum(param) ); // 모집대리점 매출수익
             map.put("selectRecruitingAgencySum", agencyMemberMapper.selectRecruitingAgencySum(param)); // 모집대리점 매출수익
         }
         // 지사인 경우
         if(param.getDealerKind() == 33){
-            map.put("selectMerchantSalesSum",agencyMemberMapper.selectMerchantSalesSum(param)); // 가맹점매출수익
-            map.put("selectRecruitingAgencySum", agencyMemberMapper.selectRecruitingAgencySum(param)); // 소속대리점 매출수익
-            map.put("getJoinAmtSum", agencyMemberMapper.selectJoinAmtUpSum(param)); // 가맹비 수익
-            map.put("getJoinAmtSum", agencyMemberMapper); // 추천지사 수익
+            map.put("agencyMemberShipFeeSum",agencyMemberMapper.selectJoinAmtUpSum(param)); // 가맹비
+            map.put("recruitmentAgencySalesSum",agencyMemberMapper.merchantIncomeSum(param) ); // 소속대리점 매출수익
+
         }
         return map;
     }

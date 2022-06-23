@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class MerchantSalesList {
-    private String mberName;
-    private int splpc;
-    private int feeAmount;
+    private int no; // 순번
+    private String memberName; // 가맹점이름
+    private int amount; // 매출합계
+    private int feeAmount; // 수수료 수익합계
 }

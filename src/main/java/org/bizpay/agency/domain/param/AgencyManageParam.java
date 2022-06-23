@@ -14,4 +14,5 @@ public class AgencyManageParam {
     private String dealerId;
     private String cmpnm; // 대리점 지사명
     private String bprprr; // 대표자명
+    private String type;
 }

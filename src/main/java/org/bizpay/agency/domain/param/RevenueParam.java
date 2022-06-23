@@ -10,4 +10,5 @@ public class RevenueParam {
     public int startNo;
     public int endNo;
     public int dealerKind;
+    private String type;
 }

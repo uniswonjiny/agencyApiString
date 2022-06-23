@@ -121,6 +121,7 @@
                 where RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where DEALER_ID = #{userId})  and DEALER_KIND = 33 ) as inDirectCount
                 from dual
             </when>
+            <!-- 대리점인 경우 -->
             <when test="dealerKind!=null and dealerKind.equals('34')">
                 select (
                     select count(1) as a1
@@ -187,46 +188,7 @@
         ) bb
         where bb.no between #{startNo} and #{endNo}
     </select>
-    <!-- 가맹점 매출수일 지사 대리점 공통 -->
-    <select id="getDistributorRevenue1" resultType="integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select
-            (aa.SPLPC + aa.VAT) * (bb.BOSS_RATE *100) / 100
-        from DELNG aa
-        inner join MBER_BASIS bb
-        on aa.MBER_CODE = bb.MBER_CODE
-        where aa.CONFM_DT between #{startDt} and #{endDt}
-        and BIZ_CODE in (select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId}))
-    </select>
 
-
-    <!-- 가맹점 산하모집대리점 매출수익 -->
-    <select id="getDistributorRevenue2" resultType="integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select
-        (aa.SPLPC + aa.VAT) * (bb.BOSS_RATE *100) / 100,
-        from DELNG aa
-        inner join MBER_BASIS bb
-        on aa.MBER_CODE = bb.MBER_CODE
-        where aa.CONFM_DT between #{startDt} and #{endDt}
-        and BIZ_CODE in  (select BIZ_CODE from biz where BOSS_BIZ_CODE in (
-        select BIZ_CODE from BIZ where BOSS_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-        ))
-    </select>
-
-
-    <!-- 추천지사 가맹비 + 매출수익 -->
-    <select id="recommendRevenue" resultType="integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select a.aa + b.aa from
-            ( select sum(nvl(JOIN_AMT,0)) aa from biz
-                where RECOMMEND_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID = #{userId})
-                    and CREATE_DT between #{startDt} and #{endDt} ) a ,
-            ( select sum(( nvl(aa.SPLPC,0) + nvl(aa.VAT,0)) * (nvl(bb.BOSS_RATE,0) *100) / 100 ) aa
-                from DELNG aa
-                inner join MBER_BASIS bb
-                    on aa.MBER_CODE = bb.MBER_CODE
-                where aa.CONFM_DT between #{startDt} and #{endDt}
-                    and BIZ_CODE in (select BIZ_CODE from BIZ where RECOMMEND_BIZ_CODE = (select BIZ_CODE from BIZ where DEALER_ID =#{userId}))
-            ) b
-    </select>
 
     <!-- 거래조회 -->
     <select id="getTransactionList" resultType="org.bizpay.agency.domain.result.TransactionInfo" parameterType="org.bizpay.agency.domain.param.TransactionParam">
@@ -399,7 +361,7 @@
         where bb.no between ${startNo} and ${endNo}
     </select>
 
-    <!-- 가맹비수익 목록 -->
+    <!-- *모집대리점 가맹비수익 목록 -->
     <select id="getJoinAmtList" parameterType="org.bizpay.agency.domain.param.RevenueParam" resultType="org.bizpay.agency.domain.result.JoinAmtList">
         select
             no , CMPNM, CREATE_DT,
@@ -421,92 +383,6 @@
             ) bb
         where no between ${startNo} and ${endNo}
     </select>
-
-    <!-- 가맹비수익 전체갯수 -->
-    <select id="getJoinAmtCount" parameterType="org.bizpay.agency.domain.param.RevenueParam" resultType="int">
-        select
-                count(1)
-                from biz
-                where BOSS_BIZ_CODE = (select BIZ_CODE from MBER where USID = #{userId})
-                and to_DATE( REPLACE(nvl(CREATE_DT, '1999-01-01'), '-' , '' ) , 'YYYY-MM-DD') between #{startDt} and #{endDt}
-    </select>
-
-    <!-- 가맹비 수익 :  지사 대리점 공통사용  -->
-    <select id="getJoinAmtSum" resultType="integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select
-            sum(
-                    (CASE
-                         WHEN bb.biz_type = 'N' THEN (bb.JOIN_AMT / 1.1) - (bb.JOIN_AMT / 1.1 * 0.033)
-                         ELSE (CASE WHEN bb.biz_type = 'O' THEN (bb.JOIN_AMT / 1.1) ELSE bb.JOIN_AMT END) END) ) as JOIN_AMT
-        from (select
-                  biz_type,
-                  nvl(JOIN_AMT, 0) as JOIN_AMT,
-                  to_DATE( REPLACE(nvl(CREATE_DT, '1999-01-01'), '-' , '' ) , 'YYYY-MM-DD') as CREATE_DT
-              from biz
-              where BOSS_BIZ_CODE = (select BIZ_CODE from MBER where USID = #{userId})
-                and to_DATE( REPLACE(nvl(CREATE_DT, '1999-01-01'), '-' , '' ) , 'YYYY-MM-DD') between #{startDt} and #{endDt}
-             ) bb
-    </select>
-
-    <!-- 가맹점 매출수익 목록 -->
-    <select id="selectMerchantSales" resultType="org.bizpay.agency.domain.result.MerchantSalesList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select * from
-            (
-                select
-                    row_number() over ( order by mba.MBER_NAME desc) as  no,
-    mba.MBER_NAME,
-    sum(de.SPLPC + de.VAT) as splpc,
-    FLOOR(sum(de.SPLPC + de.VAT) * mba.FEE_RATE / 100) as fee_amount
-                from DELNG de
-                    inner join MBER mb
-                on de.MBER_CODE = mb.MBER_CODE
-                    inner join MBER_BASIS mba
-                    on mba.MBER_CODE = mb.MBER_CODE
-                where mb.BIZ_CODE in ( select BIZ_CODE
-                    from MBER
-                    where usid = #{userId})
-                  and to_date(de.CONFM_DT , 'YYYYMMDD' ) between #{startDt} and #{endDt}
-                  and de.DELNG_SE_CODE in ('CARD_ISSUE', 'CASH_RCIPT_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL')
-                group by  mba.MBER_NAME , mba.FEE_RATE
-            )
-        where no between ${startNo} and ${endNo}
-    </select>
-    <!-- 가맹점 매출수익 합계 -->
-    <select id="selectMerchantSalesSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-
-                select
-
-     sum(FLOOR(sum(de.SPLPC + de.VAT) * mba.FEE_RATE / 100)) as fee_amount
-                from DELNG de
-                    inner join MBER mb
-                on de.MBER_CODE = mb.MBER_CODE
-                    inner join MBER_BASIS mba
-                    on mba.MBER_CODE = mb.MBER_CODE
-                where mb.BIZ_CODE in ( select BIZ_CODE
-                    from MBER
-                    where usid = #{userId})
-                  and to_date(de.CONFM_DT , 'YYYYMMDD' ) between #{startDt} and #{endDt}
-                  and de.DELNG_SE_CODE in ('CARD_ISSUE', 'CASH_RCIPT_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL')
-                group by  mba.MBER_NAME , mba.FEE_RATE
-    </select>
-
-    <!-- 가맹점 매출수익 전체갯수 -->
-    <select id="selectMerchantSalesCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-                select
-                    count(1)
-                from DELNG de
-                    inner join MBER mb
-                on de.MBER_CODE = mb.MBER_CODE
-                    inner join MBER_BASIS mba
-                    on mba.MBER_CODE = mb.MBER_CODE
-                where mb.BIZ_CODE in ( select BIZ_CODE
-                    from MBER
-                    where usid = #{userId})
-                  and to_date(de.CONFM_DT , 'YYYYMMDD' ) between #{startDt} and #{endDt}
-                  and de.DELNG_SE_CODE in ('CARD_ISSUE', 'CASH_RCIPT_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL')
-                group by  mba.MBER_NAME , mba.FEE_RATE
-    </select>
-
     <!-- 모집대리점 매출수익목록 -->
     <select id="selectRecruitingAgencyList" resultType="org.bizpay.agency.domain.result.RecruitingAgencyList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
         select * from
@@ -570,8 +446,11 @@
         dealer_kind,
         aa.biz_code,
         dealer_id,
-        <if test="dealerKind==33">
+        <if test='dealerKind==33 and type.equals("a")'>
         ( select count(0) from biz where trget_biz_code = aa.biz_code ) as count,
+        </if>
+        <if test='dealerKind==33 and type.equals("b")'>
+            ( select count(0) from biz where trget_biz_code = aa.biz_code ) as count,
         </if>
         <if test="dealerKind==34">
         ( select count(0) from biz where boss_biz_code = aa.biz_code ) as count,
@@ -586,35 +465,41 @@
         aa.m_telno,
         aa.bplc
         from BIZ aa
-        where DEALER_KIND = #{dealerKind}
-        and aa.dt between #{startDt} and #{endDt}
-        <if test="dealerKind==33">
-            and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
-        </if>
-        <if test="dealerKind==34">
-            and aa.BOSS_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
-        </if>
-        <if test="dealerId!=null and !dealerId.equals('')" >
-            and aa.dealer_id = #{dealerId}
-        </if>
-        <if test="cmpnm!=null and !cmpnm.equals('')" >
-            and aa.cmpnm like '%'||#{cmpnm}||'%'
-        </if>
-        <if test="bprprr!=null and !bprprr.equals('')" >
-            and aa.bprprr like '%'||#{bprprr}||'%'
-        </if>
-        )
-        where no between ${startNo} and ${endNo}
-    </select>
-    <!-- 대리점관리 전체갯수 -->
+        where
+        aa.dt between #{startDt} and #{endDt}
+    <!--  DEALER_KIND = #{dealerKind} -->
+      <if test='dealerKind==33 and type.equals("a")'>
+          and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+      </if>
+      <if test='dealerKind==33 and type.equals("b")'>
+          and aa.trget_biz_code = (select BIZ_CODE from biz where dealer_id = #{userId})
+      </if>
+      <if test="dealerKind==34">
+          and aa.BOSS_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+      </if>
+      <if test="dealerId!=null and !dealerId.equals('')" >
+          and aa.dealer_id = #{dealerId}
+      </if>
+      <if test="cmpnm!=null and !cmpnm.equals('')" >
+          and aa.cmpnm like '%'||#{cmpnm}||'%'
+      </if>
+      <if test="bprprr!=null and !bprprr.equals('')" >
+          and aa.bprprr like '%'||#{bprprr}||'%'
+      </if>
+      )
+      where no between ${startNo} and ${endNo}
+  </select>
+  <!-- 대리점관리 전체갯수 -->
     <select id="selectAgencyAgencyManagementCount" resultType="int" parameterType="org.bizpay.agency.domain.param.AgencyManageParam" >
     select
         count(0)
         from BIZ aa
-        where DEALER_KIND = #{dealerKind}
-        and aa.dt between #{startDt} and #{endDt}
-        <if test="dealerKind==33">
+        where aa.dt between #{startDt} and #{endDt}
+        <if test='dealerKind==33 and type.equals("a")'>
             and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+        </if>
+        <if test='dealerKind==33 and type.equals("b")'>
+            and aa.trget_biz_code = (select BIZ_CODE from biz where dealer_id = #{userId})
         </if>
         <if test="dealerKind==34">
             and aa.BOSS_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
@@ -636,7 +521,7 @@
     <select id="selectMerchantManagementList" resultType="org.bizpay.agency.domain.result.MerchantManagementList" parameterType="org.bizpay.agency.domain.param.AgencyParam">
         select * from
             (select
-                row_number() over (order by  mba.mber_code desc) as no,
+                row_number() over (order by mbb.CREAT_DT desc) as no,
                 mba.usid,
                 mbb.company_name,
                 mbb.mber_name,
@@ -649,7 +534,7 @@
                 mbb.account_no,
                 mbb.bank_name,
                 mbb.depositor,
-                (select company_name from biz where biz_code = bi.TRGET_BIZ_CODE) as boss_name
+                (select bbb.CMPNM from biz bbb where bbb.biz_code = bi.BIZ_CODE) as boss_name
             from mber mba
             inner join mber_basis mbb
                 on mba.mber_code = mbb.mber_code
@@ -698,9 +583,7 @@
         inner join biz bi
         on mba.biz_code = bi.biz_code
         where bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
-        where
-        mbb.CREAT_DT between #{startDt} and #{endDt}
-
+        and mbb.CREAT_DT between #{startDt} and #{endDt}
         <if test="dealerKind==34">
             and bi.TRGET_BIZ_CODE = ( select biz_code from biz where DEALER_ID = #{userId} )
         </if>
@@ -729,7 +612,7 @@
     </select>
 
     <!-- 대리점 가맹점 리스트 franchise -->
-    <select id="selectfranchiseManagementList" resultType="org.bizpay.agency.domain.result.MerchantManagementList" parameterType="org.bizpay.agency.domain.param.AgencyParam">
+    <select id="selectFranchiseManagementList" resultType="org.bizpay.agency.domain.result.MerchantManagementList" parameterType="org.bizpay.agency.domain.param.AgencyParam">
         select * from
         (select
             row_number() over (order by  mba.mber_code desc) as no,
@@ -768,7 +651,7 @@
         where no between ${startNo} and ${endNo}
     </select>
     <!-- 대리점 가맹점 리스트 전체숫자 -->
-    <select id="selectfranchiseManagementCount" resultType="int"  parameterType="org.bizpay.agency.domain.param.AgencyParam">
+    <select id="selectFranchiseManagementCount" resultType="int"  parameterType="org.bizpay.agency.domain.param.AgencyParam">
         select
             count(0)
         from mber mba
@@ -798,7 +681,7 @@
 
 <!-- 지사 -->
     <!-- 소속 대리점 매출수익 목록 -->
-    <select id="AffiliatedAgency" resultType="org.bizpay.agency.domain.result.RecruitingAgencyList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+    <select id="affiliatedAgency" resultType="org.bizpay.agency.domain.result.RecruitingAgencyList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
         select * from
             (
                 select
@@ -849,7 +732,7 @@
 
     </select>
     <!-- 지사의 소속 대리점 매출수익 전채갯수 -->
-    <select id="AffiliatedAgencyCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+    <select id="affiliatedAgencyCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
         select count(0) from
             (select
                  mba.MBER_NAME,mba.FEE_RATE
@@ -972,4 +855,200 @@
             and status = {status}
         </if>
     </select>
+<!-- 가맹점 매출 목록 -->
+    <select id="merchantIncomeList" resultType="org.bizpay.agency.domain.result.MerchantSalesList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select * from
+            (select
+                row_number() over (order by  de.MBER_CODE desc) as no ,
+                ( select COMPANY_NAME from MBER_BASIS bbb where bbb.MBER_CODE = de.MBER_CODE ) as member_name,
+                sum(de.VAT + de.SPLPC) as  amount,
+                sum(de.MBER_FEE_AMT) as fee_amount
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE = (
+                    select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                    )
+                 )
+             group by de.MBER_CODE )
+        where no between ${startNo} and ${endNo}
+    </select>
+    <!-- 가맹점 매출 목록 전체 갯수 -->
+    <select id="merchantIncomeCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select count(0) from
+            (select
+                 count(1)
+             from DELNG de
+             where de.CONFM_DT between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE = (
+                     select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                 )
+             )
+             group by de.MBER_CODE)
+    </select>
+<!-- 가맹점 매출수익 합 -->
+    <select id="merchantIncomeSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select
+            sum(de.MBER_FEE_AMT) as fee_amount
+        from DELNG de
+        where to_date(de.CONFM_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt}
+          and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+          and de.MBER_CODE in (
+            select mb.MBER_CODE from MBER mb where mb.BIZ_CODE = (
+                select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+            )
+        )
+    </select>
+
+    <!-- 대리점 : 모집대리점 매출수익 -->
+    <!-- 모집대리점 매출 목록 -->
+    <select id="recruitmentAgencySalesList" resultType="org.bizpay.agency.domain.result.MerchantSalesList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select * from
+            (select
+                 row_number() over (order by  de.MBER_CODE desc) as no ,
+                ( select COMPANY_NAME from MBER_BASIS bbb where bbb.MBER_CODE = de.MBER_CODE ) as member_name,
+                sum(de.VAT + de.SPLPC) as amount,
+                sum(de.MBER_FEE_AMT) as fee_amount
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                    select mb.MBER_CODE from MBER mb where mb.BIZ_CODE in (
+                        select biz_code from biz where BOSS_BIZ_CODE = (
+                            select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                        )
+                    )
+                )
+             group by de.MBER_CODE )
+        where no between ${startNo} and ${endNo}
+    </select>
+    <!-- 모집대리점 매출합 -->
+    <select id="recruitmentAgencySalesSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+             select
+                 sum(de.MBER_FEE_AMT) as fee_amount
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE in (
+                    select biz_code from biz where BOSS_BIZ_CODE = (
+                        select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                    )
+                )
+            )
+    </select>
+
+    <!-- 모집대리점 매출 전체갯수 -->
+    <select id="recruitmentAgencySalesCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select count(1) from
+            (select
+                 count(1)
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE in (
+                 select biz_code from biz where BOSS_BIZ_CODE = (
+                 select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                 )
+                 )
+                 )
+             group by de.MBER_CODE )
+    </select>
+    <!-- * 지사 : 소속 대리점 매출수익 -->
+    <!-- 소속 대리점 매출 목록 -->
+    <select id="affiliatedAgencySalesList" resultType="org.bizpay.agency.domain.result.AffiliateList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select * from
+            (select
+                 row_number() over (order by  de.MBER_CODE desc) as no ,
+                ( select COMPANY_NAME from MBER_BASIS bbb where bbb.MBER_CODE = de.MBER_CODE ) as member_name,
+                sum(de.VAT + de.SPLPC) as amount,
+                sum(de.MBER_FEE_AMT) as fee_amount
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE in (
+                 select bbb.biz_code from biz bbb where TRGET_BIZ_CODE = (
+                 select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                    ) and bbb.DEALER_KIND = 34
+                 )
+                 )
+             group by de.MBER_CODE )
+        where no between ${startNo} and ${endNo}
+    </select>
+    <!-- 소속 대리점 매출 합 -->
+    <select id="affiliatedAgencySalesSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+            select
+                sum(de.MBER_FEE_AMT) as fee_amount
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE in (
+                 select bbb.biz_code from biz bbb where TRGET_BIZ_CODE = (
+                 select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                 ) and bbb.DEALER_KIND = 34
+                 )
+                 )
+    </select>
+    <!-- 소속 대리점 매출 전체 갯수 -->
+    <select id="affiliatedAgencySalesCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select count(1) from
+            (select
+                 count(1)
+             from DELNG de
+             where to_date(de.CONFM_DT, 'YYYY-MM-DD' ) between #{startDt} and #{endDt}
+               and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+               and de.MBER_CODE in (
+                 select mb.MBER_CODE from MBER mb where mb.BIZ_CODE in (
+                     select bbb.biz_code from biz bbb where TRGET_BIZ_CODE = (
+                         select BIZ_CODE from BIZ where DEALER_ID = #{userId}
+                     ) and bbb.DEALER_KIND = 34
+                 )
+             )
+             )
+             group by de.MBER_CODE )
+
+    </select>
+
+    <!-- 가맹비 -->
+    <!-- 대리점* 모집인 가맹비 목록 -->
+    <select id="agencyMemberShipFeeList" parameterType="org.bizpay.agency.domain.param.RevenueParam" resultType="org.bizpay.agency.domain.result.JoinAmtList">
+        select * from (select row_number() over ( ORDER BY CREATE_DT )                                             as no,
+                      (select cccc.CMPNM from biz cccc where cccc.DEALER_ID =  #{userId})                   as cmpnm,
+                      to_date(CREATE_DT, 'YYYY-MM-DD')                                                     as create_dt,
+                      FLOOR((CASE
+                                 WHEN biz_type = 'N' THEN (300000 / 1.1) - (300000 / 1.1 * 0.033)
+                                 ELSE (CASE WHEN biz_type = 'O' THEN (300000 / 1.1) ELSE 300000 END) END)) as join_amt
+                       From biz
+                       where BOSS_BIZ_CODE = (select BIZ_CODE from biz bbbb where bbbb.DEALER_ID =  #{userId})
+                         and to_date(CREATE_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt} )
+        where no between ${startNo} and ${endNo}
+    </select>
+
+    <!-- 대리점* 모집인 가맹비합계금액 -->
+    <select id="agencyMemberShipFeeSum" resultType="int" >
+        select
+          sum( FLOOR((CASE
+                      WHEN biz_type = 'N' THEN (300000 / 1.1) - (300000 / 1.1 * 0.033)
+                           ELSE (CASE WHEN biz_type = 'O' THEN (300000 / 1.1) ELSE 300000 END) END)) ) as JOIN_AMT
+                       From biz
+                       where BOSS_BIZ_CODE = (select BIZ_CODE from biz bbbb where bbbb.DEALER_ID =  #{userId})
+                         and to_date(CREATE_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt}
+    </select>
+
+    <!-- 대리점* 모집인 가맹비 목록 전체숫자 -->
+    <select id="agencyMemberShipFeeCount" resultType="int" >
+        select count(0)
+                       From biz
+                       where BOSS_BIZ_CODE = (select BIZ_CODE from biz bbbb where bbbb.DEALER_ID =  #{userId})
+                         and to_date(CREATE_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt}
+
+    </select>
+
+
 </mapper>
