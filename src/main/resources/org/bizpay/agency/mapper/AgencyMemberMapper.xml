@@ -775,7 +775,7 @@
         where no between ${startNo} and ${endNo}
     </select>
     <!-- 지사의 가맹비수익 합 -->
-    <select id="selectJoinAmtUpSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+    <select id="selectJoinAmtUpSum" resultType="Integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
             select
                 SUM(
                     (CASE
@@ -890,7 +890,7 @@
              group by de.MBER_CODE)
     </select>
 <!-- 가맹점 매출수익 합 -->
-    <select id="merchantIncomeSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+    <select id="merchantIncomeSum" resultType="Integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
         select
             sum(de.MBER_FEE_AMT) as fee_amount
         from DELNG de

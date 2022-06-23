@@ -68,7 +68,7 @@ public interface AgencyMemberMapper {
     // 가맹점 매출 목록 전체 갯수
     public int merchantIncomeCount(RevenueParam param) throws SqlErrorException;
     // 가맹점 매출수익 합
-    public int merchantIncomeSum(RevenueParam param) throws SqlErrorException;
+    public Integer merchantIncomeSum(RevenueParam param) throws SqlErrorException;
 
     // 대리점 가맹점 리스트
     public List<MerchantManagementList> selectFranchiseManagementList(AgencyParam param) throws SqlErrorException;
@@ -83,7 +83,7 @@ public interface AgencyMemberMapper {
     // 지사*의 가맹비수익 목록
     public List<JoinAmtList> selectJoinAmtUpList(RevenueParam param) throws SqlErrorException;
     // 지사*의 가맹비수익 합
-    public int selectJoinAmtUpSum (RevenueParam param) throws SqlErrorException;
+    public Integer selectJoinAmtUpSum (RevenueParam param) throws SqlErrorException;
     // 지사*의 가맹비수익 전체갯수
     public int selectJoinAmtUpCount (RevenueParam param) throws SqlErrorException;
     // 대리점* 모집인 가맹비 목록

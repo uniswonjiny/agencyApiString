@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class RevenueParam {
     public String userId;
-    public int startDt;
-    public int endDt;
+    public String startDt;
+    public String endDt;
     public int startNo;
     public int endNo;
     public int dealerKind;
