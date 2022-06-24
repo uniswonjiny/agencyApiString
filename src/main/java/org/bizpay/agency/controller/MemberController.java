@@ -100,10 +100,10 @@ public class MemberController {
         log.info("대리점 등록 하기");
         return new ResponseEntity<>(memberService.insertRegAgency(param), HttpStatus.OK);
     }
-    // 수익현황 전체 수익현황부분
-    @PostMapping("/fetchIncomeInfo")
+    // 수익현황 전체 합계부분
+    @PostMapping("/fetchIncomeInfoSum")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> incomeInfo(@RequestBody RevenueParam param) throws Exception {
+    public ResponseEntity<HashMap<String, Object>> incomeInfoSum(@RequestBody RevenueParam param) throws Exception {
         log.info("대리점 수익현황 전체 합계부분");
         return new ResponseEntity<>(memberService.inComeInfo(param), HttpStatus.OK);
     }

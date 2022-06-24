@@ -775,15 +775,15 @@
         where no between ${startNo} and ${endNo}
     </select>
     <!-- 지사의 가맹비수익 합 -->
-    <select id="selectJoinAmtUpSum" resultType="Integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-            select
+    <select id="selectJoinAmtUpSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+            select nvl(amount, 0) from (select
                 SUM(
                     (CASE
                         WHEN biz_type = 'N' THEN (JOIN_AMT / 1.1) - (JOIN_AMT / 1.1 * 0.033)
-                        ELSE (CASE WHEN biz_type = 'O' THEN (JOIN_AMT / 1.1) ELSE JOIN_AMT END) END))
+                        ELSE (CASE WHEN biz_type = 'O' THEN (JOIN_AMT / 1.1) ELSE JOIN_AMT END) END)) as amount
             from biz
             where TRGET_BIZ_CODE = (select BIZ_CODE from MBER where USID = #{userId})
-            and to_DATE( REPLACE(nvl(CREATE_DT, '1999-01-01'), '-' , '' ) , 'YYYY-MM-DD') between #{startDt} and #{endDt}
+            and to_DATE( REPLACE(nvl(CREATE_DT, '1999-01-01'), '-' , '' ) , 'YYYY-MM-DD') between #{startDt} and #{endDt} )
     </select>
     <!-- 지사의 가맹비수익 전체갯수 -->
     <select id="selectJoinAmtUpCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
@@ -890,9 +890,9 @@
              group by de.MBER_CODE)
     </select>
 <!-- 가맹점 매출수익 합 -->
-    <select id="merchantIncomeSum" resultType="Integer" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select
-            sum(de.MBER_FEE_AMT) as fee_amount
+    <select id="merchantIncomeSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select nvl(amount, 0) from (select
+            sum(de.MBER_FEE_AMT) as amount
         from DELNG de
         where to_date(de.CONFM_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt}
           and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
@@ -900,7 +900,7 @@
             select mb.MBER_CODE from MBER mb where mb.BIZ_CODE = (
                 select BIZ_CODE from BIZ where DEALER_ID = #{userId}
             )
-        )
+        ))
     </select>
 
     <!-- 대리점 : 모집대리점 매출수익 -->

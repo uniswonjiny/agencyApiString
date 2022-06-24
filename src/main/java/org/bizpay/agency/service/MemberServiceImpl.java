@@ -131,21 +131,28 @@ public class MemberServiceImpl implements MemberService {
     public HashMap<String, Object> inComeInfo(RevenueParam param) throws Exception {
         log.info(" 수익현황 전체합부분");
         HashMap<String, Object> map = new HashMap<String, Object>();
+        int joinSalesSum = 0 ; // 가맹점 매출수익합
+        int mojibSalesSum = 0 ; // 모집대리점 매출수익 합
+        int sosokSalesSum =0; // 소속대리점수익
+        int joinSum = 0 ; // 가맹비수익
+        int recommendSum =0 ; // 추천지사수익
         // 대리점인 경우
         if(param.getDealerKind() == 34){
-            map.put("agencyMemberShipFeeSum", agencyMemberMapper.agencyMemberShipFeeList(param) ); // 가맹비
-            map.put("recruitmentAgencySalesSum",agencyMemberMapper.merchantIncomeSum(param) ); // 모집대리점 매출수익
-            map.put("selectRecruitingAgencySum", agencyMemberMapper.selectRecruitingAgencySum(param)); // 모집대리점 매출수익
+
         }
         // 지사인 경우
         if(param.getDealerKind() == 33){
-            Integer agencyMemberShipFeeSum = agencyMemberMapper.selectJoinAmtUpSum(param);
-            Integer recruitmentAgencySalesSum = agencyMemberMapper.merchantIncomeSum(param);
-
-            map.put("agencyMemberShipFeeSum",agencyMemberShipFeeSum == null ? 0 : agencyMemberShipFeeSum  ) ; // 가맹비
-            map.put("recruitmentAgencySalesSum", recruitmentAgencySalesSum == null ? 0 : recruitmentAgencySalesSum ); // 소속대리점 매출수익
-
+            map.put("agencyMemberShipFeeSum", agencyMemberMapper.selectJoinAmtUpSum(param)) ; // 가맹비
+            map.put("recruitmentAgencySalesSum", agencyMemberMapper.merchantIncomeSum(param) ); // 소속대리점 매출수익
+            map.put("selectRecruitingAgencySum", 0); // 모집대리점 매출수익
         }
+
+        map.put("joinSalesSum",joinSalesSum);
+        map.put("mojibSalesSum",mojibSalesSum);
+        map.put("sosokSalesSum",sosokSalesSum);
+        map.put("joinSum",joinSum);
+        map.put("recommendSum",recommendSum);
+
         return map;
     }
 
