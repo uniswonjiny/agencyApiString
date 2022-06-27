@@ -293,8 +293,8 @@
             recommand_sale_total,
             dealer_reg_fee,
             total_fee ,
-            tot_amt_option01,
-            tot_amt_option02,
+            tot_amt_option01, -- 왜 숫자값에 문자열을 넣는지 알수 없다. 0 이 맡는거 같은데. 원데이터 타입에 대한 기준 개념공부 안한듯
+            tot_amt_option02, -- 이렇게 하면 뒤에 받는 부분에서 숫자처리하다 에러 나고 성능에 매우 않좋다. 최소한의 데이터 타입으로 해야함 데이터 형변환 자동 발생등 후속 개발에서 문제 일어난다.이런 데이터 처리 성능처리 관련 공부하기!
             modify_amt,
             send_amt,
             tax_invoice_yn,
@@ -469,7 +469,7 @@
         aa.dt between #{startDt} and #{endDt}
     <!--  DEALER_KIND = #{dealerKind} -->
       <if test='dealerKind==33 and type.equals("a")'>
-          and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+          and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId}) and dealer_kind = 33
       </if>
       <if test='dealerKind==33 and type.equals("b")'>
           and aa.trget_biz_code = (select BIZ_CODE from biz where dealer_id = #{userId})
@@ -496,7 +496,7 @@
         from BIZ aa
         where aa.dt between #{startDt} and #{endDt}
         <if test='dealerKind==33 and type.equals("a")'>
-            and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId})
+            and aa.RECOMMEND_BIZ_CODE = (select BIZ_CODE from biz where dealer_id = #{userId}) and dealer_kind = 33
         </if>
         <if test='dealerKind==33 and type.equals("b")'>
             and aa.trget_biz_code = (select BIZ_CODE from biz where dealer_id = #{userId})

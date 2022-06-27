@@ -11,8 +11,8 @@ public class SettlementInfo {
     private int recommandSaleTotal;
     private int dealerRegFee;
     private int totalFee;
-    private int totAmtOption01;
-    private int totAmtOption02;
+    private String totAmtOption01;
+    private String totAmtOption02;
     private int forwardAmt;
     private int modifyAmt;
     private int sendAmt;
