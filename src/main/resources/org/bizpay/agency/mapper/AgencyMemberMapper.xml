@@ -805,17 +805,42 @@
 
     <!-- 대리점 등록요청 -->
     <insert id="insertRegAgency" parameterType="org.bizpay.agency.domain.param.ReqAgencyParam">
+        <selectKey keyProperty="regNo" resultType="int" order="AFTER">
+            SELECT SEQ_REG_AGENCY.CURRVAL FROM DUAL
+        </selectKey>
+
         insert into TB_REG_AGENCY (BOSS_BIZ_CODE, COMPANY_NAME, MEMBER_NAME, EMAIL, MOBILE_NUMBER)
         values (#{bossBizCode},#{companyName},#{memberName},#{email},#{mobileNumber})
     </insert>
+
+    <!-- 대리점 이력 생성 : 주) 이력은 입력만 한다. 수정 삭제 없다  -->
+    <insert id="insertRegAgencyHistory" parameterType="hashmap">
+        insert into TB_REG_AGENCY_HISTORY (REG_NO, STATUS)
+        values ( ${reg_no}, ${status} )
+    </insert>
+
+    <!-- 대리점 이력 생성 조회 -->
+    <select id="selectRegAgencyHistory" resultType="org.bizpay.agency.domain.result.RegAgencyHistory">
+        select reg_no,
+               case status
+                when 0 then '신규등록요청'
+                when 1 then '계약서발송'
+                when 9 then '등록완료'
+                else '대기' end as status,
+               to_char(created_at , 'YYYY-MM-DD' ) as created_at from TB_REG_AGENCY_HISTORY
+        where REG_NO = ${val}  order by CREATED_AT desc
+    </select>
+
     <!-- 대리점 등록요청 목록 -->
     <select id="selectRegAgencyList" parameterType="org.bizpay.agency.domain.param.ReqAgencyParam" resultType="org.bizpay.agency.domain.result.ReqAgency">
         select * from
             (select row_number() over (order by no desc) as row_no,
                 boss_biz_code,
+                (select aa.CMPNM from biz aa where aa.BIZ_CODE = tr.boss_biz_code ) boss_biz_name,
                 email,
                 company_name,
                 mobile_number,
+                member_name,
                 created_at,
                 no,
                  case status
@@ -823,7 +848,7 @@
                     when 1 then '계약서발송'
                     when 9 then '등록완료'
                     else '대기' end as status
-             from TB_REG_AGENCY
+             from TB_REG_AGENCY tr
             where to_char(created_at, 'YYYY-MM-DD') between #{startDt} and #{endDt}
             <if test="companyName!=null and !companyName.equals('') " >
                 and companyName like '%'||#{companyName}||'%'
@@ -831,21 +856,12 @@
             <if test="status!=null and !status.equals('') " >
                 and status = {status}
             </if>
-        ) where row_no bteween ${startNo} and ${endNo}
+        ) where row_no between ${startNo} and ${endNo}
     </select>
     <!-- 대리점등록목록 전체 갯수 -->
     <select id="selectRegAgencyCount" parameterType="org.bizpay.agency.domain.param.ReqAgencyParam" resultType="int">
     select
-        boss_biz_code,
-        email,
-        company_name,
-        created_at,
-        no,
-        case status
-        when 0 then '신규등록요청'
-        when 1 then '계약서발송'
-        when 9 then '등록완료'
-        else '대기' end as status
+        count(0)
     from TB_REG_AGENCY
     where to_char(created_at, 'YYYY-MM-DD') between #{startDt} and #{endDt}
         <if test="companyName!=null and !companyName.equals('') " >

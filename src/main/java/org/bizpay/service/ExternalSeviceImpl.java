@@ -206,7 +206,7 @@ public class ExternalSeviceImpl implements ExternalService {
 	public ExternalOrderInputParam payRequest(PaymentReqParam param) throws Exception {
 		log.info("외부 수기결제 요청");
 		String storeId = "";
-		int mberCode = -1;
+		long mberCode = -1;
 		String mberCodeSn = "000";
 		OrderErrorType oet = new OrderErrorType();
 		oet.setKSNET_PG_IP(KSNET_PG_IP);
@@ -245,7 +245,7 @@ public class ExternalSeviceImpl implements ExternalService {
 				if (!"Y".equals(mberChk.get("USEAT"))) {
 					throw new ExorderException("1010"); // 결제처리 실패. 결제요청 불가능한 사업자 입니다
 				}
-				mberCode = Integer.parseInt(mberChk.get("MBERCODE").toString());
+				mberCode = Long. parseLong(mberChk.get("MBERCODE").toString());
 			}
 
 			// tbMberDetail mber_code_sn 테이터 추출

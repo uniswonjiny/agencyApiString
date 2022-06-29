@@ -142,8 +142,11 @@ public class MemberServiceImpl implements MemberService {
         }
         // 지사인 경우
         if(param.getDealerKind() == 33){
-            map.put("agencyMemberShipFeeSum", agencyMemberMapper.selectJoinAmtUpSum(param)) ; // 가맹비
-            map.put("recruitmentAgencySalesSum", agencyMemberMapper.merchantIncomeSum(param) ); // 소속대리점 매출수익
+            joinSalesSum = agencyMemberMapper.merchantIncomeSum(param);
+            joinSum = agencyMemberMapper.selectJoinAmtUpSum(param);
+            sosokSalesSum = agencyMemberMapper.merchantIncomeSum(param);
+
+
             map.put("selectRecruitingAgencySum", 0); // 모집대리점 매출수익
         }
 
@@ -180,7 +183,12 @@ public class MemberServiceImpl implements MemberService {
         if (param.getMobileNumber() != null && !param.getMobileNumber().equals("")) {
             param.setMobileNumber(cert.encrypt(param.getMobileNumber()));
         }
-        return agencyMemberMapper.insertRegAgency(param);
+        agencyMemberMapper.insertRegAgency(param);
+        HashMap<String, Integer> tmap = new HashMap<String, Integer>();
+        tmap.put("reg_no", param.getRegNo() );
+        tmap.put("status", 1); // 이유는 최초 입력 무조건 최초상태여야 한다.
+        return agencyMemberMapper.insertRegAgencyHistory(tmap);
+        // return 1;
     }
 
     @Override
@@ -188,10 +196,13 @@ public class MemberServiceImpl implements MemberService {
         log.info("대리점등록목록 조회");
         HashMap<String, Object> map = new HashMap<String, Object>();
         List<ReqAgency> list = agencyMemberMapper.selectRegAgencyList(param);
+
         if(list.size() > 0){
             for (ReqAgency agency : list) {
                 agency.setEmail( cert.decrypt( agency.getEmail()));
                 agency.setMobileNumber(cert.decrypt(agency.getMobileNumber()));
+                // 관련이력 가져오기
+                agency.setHistory( agencyMemberMapper.selectRegAgencyHistory(agency.getNo()) );
             }
         }
         map.put("list", list);

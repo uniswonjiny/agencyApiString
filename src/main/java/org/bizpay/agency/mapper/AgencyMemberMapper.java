@@ -104,4 +104,9 @@ public interface AgencyMemberMapper {
     public int affiliatedAgencySalesSum(RevenueParam param) throws SqlErrorException;
     // 지사* 소속 대리점 매출 전체 갯수
     public int affiliatedAgencySalesCount(RevenueParam param) throws SqlErrorException;
+
+    // 대리점이력 등록
+    public int insertRegAgencyHistory(HashMap<String, Integer> map) throws SqlErrorException;
+    // 대리점 이력 목록
+    public List<RegAgencyHistory> selectRegAgencyHistory(int no) throws SqlErrorException;
 }

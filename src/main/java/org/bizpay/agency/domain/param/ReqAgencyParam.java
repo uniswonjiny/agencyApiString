@@ -15,4 +15,5 @@ public class ReqAgencyParam {
     private int startNo;
     private int endNo;
     private String status;
+    private int regNo;
 }
