@@ -708,28 +708,24 @@
     </select>
     <!-- 소속 대리점 매출수익 합 -->
     <select id="affiliatedAgencySum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select sum(sumSplpc) from
-            (
-                select
-                    mba.MBER_NAME,
-                    sum(de.SPLPC + de.VAT) as splpc,
-                    FLOOR(sum(de.SPLPC + de.VAT) * mba.FEE_RATE / 100) as sumSplpc
-                from DELNG de
-                    inner join MBER mb
-                on de.MBER_CODE = mb.MBER_CODE
-                    inner join MBER_BASIS mba
-                    on mba.MBER_CODE = mb.MBER_CODE
-                where mb.BIZ_CODE = (
-                    select BIZ_CODE from biz where TRGET_BIZ_CODE = (select BIZ_CODE From BIZ where DEALER_ID = #{userId})
-                    union
-                    select BIZ_CODE from biz where BOSS_BIZ_CODE in (
-                    select BIZ_CODE from biz where TRGET_BIZ_CODE = (select BIZ_CODE From BIZ where DEALER_ID = #{userId}))
-                    )
-                  and to_date(de.CONFM_DT , 'YYYYMMDD' ) between #{startDt} and #{endDt}
-                  and de.DELNG_SE_CODE in ('CARD_ISSUE', 'CASH_RCIPT_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL')
-                group by  mba.MBER_NAME , mba.FEE_RATE
-            )
-
+        select ROUND(sum(amount))
+        from (select case mba.BIZ_TYPE
+                         when 'N' then ((((SPLPC + VAT) * mba.FEE_AGENCY) / 100) / 1.1) -
+                                       (((((SPLPC + VAT) * mba.FEE_AGENCY) / 100) / 1.1) * 0.033)
+                         else (SPLPC + VAT) * mba.FEE_AGENCY / 100
+                         end as amount
+              from DELNG de
+                       inner join MBER_BASIS mba
+                                  on de.MBER_CODE = mba.MBER_CODE
+              where to_date(de.CONFM_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt}
+                and de.MBER_CODE in (select mb.MBER_CODE
+                                     from MBER mb
+                                     where mb.BIZ_CODE in (select BIZ_CODE
+                                                           from biz
+                                                           where TRGET_BIZ_CODE = (select BIZ_CODE
+                                                                                   from BIZ
+                                                                                   where DEALER_ID = #{userId})
+                                                             and DEALER_KIND = 34))) aa
     </select>
     <!-- 지사의 소속 대리점 매출수익 전채갯수 -->
     <select id="affiliatedAgencyCount" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
@@ -907,16 +903,22 @@
     </select>
 <!-- 가맹점 매출수익 합 -->
     <select id="merchantIncomeSum" resultType="int" parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select nvl(amount, 0) from (select
-            sum(de.MBER_FEE_AMT) as amount
-        from DELNG de
-        where to_date(de.CONFM_DT, 'YYYY-MM-DD') between #{startDt} and #{endDt}
-          and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
-          and de.MBER_CODE in (
-            select mb.MBER_CODE from MBER mb where mb.BIZ_CODE = (
-                select BIZ_CODE from BIZ where DEALER_ID = #{userId}
-            )
-        ))
+        select ROUND(sum(amount))
+        from (select case mba.BIZ_TYPE
+                         when 'N' then ((((SPLPC + VAT) * mba.FEE_AGENCY) / 100) / 1.1) -
+                                       (((((SPLPC + VAT) * mba.FEE_AGENCY) / 100) / 1.1) * 0.033)
+                         else (SPLPC + VAT) * mba.FEE_AGENCY / 100
+                         end as amount
+              from DELNG de
+                       inner join MBER_BASIS mba
+                                  on de.MBER_CODE = mba.MBER_CODE
+              where to_date(de.CONFM_DT, 'YYYY-MM-DD')  between #{startDt} and #{endDt}
+                and de.delng_se_code IN ('CARD_ISSUE', 'CARD_CNCL', 'CASH_RCIPT_CNCL', 'CASH_RCIPT_ISSUE')
+                and de.MBER_CODE in (select mb.MBER_CODE
+                                     from MBER mb
+                                     where mb.BIZ_CODE = (select BIZ_CODE
+                                                          from BIZ
+                                                          where DEALER_ID = #{userId}))) aa
     </select>
 
     <!-- 대리점 : 모집대리점 매출수익 -->
@@ -975,6 +977,25 @@
              group by de.MBER_CODE )
     </select>
     <!-- * 지사 : 소속 대리점 매출수익 -->
+    <!-- 추전지사 가맹비 합 -->
+    <select id="getRecommendJoinAmtSum" resultType="int"  parameterType="org.bizpay.agency.domain.param.RevenueParam">
+        select sum(amount) from
+            (select
+                 (CASE
+                      WHEN biz_type = 'N' THEN ( (nvl(JOIN_AMT , 0)/2) / 1.1) - ( (nvl(JOIN_AMT,0)/2) / 1.1 * 0.033)
+                      ELSE (CASE WHEN biz_type = 'O' THEN (nvl(JOIN_AMT , 0)/2 ) ELSE nvl(JOIN_AMT , 0)/2 END) END) as amount from
+                 (select
+                      JOIN_AMT,
+                      (select biz_type from BIZ where BIZ_CODE = RECOMMEND_BIZ_CODE ) as  biz_type,
+                      ( nvl(JOIN_AMT , 0)/2 / 1.1) - ( nvl(JOIN_AMT,0)/2 / 1.1 * 0.033)
+                  from biz
+                  where RECOMMEND_BIZ_CODE = (select BIZ_CODE from MBER where USID = #{userId})
+                    and to_DATE( REPLACE(nvl(CREATE_DT, '1999-01-01'), '-' , '' ) , 'YYYY-MM-DD') between #{startDt} and #{endDt}
+                    and DEALER_KIND = 33 )
+                     aa
+            )
+    </select>
+
     <!-- 소속 대리점 매출 목록 -->
     <select id="affiliatedAgencySalesList" resultType="org.bizpay.agency.domain.result.AffiliateList" parameterType="org.bizpay.agency.domain.param.RevenueParam">
         select * from

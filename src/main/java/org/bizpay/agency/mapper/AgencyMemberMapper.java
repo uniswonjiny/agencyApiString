@@ -109,4 +109,7 @@ public interface AgencyMemberMapper {
     public int insertRegAgencyHistory(HashMap<String, Integer> map) throws SqlErrorException;
     // 대리점 이력 목록
     public List<RegAgencyHistory> selectRegAgencyHistory(int no) throws SqlErrorException;
+
+    // 추천지사수익 합
+    public int getRecommendJoinAmtSum(RevenueParam param) throws SqlErrorException;
 }

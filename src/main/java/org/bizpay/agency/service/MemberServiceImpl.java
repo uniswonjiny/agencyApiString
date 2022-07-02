@@ -143,14 +143,12 @@ public class MemberServiceImpl implements MemberService {
         // 지사인 경우
         if(param.getDealerKind() == 33){
             joinSalesSum = agencyMemberMapper.merchantIncomeSum(param);
+            sosokSalesSum = agencyMemberMapper.affiliatedAgencySum(param);
             joinSum = agencyMemberMapper.selectJoinAmtUpSum(param);
-            sosokSalesSum = agencyMemberMapper.merchantIncomeSum(param);
-
-
-            map.put("selectRecruitingAgencySum", 0); // 모집대리점 매출수익
+            recommendSum = agencyMemberMapper.getRecommendJoinAmtSum(param);
         }
 
-        map.put("joinSalesSum",joinSalesSum);
+        map.put("joinSalesSum",joinSalesSum); // 가맹점 매출수익합
         map.put("mojibSalesSum",mojibSalesSum);
         map.put("sosokSalesSum",sosokSalesSum);
         map.put("joinSum",joinSum);
