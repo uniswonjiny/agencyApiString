@@ -979,7 +979,7 @@
     <!-- * 지사 : 소속 대리점 매출수익 -->
     <!-- 추전지사 가맹비 합 -->
     <select id="getRecommendJoinAmtSum" resultType="int"  parameterType="org.bizpay.agency.domain.param.RevenueParam">
-        select sum(amount) from
+        select nvl(sum(nvl(amount,0)) ,0) from
             (select
                  (CASE
                       WHEN biz_type = 'N' THEN ( (nvl(JOIN_AMT , 0)/2) / 1.1) - ( (nvl(JOIN_AMT,0)/2) / 1.1 * 0.033)
